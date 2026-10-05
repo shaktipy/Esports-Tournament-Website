@@ -1,0 +1,39 @@
+.esports-app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #0a0500;
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(255, 51, 102, 0.05), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(255, 204, 0, 0.05), transparent 25%);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: clip;
+  box-sizing: border-box;
+}
+
+.esports-main-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .esports-main-content {
+    padding: 1.25rem 0.85rem;
+  }
+}
+
+/* Custom Scrollbar for Esports mode */
+.esports-app-container ::-webkit-scrollbar-thumb {
+  background: #ffcc00;
+}
+
+.esports-app-container ::-webkit-scrollbar-thumb:hover {
+  background: #ff9900;
+}
