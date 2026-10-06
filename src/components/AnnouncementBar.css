@@ -1,0 +1,150 @@
+.announcement-bar {
+  position: relative;
+  z-index: 1000;
+  width: 100%;
+  padding: 8px 18px;
+  background: #0d121f;
+  border-bottom: 1px solid rgba(102, 252, 241, 0.25);
+  font-size: 0.85rem;
+  color: #f1f5f9;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s ease;
+}
+
+.announcement-bar.type-tournament {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.25) 0%, rgba(13, 18, 31, 0.98) 20%, rgba(13, 18, 31, 0.98) 80%, rgba(239, 68, 68, 0.25) 100%);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.5);
+  box-shadow: 0 2px 14px rgba(239, 68, 68, 0.15);
+}
+
+.announcement-bar.type-reward {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.25) 0%, rgba(13, 18, 31, 0.98) 20%, rgba(13, 18, 31, 0.98) 80%, rgba(245, 158, 11, 0.25) 100%);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 2px 14px rgba(245, 158, 11, 0.15);
+}
+
+.announcement-bar.type-urgent {
+  background: linear-gradient(90deg, rgba(220, 38, 38, 0.35) 0%, rgba(13, 18, 31, 0.98) 20%, rgba(13, 18, 31, 0.98) 80%, rgba(220, 38, 38, 0.35) 100%);
+  border-bottom: 1px solid rgba(220, 38, 38, 0.6);
+  box-shadow: 0 2px 18px rgba(220, 38, 38, 0.25);
+}
+
+.announcement-bar.type-giveaway {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.25) 0%, rgba(13, 18, 31, 0.98) 20%, rgba(13, 18, 31, 0.98) 80%, rgba(16, 185, 129, 0.25) 100%);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 0 2px 14px rgba(16, 185, 129, 0.15);
+}
+
+.ann-inner {
+  max-width: 1380px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ann-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.8px;
+  color: #fff;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ann-count-pill {
+  font-size: 0.65rem;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.ann-icon.tourney { color: #f87171; filter: drop-shadow(0 0 6px rgba(248, 113, 113, 0.6)); }
+.ann-icon.reward { color: #fbbf24; filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6)); }
+.ann-icon.urgent { color: #ef4444; filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.7)); }
+.ann-icon.giveaway { color: #34d399; filter: drop-shadow(0 0 6px rgba(52, 211, 153, 0.6)); }
+.ann-icon.general { color: #60a5fa; filter: drop-shadow(0 0 6px rgba(96, 165, 250, 0.6)); }
+
+.ann-marquee-wrapper {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.ann-text {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: annFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes annFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ann-title {
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+}
+
+.ann-sub {
+  color: #cbd5e1;
+  margin-left: 6px;
+  font-weight: 500;
+}
+
+.ann-close-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ann-close-btn:hover {
+  color: #fff;
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+@media (max-width: 640px) {
+  .announcement-bar {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+  .ann-inner {
+    gap: 8px;
+  }
+  .ann-badge {
+    padding: 2px 7px;
+    font-size: 0.65rem;
+  }
+  .ann-sub {
+    display: none;
+  }
+}
