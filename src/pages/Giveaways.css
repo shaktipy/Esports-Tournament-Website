@@ -1,0 +1,367 @@
+/* ─── Page wrapper ──────────────────────────────────────── */
+.giveaways-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  align-items: center;
+}
+
+/* ─── Header ────────────────────────────────────────────── */
+.gw-page-header {
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.gw-page-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(to right, #fff, #fbbf24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.gw-page-subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  max-width: 650px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* ─── Cards container ───────────────────────────────────── */
+.gw-cards-container {
+  width: 100%;
+  max-width: 1100px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ─── Card ──────────────────────────────────────────────── */
+.gw-card {
+  border-radius: 20px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1fr 1.3fr;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.3s ease, border-color 0.3s ease;
+}
+
+.gw-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
+.gw-card.gw-featured {
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+@media (max-width: 860px) {
+  .gw-card {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Image side ────────────────────────────────────────── */
+.gw-image-wrap {
+  position: relative;
+  width: 100%;
+  height: 260px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.gw-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s ease;
+}
+
+.gw-card:hover .gw-image {
+  transform: scale(1.06);
+}
+
+.gw-image-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, transparent 60%, rgba(15, 23, 42, 0.65) 100%);
+  pointer-events: none;
+}
+
+.gw-live-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: var(--accent-red, #e11d48);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  z-index: 20;
+  box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7);
+  animation: pulse-badge 2.2s infinite;
+}
+
+@keyframes pulse-badge {
+  0%   { box-shadow: 0 0 0 0   rgba(225, 29, 72, 0.7); }
+  70%  { box-shadow: 0 0 0 8px rgba(225, 29, 72, 0);   }
+  100% { box-shadow: 0 0 0 0   rgba(225, 29, 72, 0);   }
+}
+
+/* ─── Details side ──────────────────────────────────────── */
+.gw-details {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+/* Prize pill */
+.gw-prize-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 12px;
+  width: fit-content;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: #fbbf24;
+  letter-spacing: 0.3px;
+}
+
+/* Title */
+.gw-title {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.4px;
+  line-height: 1.25;
+  margin: 0;
+}
+
+/* Winner banner */
+.gw-winner-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  font-size: 0.88rem;
+}
+
+.gw-winner-banner > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.gw-winner-label {
+  color: #f59e0b;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Stats row */
+.gw-stats-row {
+  display: flex;
+  gap: 2rem;
+  margin: 0.25rem 0;
+}
+
+.gw-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gw-stat-icon {
+  color: #fbbf24;
+}
+
+.gw-stat-icon.users {
+  color: var(--primary-color, #66fcf1);
+}
+
+.gw-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.gw-stat-label {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.gw-stat-value {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.gw-stat-value.timer {
+  font-family: monospace;
+  color: #fbbf24;
+}
+
+/* ─── Requirements ──────────────────────────────────────── */
+.gw-reqs {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+}
+
+.gw-reqs-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 0.5rem;
+}
+
+.gw-reqs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.gw-req-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.42rem 0.65rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  border: 1px solid transparent;
+  font-size: 0.8rem;
+}
+
+.gw-req-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(251, 191, 36, 0.2);
+}
+
+.gw-req-item.done {
+  background: rgba(34, 197, 94, 0.07);
+  border-color: rgba(34, 197, 94, 0.25);
+  cursor: default;
+}
+
+.gw-req-icon {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.gw-req-item.done .gw-req-icon {
+  color: #4ade80;
+}
+
+.gw-req-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+.gw-req-item.done .gw-req-text {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.gw-req-btn {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 800;
+  font-size: 0.65rem;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: background 0.2s;
+}
+
+.gw-req-btn:hover {
+  background: rgba(251, 191, 36, 0.28);
+}
+
+/* ─── Enter button ──────────────────────────────────────── */
+.gw-enter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #f59e0b 0%, #10b981 100%);
+  color: #0b0c10;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-weight: 900;
+  font-size: 1rem;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  width: 100%;
+}
+
+.gw-enter-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+}
+
+.gw-enter-btn.entered {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  cursor: default;
+}
+
+.gw-enter-btn.pending {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ─── Empty state ───────────────────────────────────────── */
+.empty-giveaways {
+  width: 100%;
+  text-align: center;
+}
+
+/* ─── Responsive ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .gw-page-title { font-size: 1.7rem; }
+  .gw-image-wrap { height: 200px; }
+  .gw-details { padding: 1.25rem; }
+  .gw-title { font-size: 1.2rem; }
+  .gw-stats-row { gap: 1.2rem; }
+}
