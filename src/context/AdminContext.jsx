@@ -359,12 +359,9 @@ export const INITIAL_GIVEAWAYS = [
     title: 'Monthly Mega Diamond Giveaway', 
     prize: '10,000 Free Fire Diamonds', 
     daysLeft: 14,
-    participants: 18420,
-    participantsList: [
-      { uid: '849204812', ign: 'HaarshFan_99', time: '2026-09-28' },
-      { uid: '912384712', ign: 'Soul_Mortal99', time: '2026-09-27' },
-      { uid: '741289301', ign: 'GodL_Shadow', time: '2026-09-26' },
-    ],
+    status: 'open',
+    participants: 0,
+    participantsList: [],
     requirements: [
       { id: 'req1', text: 'Subscribe to HAARSH XO on YouTube', completed: true },
       { id: 'req2', text: 'Follow @haarsh_xo on Instagram', completed: false },
@@ -380,10 +377,9 @@ export const INITIAL_GIVEAWAYS = [
     title: 'Weekend Special: Booyah Pass Giveaway', 
     prize: '5x Booyah Passes + 1,000 Diamonds', 
     daysLeft: 3,
-    participants: 5850,
-    participantsList: [
-      { uid: '849204812', ign: 'HaarshFan_99', time: '2026-09-28' },
-    ],
+    status: 'open',
+    participants: 0,
+    participantsList: [],
     requirements: [
       { id: 'req4', text: 'Watch today\'s live stream for 15 mins', completed: true },
       { id: 'req5', text: 'Comment your Free Fire UID in chat', completed: true }
@@ -392,16 +388,15 @@ export const INITIAL_GIVEAWAYS = [
     active: true,
     winner: null
   },
-  {
-    id: 3,
+  { 
+    id: 3, 
     category: 'esports',
-    title: '10x CS TOURNAMENT TICKETS GIVEAWAY',
-    prize: '10x Free CS Registration Tickets',
+    title: '10x CS TOURNAMENT TICKETS GIVEAWAY', 
+    prize: '10x Free CS Registration Tickets', 
     daysLeft: 1,
-    participants: 4120,
-    participantsList: [
-      { uid: '849204812', ign: 'HaarshFan_99', time: '2026-09-28' },
-    ],
+    status: 'open',
+    participants: 0,
+    participantsList: [],
     requirements: [
       { id: 'req_esp_1', text: 'Active esports registered player', completed: true },
       { id: 'req_esp_2', text: 'Watch live finals this weekend', completed: true }
@@ -576,33 +571,6 @@ export const isAuthorizedAdminEmail = (email) => {
 // Legacy fallback pin
 export const ADMIN_MASTER_PIN = 'XOADMIN2026';
 
-// ─── LocalStorage Cache Busting ───────────────────────────────────────────────
-// Bump this version string whenever a schema change requires fresh data from the server
-const LS_SCHEMA_VERSION = 'v7';
-const LS_VERSION_KEY = 'haarshxo_ls_schema';
-const ADMIN_LS_KEYS = [
-  'haarshxo_admin_tournaments', 'haarshxo_admin_passes', 'haarshxo_admin_codes',
-  'haarshxo_admin_transactions', 'haarshxo_admin_redemptions', 'haarshxo_admin_users', 'haarshxo_admin_announcements',
-  'haarshxo_admin_giveaways', 'haarshxo_admin_store', 'haarshxo_admin_logs',
-];
-
-const clearAdminLocalStorage = () => {
-  try {
-    ADMIN_LS_KEYS.forEach(k => localStorage.removeItem(k));
-    console.log('[AdminSync] localStorage cache cleared');
-  } catch {}
-};
-
-// Auto-clear if schema version mismatch
-try {
-  const storedVersion = localStorage.getItem(LS_VERSION_KEY);
-  if (storedVersion !== LS_SCHEMA_VERSION) {
-    clearAdminLocalStorage();
-    localStorage.setItem(LS_VERSION_KEY, LS_SCHEMA_VERSION);
-    console.log(`[AdminSync] Schema version updated to ${LS_SCHEMA_VERSION}, cache cleared`);
-  }
-} catch {}
-
 export const AdminProvider = ({ children }) => {
 
   // Unique tab identifier to filter out self-broadcast messages
@@ -610,24 +578,11 @@ export const AdminProvider = ({ children }) => {
   const remoteSyncRef = useRef({});
   const lastLocalActionTime = useRef(0);
   // Tracks how many syncToBackend calls are currently in-flight.
-  // fetchFromBackend will NOT run while this is > 0 to prevent stale data overwrites.
   const pendingSyncCount = useRef(0);
   // Timestamp of the last time we successfully received & applied backend data.
-  // Used to avoid applying older backend snapshots that would overwrite fresh local data.
   const lastAppliedRemoteTime = useRef(0);
-  // Prevents pushing initial/stale local state up to the server on initial mount
-  const isInitialMountRef = useRef({
-    tournaments: true,
-    passes: true,
-    codes: true,
-    transactions: true,
-    redemptions: true,
-    users: true,
-    announcements: true,
-    giveaways: true,
-    store: true,
-    logs: true,
-  });
+  // Tracks whether we have successfully pulled authoritative state from the server.
+  const hasLoadedBackendState = useRef(false);
 
   // Auth state
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(() => {
@@ -729,7 +684,31 @@ export const AdminProvider = ({ children }) => {
   const [giveawaysList, setGiveawaysList] = useState(() => {
     try {
       const saved = localStorage.getItem('haarshxo_admin_giveaways');
-      return saved ? JSON.parse(saved) : INITIAL_GIVEAWAYS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const cleaned = parsed.map(g => {
+            const cleanList = (g.participantsList || []).filter(p => 
+              p && p.uid && p.ign &&
+              p.uid !== '849204812' && 
+              p.ign !== 'HaarshFan_99' && 
+              p.ign !== 'Soul_Mortal99' && 
+              p.ign !== 'GodL_Shadow'
+            );
+            return {
+              ...g,
+              status: g.status || (g.winner ? 'completed' : 'open'),
+              participantsList: cleanList,
+              participants: cleanList.length
+            };
+          });
+          try {
+            localStorage.setItem('haarshxo_admin_giveaways', JSON.stringify(cleaned));
+          } catch {}
+          return cleaned;
+        }
+      }
+      return INITIAL_GIVEAWAYS;
     } catch {
       return INITIAL_GIVEAWAYS;
     }
@@ -764,28 +743,33 @@ export const AdminProvider = ({ children }) => {
     if (!data || typeof data !== 'object') return;
     lastAppliedRemoteTime.current = Date.now();
 
-    if (Array.isArray(data.tournaments)) {
+    if (Array.isArray(data.tournaments) && data.tournaments.length > 0) {
       remoteSyncRef.current['tournaments'] = true;
       setTournaments(data.tournaments);
+      try { localStorage.setItem('haarshxo_admin_tournaments', JSON.stringify(data.tournaments)); } catch {}
       window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'tournaments', data: data.tournaments } }));
     }
-    if (Array.isArray(data.passes)) {
+    if (Array.isArray(data.passes) && data.passes.length > 0) {
       remoteSyncRef.current['passes'] = true;
       setPasses(data.passes);
+      try { localStorage.setItem('haarshxo_admin_passes', JSON.stringify(data.passes)); } catch {}
       window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'passes', data: data.passes } }));
     }
-    if (Array.isArray(data.redeemCodes)) {
+    if (Array.isArray(data.redeemCodes) && data.redeemCodes.length > 0) {
       remoteSyncRef.current['codes'] = true;
       setRedeemCodes(data.redeemCodes);
+      try { localStorage.setItem('haarshxo_admin_codes', JSON.stringify(data.redeemCodes)); } catch {}
       window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'redeemCodes', data: data.redeemCodes } }));
     }
     if (Array.isArray(data.transactions)) {
       remoteSyncRef.current['transactions'] = true;
       setTransactions(data.transactions);
+      try { localStorage.setItem('haarshxo_admin_transactions', JSON.stringify(data.transactions)); } catch {}
     }
     if (Array.isArray(data.redemptions)) {
       remoteSyncRef.current['redemptions'] = true;
       setRedemptions(data.redemptions);
+      try { localStorage.setItem('haarshxo_admin_redemptions', JSON.stringify(data.redemptions)); } catch {}
       window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'redemptions', data: data.redemptions } }));
     }
     const uList = Array.isArray(data.users)
@@ -794,39 +778,60 @@ export const AdminProvider = ({ children }) => {
     if (uList) {
       remoteSyncRef.current['users'] = true;
       setUsersList(uList);
+      try { localStorage.setItem('haarshxo_admin_users', JSON.stringify(uList)); } catch {}
     }
+    // FIXED: Removed `&& data.announcements.length > 0` — empty [] must ALSO be applied.
+    // Previously, if all announcements were deleted, the second admin would never update
+    // because length > 0 was false, leaving stale announcements in their state.
     if (Array.isArray(data.announcements)) {
       remoteSyncRef.current['announcements'] = true;
       setAnnouncements(data.announcements);
-      // Informs GameContext to immediately sync announcements into the Notification Center
+      try { localStorage.setItem('haarshxo_admin_announcements', JSON.stringify(data.announcements)); } catch {}
       window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'announcements', data: data.announcements } }));
     }
-    const gList = Array.isArray(data.giveawaysList)
+    const rawGList = Array.isArray(data.giveawaysList)
       ? data.giveawaysList
       : (Array.isArray(data.giveaways) ? data.giveaways : null);
-    if (gList) {
+    if (rawGList && rawGList.length > 0) {
+      const gList = rawGList.map(item => {
+        const cleanList = (item.participantsList || []).filter(p => 
+          p && p.uid && p.ign &&
+          p.uid !== '849204812' && 
+          p.ign !== 'HaarshFan_99' && 
+          p.ign !== 'Soul_Mortal99' && 
+          p.ign !== 'GodL_Shadow'
+        );
+        return {
+          ...item,
+          status: item.status || (item.winner ? 'completed' : 'open'),
+          participantsList: cleanList,
+          participants: cleanList.length
+        };
+      });
       remoteSyncRef.current['giveaways'] = true;
       setGiveawaysList(gList);
+      try { localStorage.setItem('haarshxo_admin_giveaways', JSON.stringify(gList)); } catch {}
       window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'giveaways', data: gList } }));
     }
-    if (Array.isArray(data.storeRewards)) {
+    if (Array.isArray(data.storeRewards) && data.storeRewards.length > 0) {
       remoteSyncRef.current['store'] = true;
       setStoreRewards(data.storeRewards);
+      try { localStorage.setItem('haarshxo_admin_store', JSON.stringify(data.storeRewards)); } catch {}
       window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'storeRewards', data: data.storeRewards } }));
     }
-    if (Array.isArray(data.auditLogs)) {
+    if (Array.isArray(data.auditLogs) && data.auditLogs.length > 0) {
       remoteSyncRef.current['logs'] = true;
       setAuditLogs(data.auditLogs);
+      try { localStorage.setItem('haarshxo_admin_logs', JSON.stringify(data.auditLogs)); } catch {}
     }
+    hasLoadedBackendState.current = true;
   }, []);
 
   const fetchFromBackend = useCallback(async (force = false) => {
-    // Guard 1: If a local action happened within 30s, skip to avoid overwriting fresh saves.
-    // 30s gives syncToBackend enough time to complete even on slow/mobile networks.
-    if (!force && Date.now() - lastLocalActionTime.current < 30000) return null;
-    // Guard 2: Never poll while a save/sync is actively in-flight — this is the main race-condition fix.
+    // Guard: If a local action happened within 10s and not forced, skip to avoid overwriting fresh saves.
+    if (!force && Date.now() - lastLocalActionTime.current < 10000) return null;
+    // Guard: Never poll while a save/sync is actively in-flight
     if (!force && pendingSyncCount.current > 0) {
-      console.log('[AdminSync] Skipping poll — sync in-flight');
       return null;
     }
     try {
@@ -850,16 +855,28 @@ export const AdminProvider = ({ children }) => {
   }, [applyRemoteState]);
 
   const syncToBackend = useCallback(async (payload) => {
+    if (!payload || typeof payload !== 'object' || Object.keys(payload).length === 0) return false;
+
+    // Safety Guard: Don't push empty arrays that would wipe populated catalogs.
+    // NOTE: 'announcements' is intentionally EXCLUDED from this guard because
+    // an admin CAN legitimately delete ALL announcements (empty list is valid).
+    for (const [k, v] of Object.entries(payload)) {
+      if (['tournaments', 'storeRewards', 'giveawaysList', 'redeemCodes'].includes(k)) {
+        if (Array.isArray(v) && v.length === 0) {
+          console.warn(`[AdminSync] Blocked attempt to sync empty array for ${k}`);
+          return false;
+        }
+      }
+    }
+
     const baseUrl = getBackendBaseUrl();
     const primaryUrl = baseUrl ? `${baseUrl}/api/admin/sync` : '/api/admin/sync';
     const fallbackUrl = 'http://localhost:5001/api/admin/sync';
     const body = JSON.stringify(payload);
     const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body };
 
-    // Mark sync as in-flight so polls don't interrupt it
     pendingSyncCount.current += 1;
 
-    // Retry up to 3 times with exponential backoff
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         let res;
@@ -869,18 +886,14 @@ export const AdminProvider = ({ children }) => {
           res = await fetch(fallbackUrl, opts);
         }
         if (res?.ok) {
-          console.log(`[AdminSync] Sync succeeded on attempt ${attempt}`);
           pendingSyncCount.current = Math.max(0, pendingSyncCount.current - 1);
-          // After a successful save, do NOT immediately re-fetch — the data we have IS the source of truth.
-          // The next scheduled poll will confirm consistency.
           return true;
         }
-        console.warn(`[AdminSync] Sync attempt ${attempt} failed (status: ${res?.status})`);
       } catch (err) {
         console.warn(`[AdminSync] Sync attempt ${attempt} error:`, err);
       }
       if (attempt < 3) {
-        await new Promise(r => setTimeout(r, attempt * 500)); // 500ms, 1000ms backoff
+        await new Promise(r => setTimeout(r, attempt * 500));
       }
     }
     pendingSyncCount.current = Math.max(0, pendingSyncCount.current - 1);
@@ -923,16 +936,16 @@ export const AdminProvider = ({ children }) => {
       if (!type || !data || senderId === tabId) return;
       try {
         remoteSyncRef.current[type] = true;
-        if (type === 'tournaments')       setTournaments(data);
-        else if (type === 'passes')       setPasses(data);
-        else if (type === 'codes')        setRedeemCodes(data);
-        else if (type === 'transactions') setTransactions(data);
-        else if (type === 'redemptions')  setRedemptions(data);
-        else if (type === 'users')        setUsersList(data);
-        else if (type === 'announcements') setAnnouncements(data);
-        else if (type === 'giveaways')    setGiveawaysList(data);
-        else if (type === 'store')        setStoreRewards(data);
-        else if (type === 'logs')         setAuditLogs(data);
+        if (type === 'tournaments')       { setTournaments(data); try { localStorage.setItem('haarshxo_admin_tournaments', JSON.stringify(data)); } catch {} }
+        else if (type === 'passes')       { setPasses(data); try { localStorage.setItem('haarshxo_admin_passes', JSON.stringify(data)); } catch {} }
+        else if (type === 'codes')        { setRedeemCodes(data); try { localStorage.setItem('haarshxo_admin_codes', JSON.stringify(data)); } catch {} }
+        else if (type === 'transactions') { setTransactions(data); try { localStorage.setItem('haarshxo_admin_transactions', JSON.stringify(data)); } catch {} }
+        else if (type === 'redemptions')  { setRedemptions(data); try { localStorage.setItem('haarshxo_admin_redemptions', JSON.stringify(data)); } catch {} }
+        else if (type === 'users')        { setUsersList(data); try { localStorage.setItem('haarshxo_admin_users', JSON.stringify(data)); } catch {} }
+        else if (type === 'announcements') { setAnnouncements(data); try { localStorage.setItem('haarshxo_admin_announcements', JSON.stringify(data)); } catch {} }
+        else if (type === 'giveaways')    { setGiveawaysList(data); try { localStorage.setItem('haarshxo_admin_giveaways', JSON.stringify(data)); } catch {} }
+        else if (type === 'store')        { setStoreRewards(data); try { localStorage.setItem('haarshxo_admin_store', JSON.stringify(data)); } catch {} }
+        else if (type === 'logs')         { setAuditLogs(data); try { localStorage.setItem('haarshxo_admin_logs', JSON.stringify(data)); } catch {} }
       } catch (err) {
         console.warn('[AdminSync] BroadcastChannel error:', err);
       }
@@ -1005,14 +1018,33 @@ export const AdminProvider = ({ children }) => {
         const l = tryParse('haarshxo_admin_logs');
 
         // Use the remoteSyncRef flag so the persistence effects know to skip writing back
-        if (t) { remoteSyncRef.current['tournaments'] = true; setTournaments(t); }
-        if (p) { remoteSyncRef.current['passes'] = true; setPasses(p); }
-        if (c) { remoteSyncRef.current['codes'] = true; setRedeemCodes(c); }
-        if (tx) { remoteSyncRef.current['transactions'] = true; setTransactions(tx); }
-        if (red) { remoteSyncRef.current['redemptions'] = true; setRedemptions(red); }
-        if (u) { remoteSyncRef.current['users'] = true; setUsersList(u); }
-        if (a) { remoteSyncRef.current['announcements'] = true; setAnnouncements(a); }
-        if (g) { remoteSyncRef.current['giveaways'] = true; setGiveawaysList(g); }
+        if (t !== null) { remoteSyncRef.current['tournaments'] = true; setTournaments(t); }
+        if (p !== null) { remoteSyncRef.current['passes'] = true; setPasses(p); }
+        if (c !== null) { remoteSyncRef.current['codes'] = true; setRedeemCodes(c); }
+        if (tx !== null) { remoteSyncRef.current['transactions'] = true; setTransactions(tx); }
+        if (red !== null) { remoteSyncRef.current['redemptions'] = true; setRedemptions(red); }
+        if (u !== null) { remoteSyncRef.current['users'] = true; setUsersList(u); }
+        // FIXED: was `if (a)` — empty array [] is falsy so deleted announcements were never applied
+        if (a !== null) { remoteSyncRef.current['announcements'] = true; setAnnouncements(a); }
+        if (g) {
+          const cleanedG = g.map(item => {
+            const cleanList = (item.participantsList || []).filter(p => 
+              p && p.uid && p.ign &&
+              p.uid !== '849204812' && 
+              p.ign !== 'HaarshFan_99' && 
+              p.ign !== 'Soul_Mortal99' && 
+              p.ign !== 'GodL_Shadow'
+            );
+            return {
+              ...item,
+              status: item.status || (item.winner ? 'completed' : 'open'),
+              participantsList: cleanList,
+              participants: cleanList.length
+            };
+          });
+          remoteSyncRef.current['giveaways'] = true;
+          setGiveawaysList(cleanedG);
+        }
         if (s) { remoteSyncRef.current['store'] = true; setStoreRewards(s); }
         if (l) { remoteSyncRef.current['logs'] = true; setAuditLogs(l); }
 
@@ -1029,8 +1061,6 @@ export const AdminProvider = ({ children }) => {
     const handleVisibility = () => {
       if (document.visibilityState === 'visible') refreshAllFromStorage();
     };
-    document.addEventListener('visibilitychange', handleVisibility);
-
     return () => {
       if (globalBroadcastChannel) {
         globalBroadcastChannel.removeEventListener('message', handleChannelMessage);
@@ -1042,209 +1072,50 @@ export const AdminProvider = ({ children }) => {
     };
   }, [tabId, fetchFromBackend]);
 
-  // 3. State persistence effects — save to localStorage + broadcast to other tabs + sync backend
-  // NOTE: The CRUD functions already write directly inside setTournaments() callbacks for immediate
-  // persistence. These effects serve as a safety-net for any state changes that bypass the CRUD path.
-  // When remoteSyncRef flag is true it means this state change came from a remote tab/storage event,
-  // so we skip writing back to avoid a ping-pong loop — but we always clear the flag.
+  // 3. Browser Cache (localStorage) persistence:
+  // These effects ONLY mirror state into the browser's localStorage for fast local reloads.
+  // They NEVER call syncToBackend or broadcastChange, preventing initial mount or StrictMode
+  // from ever overwriting server data with uninitialized/default state.
+  // All backend saves are driven EXCLUSIVELY by explicit user actions.
   useEffect(() => {
-    try {
-      if (isInitialMountRef.current['tournaments']) {
-        isInitialMountRef.current['tournaments'] = false;
-        return;
-      }
-      const skip = remoteSyncRef.current['tournaments'];
-      remoteSyncRef.current['tournaments'] = false;
-      if (skip) {
-        // Remote state was applied — write it to localStorage so the browser cache is up-to-date
-        try { localStorage.setItem('haarshxo_admin_tournaments', JSON.stringify(tournaments)); } catch {}
-        return;
-      }
-      lastLocalActionTime.current = Date.now();
-      localStorage.setItem('haarshxo_admin_tournaments', JSON.stringify(tournaments));
-      broadcastChange('tournaments', tournaments);
-      window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'tournaments', data: tournaments } }));
-      syncToBackend({ tournaments });
-    } catch {}
-  }, [tournaments, syncToBackend, broadcastChange]);
+    try { localStorage.setItem('haarshxo_admin_tournaments', JSON.stringify(tournaments)); } catch {}
+  }, [tournaments]);
 
   useEffect(() => {
-    try {
-      if (isInitialMountRef.current['passes']) {
-        isInitialMountRef.current['passes'] = false;
-        return;
-      }
-      const skip = remoteSyncRef.current['passes'];
-      remoteSyncRef.current['passes'] = false;
-      if (skip) {
-        try { localStorage.setItem('haarshxo_admin_passes', JSON.stringify(passes)); } catch {}
-        return;
-      }
-      lastLocalActionTime.current = Date.now();
-      localStorage.setItem('haarshxo_admin_passes', JSON.stringify(passes));
-      broadcastChange('passes', passes);
-      window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'passes', data: passes } }));
-      syncToBackend({ passes });
-    } catch {}
-  }, [passes, syncToBackend, broadcastChange]);
+    try { localStorage.setItem('haarshxo_admin_passes', JSON.stringify(passes)); } catch {}
+  }, [passes]);
 
   useEffect(() => {
-    try {
-      if (isInitialMountRef.current['codes']) {
-        isInitialMountRef.current['codes'] = false;
-        return;
-      }
-      const skip = remoteSyncRef.current['codes'];
-      remoteSyncRef.current['codes'] = false;
-      if (skip) {
-        try { localStorage.setItem('haarshxo_admin_codes', JSON.stringify(redeemCodes)); } catch {}
-        return;
-      }
-      lastLocalActionTime.current = Date.now();
-      localStorage.setItem('haarshxo_admin_codes', JSON.stringify(redeemCodes));
-      broadcastChange('codes', redeemCodes);
-      window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'redeemCodes', data: redeemCodes } }));
-      syncToBackend({ redeemCodes });
-    } catch {}
-  }, [redeemCodes, syncToBackend, broadcastChange]);
-
-  // NOTE: transactions are READ-ONLY from the frontend — they are written exclusively by
-  // the backend's verify_payment endpoint. Never push transactions to /api/admin/sync or
-  // they will overwrite real Razorpay records with a stale empty array from localStorage.
-  useEffect(() => {
-    try {
-      if (isInitialMountRef.current['transactions']) {
-        isInitialMountRef.current['transactions'] = false;
-        return;
-      }
-      // Always clear the remote flag
-      remoteSyncRef.current['transactions'] = false;
-      // Only cache to localStorage for cross-tab broadcast — never push to backend
-      try { localStorage.setItem('haarshxo_admin_transactions', JSON.stringify(transactions)); } catch {}
-      broadcastChange('transactions', transactions);
-      window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'transactions', data: transactions } }));
-      // ⚠️ DO NOT call syncToBackend({ transactions }) here — transactions are backend-owned!
-    } catch {}
-  }, [transactions, broadcastChange]);
+    try { localStorage.setItem('haarshxo_admin_codes', JSON.stringify(redeemCodes)); } catch {}
+  }, [redeemCodes]);
 
   useEffect(() => {
-    try {
-      if (isInitialMountRef.current['redemptions']) {
-        isInitialMountRef.current['redemptions'] = false;
-        return;
-      }
-      const skip = remoteSyncRef.current['redemptions'];
-      remoteSyncRef.current['redemptions'] = false;
-      if (skip) {
-        try { localStorage.setItem('haarshxo_admin_redemptions', JSON.stringify(redemptions)); } catch {}
-        return;
-      }
-      lastLocalActionTime.current = Date.now();
-      localStorage.setItem('haarshxo_admin_redemptions', JSON.stringify(redemptions));
-      broadcastChange('redemptions', redemptions);
-      window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'redemptions', data: redemptions } }));
-      syncToBackend({ redemptions });
-    } catch {}
-  }, [redemptions, syncToBackend, broadcastChange]);
+    try { localStorage.setItem('haarshxo_admin_transactions', JSON.stringify(transactions)); } catch {}
+  }, [transactions]);
 
   useEffect(() => {
-    try {
-      if (isInitialMountRef.current['users']) {
-        isInitialMountRef.current['users'] = false;
-        return;
-      }
-      const skip = remoteSyncRef.current['users'];
-      remoteSyncRef.current['users'] = false;
-      if (skip) {
-        try { localStorage.setItem('haarshxo_admin_users', JSON.stringify(usersList)); } catch {}
-        return;
-      }
-      lastLocalActionTime.current = Date.now();
-      localStorage.setItem('haarshxo_admin_users', JSON.stringify(usersList));
-      broadcastChange('users', usersList);
-      window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'users', data: usersList } }));
-      // Note: user balance changes go through /api/users/:id/update-balance, not admin/sync
-    } catch {}
-  }, [usersList, broadcastChange]);
+    try { localStorage.setItem('haarshxo_admin_redemptions', JSON.stringify(redemptions)); } catch {}
+  }, [redemptions]);
 
   useEffect(() => {
-    try {
-      if (isInitialMountRef.current['announcements']) {
-        isInitialMountRef.current['announcements'] = false;
-        return;
-      }
-      const skip = remoteSyncRef.current['announcements'];
-      remoteSyncRef.current['announcements'] = false;
-      if (skip) {
-        try { localStorage.setItem('haarshxo_admin_announcements', JSON.stringify(announcements)); } catch {}
-        return;
-      }
-      lastLocalActionTime.current = Date.now();
-      localStorage.setItem('haarshxo_admin_announcements', JSON.stringify(announcements));
-      broadcastChange('announcements', announcements);
-      window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'announcements', data: announcements } }));
-      syncToBackend({ announcements });
-    } catch {}
-  }, [announcements, syncToBackend, broadcastChange]);
+    try { localStorage.setItem('haarshxo_admin_users', JSON.stringify(usersList)); } catch {}
+  }, [usersList]);
 
   useEffect(() => {
-    try {
-      if (isInitialMountRef.current['giveaways']) {
-        isInitialMountRef.current['giveaways'] = false;
-        return;
-      }
-      const skip = remoteSyncRef.current['giveaways'];
-      remoteSyncRef.current['giveaways'] = false;
-      if (skip) {
-        try { localStorage.setItem('haarshxo_admin_giveaways', JSON.stringify(giveawaysList)); } catch {}
-        return;
-      }
-      lastLocalActionTime.current = Date.now();
-      localStorage.setItem('haarshxo_admin_giveaways', JSON.stringify(giveawaysList));
-      broadcastChange('giveaways', giveawaysList);
-      window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'giveaways', data: giveawaysList } }));
-      syncToBackend({ giveawaysList });
-    } catch {}
-  }, [giveawaysList, syncToBackend, broadcastChange]);
+    try { localStorage.setItem('haarshxo_admin_announcements', JSON.stringify(announcements)); } catch {}
+  }, [announcements]);
 
   useEffect(() => {
-    try {
-      if (isInitialMountRef.current['store']) {
-        isInitialMountRef.current['store'] = false;
-        return;
-      }
-      const skip = remoteSyncRef.current['store'];
-      remoteSyncRef.current['store'] = false;
-      if (skip) {
-        try { localStorage.setItem('haarshxo_admin_store', JSON.stringify(storeRewards)); } catch {}
-        return;
-      }
-      lastLocalActionTime.current = Date.now();
-      localStorage.setItem('haarshxo_admin_store', JSON.stringify(storeRewards));
-      broadcastChange('store', storeRewards);
-      window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'storeRewards', data: storeRewards } }));
-      syncToBackend({ storeRewards });
-    } catch {}
-  }, [storeRewards, syncToBackend, broadcastChange]);
+    try { localStorage.setItem('haarshxo_admin_giveaways', JSON.stringify(giveawaysList)); } catch {}
+  }, [giveawaysList]);
 
   useEffect(() => {
-    try {
-      if (isInitialMountRef.current['logs']) {
-        isInitialMountRef.current['logs'] = false;
-        return;
-      }
-      const skip = remoteSyncRef.current['logs'];
-      remoteSyncRef.current['logs'] = false;
-      if (skip) {
-        try { localStorage.setItem('haarshxo_admin_logs', JSON.stringify(auditLogs)); } catch {}
-        return;
-      }
-      lastLocalActionTime.current = Date.now();
-      localStorage.setItem('haarshxo_admin_logs', JSON.stringify(auditLogs));
-      broadcastChange('logs', auditLogs);
-      syncToBackend({ auditLogs });
-    } catch {}
-  }, [auditLogs, syncToBackend, broadcastChange]);
+    try { localStorage.setItem('haarshxo_admin_store', JSON.stringify(storeRewards)); } catch {}
+  }, [storeRewards]);
+
+  useEffect(() => {
+    try { localStorage.setItem('haarshxo_admin_logs', JSON.stringify(auditLogs)); } catch {}
+  }, [auditLogs]);
 
   // ─── Audit Logger ─────────────────────────────────────────────────────────
   const addAuditLog = useCallback((action, category, details, overrideAdmin) => {
@@ -2100,6 +1971,10 @@ export const AdminProvider = ({ children }) => {
   const deleteAnnouncement = (id) => {
     lastLocalActionTime.current = Date.now();
     const idStr = String(id);
+
+    // FIXED: Compute `updated` outside setAnnouncements so we can directly
+    // pass it to syncToBackend — setState is async so we can't reliably
+    // read localStorage immediately after calling setAnnouncements.
     setAnnouncements(prev => {
       const updated = prev.filter(a => String(a.id) !== idStr);
       try {
@@ -2107,12 +1982,10 @@ export const AdminProvider = ({ children }) => {
         broadcastChange('announcements', updated);
         window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'announcements', data: updated } }));
       } catch {}
+      // Sync to backend inside the callback so `updated` is definitely the filtered array
+      syncToBackend({ announcements: updated });
       return updated;
     });
-    setTimeout(() => {
-      const stored = localStorage.getItem('haarshxo_admin_announcements');
-      if (stored !== null) syncToBackend({ announcements: JSON.parse(stored) });
-    }, 0);
     addAuditLog('ANNOUNCEMENT_DELETED', 'ANNOUNCEMENTS', `Deleted announcement ID: ${id}`);
 
     // Clean up from Notification Center inbox
@@ -2154,6 +2027,7 @@ export const AdminProvider = ({ children }) => {
       title: data.title || 'Exclusive Free Fire Giveaway',
       prize: data.prize || 'Diamonds / Passes',
       daysLeft: Number(data.daysLeft) || 7,
+      status: data.status || 'open', // open | ongoing | closed | completed
       participants: 0,
       participantsList: [],
       requirements: data.requirements || [
@@ -2183,7 +2057,7 @@ export const AdminProvider = ({ children }) => {
   const updateGiveaway = (id, data) => {
     lastLocalActionTime.current = Date.now();
     setGiveawaysList(prev => {
-      const updated = prev.map(g => g.id === id ? { ...g, ...data } : g);
+      const updated = prev.map(g => String(g.id) === String(id) ? { ...g, ...data } : g);
       try {
         localStorage.setItem('haarshxo_admin_giveaways', JSON.stringify(updated));
         broadcastChange('giveaways', updated);
@@ -2196,6 +2070,27 @@ export const AdminProvider = ({ children }) => {
       if (stored) syncToBackend({ giveawaysList: JSON.parse(stored) });
     }, 0);
     addAuditLog('GIVEAWAY_UPDATED', 'GIVEAWAYS', `Updated giveaway ID: ${id}`);
+  };
+
+  const toggleGiveawayStatus = (id, newStatus) => {
+    lastLocalActionTime.current = Date.now();
+    setGiveawaysList(prev => {
+      const updated = prev.map(g => {
+        if (String(g.id) !== String(id)) return g;
+        return { ...g, status: newStatus };
+      });
+      try {
+        localStorage.setItem('haarshxo_admin_giveaways', JSON.stringify(updated));
+        broadcastChange('giveaways', updated);
+        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'giveaways', data: updated } }));
+      } catch (err) {}
+      return updated;
+    });
+    setTimeout(() => {
+      const stored = localStorage.getItem('haarshxo_admin_giveaways');
+      if (stored) syncToBackend({ giveawaysList: JSON.parse(stored) });
+    }, 0);
+    addAuditLog('GIVEAWAY_STATUS_CHANGE', 'GIVEAWAYS', `Changed giveaway status of ${id} to "${newStatus.toUpperCase()}"`);
   };
 
   const deleteGiveaway = (id) => {
@@ -2220,23 +2115,30 @@ export const AdminProvider = ({ children }) => {
   const drawGiveawayWinner = (id) => {
     lastLocalActionTime.current = Date.now();
     let pickedWinner = null;
+    let hadParticipants = true;
+
     setGiveawaysList(prev => {
+      const target = prev.find(g => String(g.id) === String(id));
+      if (!target || !target.participantsList || target.participantsList.length === 0) {
+        hadParticipants = false;
+        return prev;
+      }
+
+      const pool = target.participantsList;
+      const randomEntry = pool[Math.floor(Math.random() * pool.length)];
+      pickedWinner = {
+        ign: randomEntry.ign,
+        uid: randomEntry.uid,
+        drawnAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        prize: target.prize
+      };
+
       const updated = prev.map(g => {
-        if (g.id !== id) return g;
-        const pool = g.participantsList && g.participantsList.length > 0
-          ? g.participantsList
-          : [{ ign: 'Lucky_Winner_XO', uid: '782910481' }, { ign: 'Thunder_Strike', uid: '661902847' }, { ign: 'Pro_Booyah_99', uid: '849204812' }];
-        
-        const randomEntry = pool[Math.floor(Math.random() * pool.length)];
-        pickedWinner = {
-          ign: randomEntry.ign,
-          uid: randomEntry.uid,
-          drawnAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
-          prize: g.prize
-        };
+        if (String(g.id) !== String(id)) return g;
         return {
           ...g,
-          winner: pickedWinner
+          winner: pickedWinner,
+          status: 'completed'
         };
       });
       try {
@@ -2246,6 +2148,10 @@ export const AdminProvider = ({ children }) => {
       } catch {}
       return updated;
     });
+
+    if (!hadParticipants) {
+      return { error: 'NO_PARTICIPANTS' };
+    }
 
     setTimeout(() => {
       const stored = localStorage.getItem('haarshxo_admin_giveaways');
@@ -2259,23 +2165,54 @@ export const AdminProvider = ({ children }) => {
 
   const addGiveawayParticipant = (giveawayId, { uid, ign }) => {
     lastLocalActionTime.current = Date.now();
-    setGiveawaysList(prev => {
-      const updated = prev.map(g => {
-        if (g.id !== giveawayId) return g;
-        const alreadyJoined = (g.participantsList || []).some(p => p.uid === uid);
-        if (alreadyJoined) return g;
+    let wasAdded = false;
+    let blockReason = '';
 
-        const newEntry = {
-          id: `gp_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-          uid: uid || '849204812',
-          ign: ign || 'HaarshFan_99',
-          time: new Date().toISOString().split('T')[0]
-        };
+    const cleanUid = String(uid || '').trim();
+    const cleanIgn = String(ign || '').trim();
+
+    if (!cleanUid || !cleanIgn) {
+      return { success: false, reason: 'Valid user account required to enter giveaway.' };
+    }
+    if (cleanUid === '849204812' || cleanIgn === 'HaarshFan_99') {
+      return { success: false, reason: 'Please login with your own real Free Fire account.' };
+    }
+
+    setGiveawaysList(prev => {
+      const target = prev.find(g => String(g.id) === String(giveawayId));
+      if (!target) return prev;
+
+      const currentStatus = target.status || (target.winner ? 'completed' : 'open');
+      if (currentStatus === 'completed' || target.winner) {
+        blockReason = 'Giveaway concluded! Winner already announced.';
+        return prev;
+      }
+      if (currentStatus === 'closed') {
+        blockReason = 'Registrations are closed for this giveaway.';
+        return prev;
+      }
+      if (currentStatus === 'ongoing' || currentStatus === 'live') {
+        blockReason = 'Giveaway is currently live on stream! Entries are locked.';
+        return prev;
+      }
+
+      const alreadyJoined = (target.participantsList || []).some(p => String(p.uid) === cleanUid);
+      if (alreadyJoined) return prev;
+
+      const newEntry = {
+        id: `gp_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        uid: cleanUid,
+        ign: cleanIgn,
+        time: new Date().toISOString().split('T')[0]
+      };
+      wasAdded = true;
+      const updated = prev.map(g => {
+        if (String(g.id) !== String(giveawayId)) return g;
         const updatedList = [newEntry, ...(g.participantsList || [])];
         return {
           ...g,
           participantsList: updatedList,
-          participants: (g.participants || 0) + 1
+          participants: updatedList.length
         };
       });
       try {
@@ -2285,11 +2222,16 @@ export const AdminProvider = ({ children }) => {
       } catch {}
       return updated;
     });
-    setTimeout(() => {
-      const stored = localStorage.getItem('haarshxo_admin_giveaways');
-      if (stored) syncToBackend({ giveawaysList: JSON.parse(stored) });
-    }, 50);
-    addAuditLog('GIVEAWAY_ENTRY', 'GIVEAWAYS', `Player ${ign} (UID: ${uid}) entered giveaway ID: ${giveawayId}`);
+
+    if (wasAdded) {
+      setTimeout(() => {
+        const stored = localStorage.getItem('haarshxo_admin_giveaways');
+        if (stored) syncToBackend({ giveawaysList: JSON.parse(stored) });
+      }, 50);
+      addAuditLog('GIVEAWAY_ENTRY', 'GIVEAWAYS', `Player ${cleanIgn} (UID: ${cleanUid}) entered giveaway ID: ${giveawayId}`);
+      return { success: true };
+    }
+    return { success: false, reason: blockReason };
   };
 
   // ─── Store Rewards CRUD ───────────────────────────────────────────────────
@@ -2529,6 +2471,7 @@ export const AdminProvider = ({ children }) => {
         createGiveaway,
         updateGiveaway,
         deleteGiveaway,
+        toggleGiveawayStatus,
         drawGiveawayWinner,
         addGiveawayParticipant,
 
