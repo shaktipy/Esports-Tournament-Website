@@ -1,0 +1,559 @@
+/* ─── Esports Navbar Wrapper & Sticky Bar ────────────────────────────────── */
+.esports-navbar-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  max-width: 100vw;
+}
+
+.esports-navbar.glass-panel {
+  background: rgba(11, 17, 33, 0.96);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 0;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 0.6rem 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.esports-navbar .navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+  box-sizing: border-box;
+  gap: 1rem;
+}
+
+/* ─── Brand Logo ──────────────────────────────────────────────────────────── */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  text-decoration: none;
+  user-select: none;
+}
+
+.esports-logo-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #f59e0b, #10b981);
+  border-radius: 9px;
+  margin-right: 10px;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+  flex-shrink: 0;
+}
+
+.logo-sword {
+  color: #0b0c10;
+}
+
+.esports-logo-text-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-brand {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 1.2px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.esports-navbar .logo-text {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 1px;
+  background: linear-gradient(to right, #ffffff, #fbbf24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+/* ─── Desktop Nav Links ───────────────────────────────────────────────────── */
+.esports-navbar .navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  flex-shrink: 1;
+}
+
+.esports-navbar .nav-link {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  padding: 6px 4px;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.esports-navbar .nav-link:hover {
+  color: #fbbf24;
+}
+
+.esports-navbar .nav-link.active {
+  color: #fbbf24;
+}
+
+.esports-navbar .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #fbbf24;
+  box-shadow: 0 0 8px #fbbf24;
+  transition: width 0.25s ease;
+}
+
+.esports-navbar .nav-link:hover::after,
+.esports-navbar .nav-link.active::after {
+  width: 100%;
+}
+
+.esports-navbar .nav-link-home {
+  color: #38bdf8;
+}
+
+.esports-navbar .nav-link-home:hover {
+  color: #67e8f9;
+}
+
+.esports-navbar .nav-link-home::after {
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8;
+}
+
+/* ─── Right Actions ───────────────────────────────────────────────────────── */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-shrink: 0;
+}
+
+/* Tokens display */
+.esports-tokens-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.token-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  transition: all 0.2s ease;
+  cursor: default;
+  user-select: none;
+}
+
+.token-badge:hover {
+  transform: translateY(-1px);
+}
+
+.token-badge.cs-token {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.12);
+}
+
+.token-badge.br-token {
+  background: rgba(226, 232, 240, 0.1);
+  border: 1px solid rgba(226, 232, 240, 0.3);
+  box-shadow: 0 0 8px rgba(226, 232, 240, 0.08);
+}
+
+.token-ticket-img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+}
+
+.token-qty {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #fff;
+  line-height: 1;
+}
+
+/* Admin Button */
+.esports-admin-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.esports-admin-btn:hover {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
+/* User Menu & Auth */
+.auth-section {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 3px 6px 3px 10px;
+  border-radius: 8px;
+}
+
+.username {
+  font-weight: 700;
+  color: #fbbf24;
+  font-size: 0.85rem;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logout-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  border-radius: 6px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.esports-login-btn {
+  background: linear-gradient(135deg, #f59e0b, #10b981);
+  color: #0b0c10;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 7px;
+  font-weight: 800;
+  font-size: 0.84rem;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.esports-login-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+/* Hamburger toggle */
+.esports-mobile-menu-btn {
+  display: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f1f5f9;
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.esports-mobile-menu-btn:hover {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+/* ─── Mobile Drawer ───────────────────────────────────────────────────────── */
+.esports-mobile-drawer {
+  background: #0b1121;
+  border-bottom: 2px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.7);
+  animation: slideDownFade 0.22s ease-out;
+  border-radius: 0;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-drawer-inner {
+  padding: 1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  text-align: left;
+  font-family: inherit;
+}
+
+.mobile-nav-item:hover,
+.mobile-nav-item.active {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  transform: translateX(3px);
+}
+
+.mobile-nav-item.home-item {
+  border-color: rgba(56, 189, 248, 0.25);
+  color: #38bdf8;
+}
+
+.mobile-nav-item.home-item:hover {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #7dd3fc;
+}
+
+.mobile-admin-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+  color: #fca5a5;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.mobile-admin-item:hover {
+  background: rgba(239, 68, 68, 0.25);
+  color: #ffffff;
+}
+
+.mobile-auth-footer {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobile-user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.mobile-user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-user-ign {
+  font-weight: 800;
+  color: #fbbf24;
+  font-size: 0.9rem;
+}
+
+.mobile-logout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-logout-btn:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+.mobile-login-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: linear-gradient(135deg, #f59e0b, #10b981);
+  color: #0b0c10;
+  border: none;
+  border-radius: 8px;
+  font-weight: 900;
+  font-size: 0.88rem;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobile-login-btn:hover {
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.4);
+}
+
+/* ─── Responsive Breakpoints ──────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .desktop-only {
+    display: none !important;
+  }
+
+  .esports-mobile-menu-btn {
+    display: flex;
+  }
+
+  .esports-navbar .navbar-container {
+    padding: 0 1rem;
+    gap: 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .esports-navbar .navbar-container {
+    padding: 0 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .esports-logo-icon {
+    width: 30px;
+    height: 30px;
+    margin-right: 6px;
+  }
+
+  .logo-sword {
+    width: 16px;
+    height: 16px;
+  }
+
+  .logo-brand {
+    font-size: 0.62rem;
+    letter-spacing: 0.8px;
+  }
+
+  .esports-navbar .logo-text {
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+  }
+
+  .token-badge {
+    padding: 3px 7px;
+    gap: 4px;
+    border-radius: 12px;
+  }
+
+  .token-ticket-img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .token-qty {
+    font-size: 0.82rem;
+  }
+
+  .navbar-actions {
+    gap: 0.4rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .logo-brand {
+    display: none;
+  }
+
+  .esports-navbar .logo-text {
+    font-size: 0.88rem;
+  }
+}
