@@ -1,0 +1,495 @@
+/* ===== DAILY LOGIN REWARD MODAL (FULL MONTH) ===== */
+
+.daily-login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 15, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 1rem;
+  animation: dlFadeIn 0.25s ease-out;
+}
+
+@keyframes dlFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.daily-login-modal {
+  position: relative;
+  background: linear-gradient(155deg, rgba(14, 16, 28, 0.98) 0%, rgba(22, 14, 38, 0.98) 50%, rgba(12, 14, 26, 0.98) 100%);
+  border: 1px solid rgba(249, 115, 22, 0.45);
+  border-radius: 24px;
+  padding: 2.2rem 2.4rem;
+  padding-right: 5rem; /* extra room for absolute close button */
+  width: 100%;
+  max-width: 980px;
+  box-shadow: 0 0 60px rgba(249, 115, 22, 0.18), 0 30px 70px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-height: 92vh;
+  overflow: hidden;
+  animation: dlScaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes dlScaleUp {
+  from {
+    transform: scale(0.94) translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Close Cross Button */
+.dl-close-x-btn {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.dl-close-x-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #ef4444;
+  transform: rotate(90deg) scale(1.08);
+}
+
+/* Header */
+.dl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dl-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.dl-fire-icon {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: rgba(249, 115, 22, 0.15);
+  border: 1px solid rgba(249, 115, 22, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: dlFlamePulse 2.2s ease-in-out infinite;
+}
+
+@keyframes dlFlamePulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(249, 115, 22, 0.65); }
+}
+
+.dl-month-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-bottom: 0.35rem;
+}
+
+.dl-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: 1px;
+}
+
+.dl-subtitle {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+  max-width: 500px;
+}
+
+/* Streak Pills */
+.dl-streak-pills {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.dl-streak-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.55rem 0.9rem;
+}
+
+.dl-streak-pill.streak {
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.dl-streak-pill.total {
+  border-color: rgba(102, 252, 241, 0.3);
+}
+
+.dl-streak-pill.today {
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.dl-pill-val {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.dl-pill-lbl {
+  display: block;
+  font-size: 0.68rem;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Calendar Container & Scrollbar */
+.dl-calendar-container {
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-right: -6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(249, 115, 22, 0.35);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(249, 115, 22, 0.6);
+}
+
+/* Calendar Grid */
+.dl-calendar-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .dl-calendar-month-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .dl-calendar-month-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .dl-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dl-streak-pills {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Day Cards */
+.dl-month-day-card {
+  position: relative;
+  background: rgba(20, 22, 38, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  padding: 0.8rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  text-align: center;
+  transition: all 0.25s ease;
+  min-height: 120px;
+}
+
+.dl-month-day-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  background: rgba(25, 28, 48, 0.75);
+}
+
+/* Milestone Cards */
+.dl-month-day-card.milestone {
+  background: linear-gradient(145deg, rgba(30, 20, 50, 0.8), rgba(20, 15, 35, 0.8));
+  border-color: rgba(168, 85, 247, 0.35);
+}
+
+.dl-month-day-card.grand {
+  background: linear-gradient(145deg, rgba(40, 25, 10, 0.85), rgba(30, 15, 30, 0.85));
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 15px rgba(251, 191, 36, 0.15);
+}
+
+/* Today Active Card */
+.dl-month-day-card.is-today {
+  border-color: rgba(249, 115, 22, 0.85);
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.35);
+  background: rgba(35, 20, 15, 0.8);
+}
+
+/* Card Header */
+.dl-day-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.dl-day-number {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.dl-today-indicator {
+  font-size: 0.6rem;
+  font-weight: 900;
+  background: #f97316;
+  color: #fff;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.dl-milestone-trophy {
+  color: #fbbf24;
+}
+
+/* Icon & Reward Info */
+.dl-day-icon-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0.1rem 0;
+}
+
+.dl-day-emoji {
+  font-size: 1.35rem;
+}
+
+.dl-day-reward-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.dl-day-coins {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.dl-ticket-pill {
+  font-size: 0.62rem;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+
+.dl-ticket-pill.cs {
+  background: rgba(6, 182, 212, 0.2);
+  color: #22d3ee;
+  border: 1px solid rgba(6, 182, 212, 0.4);
+}
+
+.dl-ticket-pill.br {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.dl-ticket-pill.diamond {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+/* Footer Status */
+.dl-day-footer-status {
+  width: 100%;
+  margin-top: 0.2rem;
+}
+
+.dl-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  width: 100%;
+  padding: 3px 0;
+  border-radius: 6px;
+}
+
+.dl-status-badge.claimed {
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.dl-status-badge.available {
+  background: linear-gradient(90deg, #f97316, #ea580c);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-weight: 800;
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.5);
+  animation: dlClaimGlow 1.5s ease-in-out infinite;
+  transition: transform 0.2s ease;
+}
+
+.dl-status-badge.available:hover {
+  transform: scale(1.05);
+}
+
+@keyframes dlClaimGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(249, 115, 22, 0.5); }
+  50% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.9); }
+}
+
+.dl-status-badge.locked {
+  color: #475569;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dl-status-badge.missed {
+  color: #64748b;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Modal Bottom Bar */
+.dl-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dl-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.dl-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.dl-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 800;
+  padding: 0.75rem 1.4rem;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  letter-spacing: 0.5px;
+}
+
+.dl-action-btn.primary {
+  background: linear-gradient(90deg, #f97316, #ea580c);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+}
+
+.dl-action-btn.primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(249, 115, 22, 0.6);
+}
+
+.dl-action-btn.primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.dl-action-btn.claimed {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+.dl-action-btn.claimed:hover {
+  background: rgba(34, 197, 94, 0.25);
+}
+
+.dl-action-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #94a3b8;
+}
+
+.dl-action-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
