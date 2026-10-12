@@ -1,0 +1,471 @@
+.esports-home {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Tickets Showcase Banner */
+.tickets-showcase-banner {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  padding: 1.25rem 1.75rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  gap: 1.5rem;
+  align-items: center;
+}
+
+@media (max-width: 960px) {
+  .tickets-showcase-banner {
+    grid-template-columns: 1fr;
+    padding: 1.25rem 1.25rem;
+  }
+}
+
+.tickets-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.tickets-tag {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #fbbf24;
+  letter-spacing: 1.2px;
+}
+
+.tickets-banner-title {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.8px;
+  line-height: 1.25;
+}
+
+.tickets-banner-desc {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.tickets-balance-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.summary-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+}
+
+.summary-pill.cs {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.summary-pill.br {
+  background: rgba(226, 232, 240, 0.15);
+  border: 1px solid rgba(226, 232, 240, 0.4);
+  color: #f1f5f9;
+}
+
+.summary-pill strong {
+  font-size: 0.95rem;
+  color: #fff;
+  margin-left: 4px;
+}
+
+.summary-pill .pill-img {
+  width: 28px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.2));
+}
+
+.btn-get-tickets {
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #fbbf24;
+  padding: 5px 12px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-get-tickets:hover {
+  background: rgba(245, 158, 11, 0.35);
+  color: #fff;
+  transform: translateX(2px);
+}
+
+.tickets-cards-preview {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.ticket-preview-item {
+  width: 100%;
+  max-width: 190px;
+  transition: transform 0.3s ease;
+}
+
+.ticket-preview-item:hover {
+  transform: scale(1.05);
+}
+
+.ticket-preview-item.cs-tilt {
+  transform: perspective(600px) rotateX(3deg) rotateZ(-1.5deg);
+}
+
+.ticket-preview-item.br-tilt {
+  transform: perspective(600px) rotateX(3deg) rotateZ(1.5deg);
+}
+
+.ticket-preview-item:hover {
+  transform: scale(1.06) rotate(0deg);
+}
+
+.ticket-full-img {
+  width: 100%;
+  display: block;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.5));
+  transition: filter 0.3s ease;
+}
+
+.ticket-preview-item.cs-tilt .ticket-full-img {
+  filter: drop-shadow(0 6px 14px rgba(34, 197, 94, 0.3)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+.ticket-preview-item.br-tilt .ticket-full-img {
+  filter: drop-shadow(0 6px 14px rgba(255, 255, 255, 0.2)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+}
+
+/* Header & Filters */
+.esports-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 2px solid rgba(245, 158, 11, 0.3);
+  padding-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.esports-page-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+  text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+}
+
+.esports-page-subtitle {
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.esports-filters {
+  display: flex;
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.4rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.esports-filter-btn {
+  background: transparent;
+  color: #c5c6c7;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.esports-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.esports-filter-btn.active {
+  background: linear-gradient(135deg, #f59e0b, #10b981);
+  color: #0b0c10;
+  font-weight: 800;
+}
+
+/* Tournaments Grid */
+.tournaments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.tournament-card {
+  border-radius: 18px;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+}
+
+.tournament-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+}
+
+.tournament-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.tournament-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.tournament-card:hover .tournament-image {
+  transform: scale(1.08);
+}
+
+.tournament-prize-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #fbbf24;
+  backdrop-filter: blur(8px);
+  color: #fbbf24;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.tournament-mode-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.tournament-mode-badge.cs {
+  background: rgba(34, 197, 94, 0.9);
+  color: #000;
+}
+
+.tournament-mode-badge.br {
+  background: rgba(241, 245, 249, 0.9);
+  color: #0f172a;
+}
+
+.tournament-details {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.tournament-title {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.5px;
+  min-height: 2.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
+}
+
+.tournament-desc {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  min-height: 2.7rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tournament-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.9rem;
+  border-radius: 10px;
+  margin-bottom: 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  min-height: 80px;
+}
+
+.t-info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #cbd5e1;
+}
+
+.t-info-item:last-child {
+  grid-column: span 2;
+}
+
+.t-icon {
+  color: #fbbf24;
+}
+
+/* Ticket Cost Box - Pushed to bottom so all buttons line up */
+.tournament-ticket-cost-box {
+  margin-top: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+  min-height: 48px;
+}
+
+.ticket-req-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.req-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.req-token-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.req-token-img {
+  width: 44px;
+  height: auto;
+  object-fit: contain;
+}
+
+.req-token-text {
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #fff;
+}
+
+.user-avail-tickets {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* Registration Buttons - Consistent height and position across all cards */
+.join-tournament-btn {
+  width: 100%;
+  height: 46px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.join-tournament-btn.ready {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+}
+
+.join-tournament-btn.ready:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+}
+
+.join-tournament-btn.registered {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  cursor: default;
+}
+
+.join-tournament-btn.need-ticket {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.join-tournament-btn.need-ticket:hover {
+  background: rgba(245, 158, 11, 0.25);
+  transform: translateY(-2px);
+}
+
+.ticket-confirmed-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.confirmed-ticket-img {
+  max-width: 280px;
+  width: 100%;
+  border-radius: 8px;
+}
