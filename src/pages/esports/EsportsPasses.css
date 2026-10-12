@@ -1,0 +1,408 @@
+.esports-passes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+}
+
+.passes-header {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.passes-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 2px;
+  background: linear-gradient(to right, #fff, #fbbf24);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.passes-subtitle {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 1.5rem;
+}
+
+/* User Balance Card in Passes Header */
+.passes-balance-card {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 1rem 2rem;
+  border-radius: 16px;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.user-coin-badge, .user-tickets-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.balance-lbl {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.balance-val {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.ticket-counts-group {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.count-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.count-pill.coins {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+}
+
+.count-pill.cs {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #4ade80;
+}
+
+.count-pill.br {
+  background: rgba(226, 232, 240, 0.15);
+  border: 1px solid rgba(226, 232, 240, 0.4);
+  color: #f1f5f9;
+}
+
+.coin-pill-img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 5px rgba(245, 158, 11, 0.6));
+}
+
+.ticket-tiny {
+  width: 40px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Passes Grid */
+.passes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  width: 100%;
+}
+
+.pass-card {
+  position: relative;
+  border-radius: 20px;
+  transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  display: flex;
+  flex-direction: column;
+}
+
+.pass-card:hover {
+  transform: translateY(-8px);
+}
+
+.pass-card.popular {
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.2);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f59e0b;
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 900;
+  padding: 4px 14px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  z-index: 10;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.pass-card-header {
+  padding: 2rem 1.5rem;
+  border-radius: 20px 20px 0 0;
+  text-align: center;
+  position: relative;
+  color: #fff;
+}
+
+.pass-icon-container {
+  margin-bottom: 0.8rem;
+  color: #fff;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+
+.pass-name {
+  font-size: 1.3rem;
+  font-weight: 900;
+  margin-bottom: 0.2rem;
+  letter-spacing: 0.5px;
+}
+
+.pass-sub {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.pass-price-tag {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 14px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-lbl {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.price-num {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.pass-card-body {
+  padding: 1.5rem;
+  border-radius: 0 0 20px 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-top: none;
+}
+
+.pass-ticket-preview {
+  margin-bottom: 1.2rem;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.pass-ticket-img {
+  width: 100%;
+  display: block;
+}
+
+/* Pass Rewards Highlight Chips */
+.pass-rewards-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+
+.reward-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.reward-chip.cs {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.reward-chip.br {
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  color: #e2e8f0;
+}
+
+.reward-chip.coins {
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+}
+
+.reward-chip .chip-img {
+  width: 20px;
+  height: auto;
+  object-fit: contain;
+}
+
+.chip-coin-img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+}
+
+.feature-coin-bullet {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.6));
+}
+
+.pass-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.pass-features li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.feature-bullet {
+  color: #fbbf24;
+  flex-shrink: 0;
+}
+
+.purchase-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: #0b0c10;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
+}
+
+.purchase-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.purchase-btn.need-coins {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: var(--text-muted) !important;
+  cursor: pointer;
+}
+
+.purchase-btn.purchased-glow {
+  border: 1px solid rgba(16, 185, 129, 0.5) !important;
+  color: #4ade80 !important;
+  cursor: default;
+}
+
+.purchase-btn.processing {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+/* INR price display in header */
+.inr-price {
+  color: #fff;
+  font-size: 1.3rem !important;
+}
+
+/* Secure payment badge in balance card */
+.secure-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: #4ade80;
+  font-weight: 700;
+}
+
+.shield-icon {
+  color: #4ade80;
+  flex-shrink: 0;
+}
+
+/* Combo pass: Unsplash image as cover */
+.pass-ticket-cover {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+/* Spinning loader icon */
+.spin-icon {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Razorpay note under button */
+.razorpay-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  opacity: 0.8;
+}
+
+/* Best Value badge — amber */
+.best-value-badge {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+}
+
+.pass-card.best-value {
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.2);
+}
