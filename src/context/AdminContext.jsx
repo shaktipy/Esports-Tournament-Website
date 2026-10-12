@@ -1,4 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { 
+  getTournamentTotalSlots, 
+  assignRandomSlot, 
+  getOccupiedSlotNumbers, 
+  getAvailableSlots 
+} from '../utils/tournamentSlots';
 
 const AdminContext = createContext();
 
@@ -29,21 +35,101 @@ export const INITIAL_TOURNAMENTS = [
     prize: '₹25,000 + 5,000 Diamonds',
     mode: 'Squad (CS)',
     map: 'Kalahari / Bermuda CS',
-    slots: '14/16 Squads',
-    maxSlots: 16,
-    registeredCount: 14,
+    slots: '4/4 Squads',
+    maxSlots: 4,
+    registeredCount: 4,
     ticketType: 'CS',
     ticketCost: 1,
     ticketImage: '/tokens/cs-ticket.png',
     image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=1470&auto=format&fit=crop',
     description: 'Competitive 4v4 Clash Squad. Fast rounds, high stakes, master tier teams.',
     rules: 'No character skill abuse. Gun attributes ON. Emote after knock allowed.',
-    status: 'open', // open | closed | ongoing | completed | upcoming
+    status: 'closed', // open | closed | ongoing | completed | upcoming
     participants: [
-      { id: 'p1', ign: 'XO_Thunder', uid: '849204812', teamName: 'Team Thunder', registeredAt: '2026-09-28 14:20', ticketUsed: '1x CS Ticket', status: 'confirmed' },
-      { id: 'p2', ign: 'Soul_Mortal99', uid: '912384712', teamName: 'Soul Army', registeredAt: '2026-09-28 15:10', ticketUsed: '1x CS Ticket', status: 'confirmed' },
-      { id: 'p3', ign: 'GodL_Shadow', uid: '741289301', teamName: 'GodLike Esports', registeredAt: '2026-09-28 16:45', ticketUsed: '1x CS Ticket', status: 'confirmed' },
-      { id: 'p4', ign: 'Total_Ajay', uid: '632194820', teamName: 'Total Gaming B', registeredAt: '2026-09-28 17:30', ticketUsed: '1x CS Ticket', status: 'confirmed' },
+      { 
+        id: 'p1', 
+        slotNumber: 1, 
+        slot: 1, 
+        type: 'squad',
+        ign: 'XO_Thunder', 
+        uid: '849204812', 
+        leaderIgn: 'XO_Thunder',
+        leaderUid: '849204812',
+        teamName: 'Team Thunder', 
+        phone: '9876543210',
+        players: [
+          { role: 'Captain (P1)', ign: 'XO_Thunder', uid: '849204812' },
+          { role: 'Player 2', ign: 'Thunder_Viper', uid: '849204813' },
+          { role: 'Player 3', ign: 'Thunder_Blaze', uid: '849204814' },
+          { role: 'Player 4', ign: 'Thunder_Storm', uid: '849204815' }
+        ],
+        registeredAt: '2026-09-28 14:20', 
+        ticketUsed: '4x CS Tickets', 
+        status: 'confirmed' 
+      },
+      { 
+        id: 'p2', 
+        slotNumber: 2, 
+        slot: 2, 
+        type: 'squad',
+        ign: 'Soul_Mortal99', 
+        uid: '912384712', 
+        leaderIgn: 'Soul_Mortal99',
+        leaderUid: '912384712',
+        teamName: 'Soul Army', 
+        phone: '9876543211',
+        players: [
+          { role: 'Captain (P1)', ign: 'Soul_Mortal99', uid: '912384712' },
+          { role: 'Player 2', ign: 'Soul_Viper', uid: '912384713' },
+          { role: 'Player 3', ign: 'Soul_Regaltos', uid: '912384714' },
+          { role: 'Player 4', ign: 'Soul_Aman', uid: '912384715' }
+        ],
+        registeredAt: '2026-09-28 15:10', 
+        ticketUsed: '4x CS Tickets', 
+        status: 'confirmed' 
+      },
+      { 
+        id: 'p3', 
+        slotNumber: 3, 
+        slot: 3, 
+        type: 'squad',
+        ign: 'GodL_Shadow', 
+        uid: '741289301', 
+        leaderIgn: 'GodL_Shadow',
+        leaderUid: '741289301',
+        teamName: 'GodLike Esports', 
+        phone: '9876543212',
+        players: [
+          { role: 'Captain (P1)', ign: 'GodL_Shadow', uid: '741289301' },
+          { role: 'Player 2', ign: 'GodL_Jonathan', uid: '741289302' },
+          { role: 'Player 3', ign: 'GodL_Neyoo', uid: '741289303' },
+          { role: 'Player 4', ign: 'GodL_Zgod', uid: '741289304' }
+        ],
+        registeredAt: '2026-09-28 16:45', 
+        ticketUsed: '4x CS Tickets', 
+        status: 'confirmed' 
+      },
+      { 
+        id: 'p4', 
+        slotNumber: 4, 
+        slot: 4, 
+        type: 'squad',
+        ign: 'Total_Ajay', 
+        uid: '632194820', 
+        leaderIgn: 'Total_Ajay',
+        leaderUid: '632194820',
+        teamName: 'Total Gaming B', 
+        phone: '9876543213',
+        players: [
+          { role: 'Captain (P1)', ign: 'Total_Ajay', uid: '632194820' },
+          { role: 'Player 2', ign: 'Total_Bala', uid: '632194821' },
+          { role: 'Player 3', ign: 'Total_Fozy', uid: '632194822' },
+          { role: 'Player 4', ign: 'Total_Mafia', uid: '632194823' }
+        ],
+        registeredAt: '2026-09-28 17:30', 
+        ticketUsed: '4x CS Tickets', 
+        status: 'confirmed' 
+      },
     ],
     results: {
       winnersDeclared: false,
@@ -60,9 +146,9 @@ export const INITIAL_TOURNAMENTS = [
     prize: '₹50,000 + 10,000 Diamonds',
     mode: 'Squad (BR)',
     map: 'Bermuda Classic',
-    slots: '44/48 Teams',
-    maxSlots: 48,
-    registeredCount: 44,
+    slots: '2/12 Squads',
+    maxSlots: 12,
+    registeredCount: 2,
     ticketType: 'BR',
     ticketCost: 1,
     ticketImage: '/tokens/br-ticket.png',
@@ -71,8 +157,48 @@ export const INITIAL_TOURNAMENTS = [
     rules: 'Official FFWS points table. 12 Matches over 2 days. Hackers instantly banned.',
     status: 'open',
     participants: [
-      { id: 'p5', ign: 'Hydra_Dynamo', uid: '881290342', teamName: 'Hydra Clan', registeredAt: '2026-09-27 18:00', ticketUsed: '1x BR Ticket', status: 'confirmed' },
-      { id: 'p6', ign: 'Blind_Joker', uid: '445129381', teamName: 'Blind Esports', registeredAt: '2026-09-27 19:30', ticketUsed: '1x BR Ticket', status: 'confirmed' },
+      { 
+        id: 'p5', 
+        slotNumber: 3, 
+        slot: 3, 
+        type: 'squad',
+        ign: 'Hydra_Dynamo', 
+        uid: '881290342', 
+        leaderIgn: 'Hydra_Dynamo',
+        leaderUid: '881290342',
+        teamName: 'Hydra Clan', 
+        phone: '9811223344',
+        players: [
+          { role: 'Captain (P1)', ign: 'Hydra_Dynamo', uid: '881290342' },
+          { role: 'Player 2', ign: 'Hydra_Alpha', uid: '881290343' },
+          { role: 'Player 3', ign: 'Hydra_Beta', uid: '881290344' },
+          { role: 'Player 4', ign: 'Hydra_Delta', uid: '881290345' }
+        ],
+        registeredAt: '2026-09-27 18:00', 
+        ticketUsed: '4x BR Tickets', 
+        status: 'confirmed' 
+      },
+      { 
+        id: 'p6', 
+        slotNumber: 7, 
+        slot: 7, 
+        type: 'squad',
+        ign: 'Blind_Joker', 
+        uid: '445129381', 
+        leaderIgn: 'Blind_Joker',
+        leaderUid: '445129381',
+        teamName: 'Blind Esports', 
+        phone: '9822334455',
+        players: [
+          { role: 'Captain (P1)', ign: 'Blind_Joker', uid: '445129381' },
+          { role: 'Player 2', ign: 'Blind_Rony', uid: '445129382' },
+          { role: 'Player 3', ign: 'Blind_Spidey', uid: '445129383' },
+          { role: 'Player 4', ign: 'Blind_Venom', uid: '445129384' }
+        ],
+        registeredAt: '2026-09-27 19:30', 
+        ticketUsed: '4x BR Tickets', 
+        status: 'confirmed' 
+      },
     ],
     results: {
       winnersDeclared: false,
@@ -89,9 +215,9 @@ export const INITIAL_TOURNAMENTS = [
     prize: '₹15,000 + 2,500 Diamonds',
     mode: 'Solo (1v1)',
     map: 'Iron Cage',
-    slots: '88/100 Players',
-    maxSlots: 100,
-    registeredCount: 88,
+    slots: '1/48 Players',
+    maxSlots: 48,
+    registeredCount: 1,
     ticketType: 'BR',
     ticketCost: 1,
     ticketImage: '/tokens/br-ticket.png',
@@ -100,7 +226,7 @@ export const INITIAL_TOURNAMENTS = [
     rules: 'Best of 7 rounds. Headshots only in round 3 and 7.',
     status: 'open',
     participants: [
-      { id: 'p7', ign: 'SniperKing_XO', uid: '229103948', teamName: 'Solo', registeredAt: '2026-09-28 10:15', ticketUsed: '1x BR Ticket', status: 'confirmed' },
+      { id: 'p7', slotNumber: 8, slot: 8, ign: 'SniperKing_XO', uid: '229103948', teamName: 'Solo', registeredAt: '2026-09-28 10:15', ticketUsed: '1x BR Ticket', status: 'confirmed' },
     ],
     results: {
       winnersDeclared: false,
@@ -606,7 +732,28 @@ export const AdminProvider = ({ children }) => {
   const [tournaments, setTournaments] = useState(() => {
     try {
       const saved = localStorage.getItem('haarshxo_admin_tournaments');
-      return saved ? JSON.parse(saved) : INITIAL_TOURNAMENTS;
+      const list = saved ? JSON.parse(saved) : INITIAL_TOURNAMENTS;
+      // Ensure all participants have unique valid slot numbers
+      return list.map(t => {
+        if (!Array.isArray(t.participants) || t.participants.length === 0) return t;
+        const totalSlots = getTournamentTotalSlots(t);
+        const used = new Set();
+        const updatedParticipants = t.participants.map(p => {
+          let s = Number(p.slotNumber || p.slot);
+          if (isNaN(s) || s < 1 || s > totalSlots || used.has(s)) {
+            // Find next available slot
+            for (let next = 1; next <= totalSlots; next++) {
+              if (!used.has(next)) {
+                s = next;
+                break;
+              }
+            }
+          }
+          if (s) used.add(s);
+          return { ...p, slotNumber: s || 1, slot: s || 1 };
+        });
+        return { ...t, participants: updatedParticipants };
+      });
     } catch {
       return INITIAL_TOURNAMENTS;
     }
@@ -861,7 +1008,8 @@ export const AdminProvider = ({ children }) => {
     // NOTE: 'announcements' is intentionally EXCLUDED from this guard because
     // an admin CAN legitimately delete ALL announcements (empty list is valid).
     for (const [k, v] of Object.entries(payload)) {
-      if (['tournaments', 'storeRewards', 'giveawaysList', 'redeemCodes'].includes(k)) {
+      // Block empty arrays only for these catalogs (deleting all promo codes / rewards is intentional)
+      if (['tournaments', 'storeRewards', 'giveawaysList'].includes(k)) {
         if (Array.isArray(v) && v.length === 0) {
           console.warn(`[AdminSync] Blocked attempt to sync empty array for ${k}`);
           return false;
@@ -1311,11 +1459,31 @@ export const AdminProvider = ({ children }) => {
     let registeredParticipant = null;
 
     setTournaments(prev => {
+      const targetTourney = prev.find(t => String(t.id) === idStr);
+      if (!targetTourney) return prev;
+
+      const totalSlots = getTournamentTotalSlots(targetTourney);
+      const occupiedSlots = getOccupiedSlotNumbers(targetTourney.participants);
+
+      // Determine random available slot number
+      let assignedSlot = null;
+      if (registrationData.slotNumber && !occupiedSlots.has(Number(registrationData.slotNumber))) {
+        assignedSlot = Number(registrationData.slotNumber);
+      } else {
+        assignedSlot = assignRandomSlot(targetTourney);
+      }
+
+      // If somehow null (e.g. overcapacity), fallback to total occupied count + 1
+      if (!assignedSlot) {
+        assignedSlot = (targetTourney.participants?.length || 0) + 1;
+      }
+
       const updated = prev.map(t => {
         if (String(t.id) !== idStr) return t;
 
         const isSquad = (t.mode || '').toLowerCase().includes('squad');
         const isDuo = (t.mode || '').toLowerCase().includes('duo');
+        const isSolo = (t.mode || '').toLowerCase().includes('solo');
         const regType = registrationData.type || (isSquad ? 'squad' : isDuo ? 'duo' : 'solo');
 
         const newParticipant = {
@@ -1324,6 +1492,8 @@ export const AdminProvider = ({ children }) => {
           tournamentTitle: t.title,
           type: regType, // 'solo' | 'squad' | 'duo'
           mode: t.mode,
+          slotNumber: assignedSlot,
+          slot: assignedSlot,
           teamName: registrationData.teamName || (regType === 'solo' ? (registrationData.ign || 'Solo Player') : 'Team Squad'),
           ign: registrationData.ign || registrationData.leaderIgn || 'Player',
           uid: registrationData.uid || registrationData.leaderUid || 'Unknown',
@@ -1344,14 +1514,13 @@ export const AdminProvider = ({ children }) => {
         registeredParticipant = newParticipant;
         const updatedList = [newParticipant, ...(t.participants || [])];
         const newCount = updatedList.length;
-        const maxSlotsNum = Number(t.maxSlots) || 16;
-        const isSolo = (t.mode || '').toLowerCase().includes('solo');
+        const maxSlotsNum = totalSlots;
 
         return {
           ...t,
           participants: updatedList,
           registeredCount: newCount,
-          slots: `${newCount}/${maxSlotsNum} ${isSolo ? 'Players' : 'Teams'}`,
+          slots: `${newCount}/${maxSlotsNum} ${isSolo ? 'Players' : isSquad ? 'Squads' : isDuo ? 'Duos' : 'Teams'}`,
           status: newCount >= maxSlotsNum ? 'closed' : t.status
         };
       });
@@ -1365,33 +1534,88 @@ export const AdminProvider = ({ children }) => {
       }
       return updated;
     });
+
     setTimeout(() => {
       const stored = localStorage.getItem('haarshxo_admin_tournaments');
       if (stored) syncToBackend({ tournaments: JSON.parse(stored) });
     }, 0);
 
     const displayIdentifier = registrationData.teamName || registrationData.ign || 'Player';
-    addAuditLog('PARTICIPANT_REGISTERED', 'TOURNAMENTS', `Registered ${displayIdentifier} in tournament ${tourneyId}`);
+    addAuditLog('PARTICIPANT_REGISTERED', 'TOURNAMENTS', `Registered ${displayIdentifier} in tournament ${tourneyId} (Assigned Slot #${registeredParticipant?.slotNumber || '?'})`);
     return registeredParticipant;
   };
 
-  const removeTournamentParticipant = (tourneyId, participantId) => {
+  const removeTournamentParticipant = (tourneyId, participantId, reason = '') => {
     lastLocalActionTime.current = Date.now();
     const idStr = String(tourneyId);
+    let disqualifiedRecord = null;
+    let targetTourneyTitle = '';
 
     setTournaments(prev => {
+      const targetTourney = prev.find(t => String(t.id) === idStr);
+      if (!targetTourney) return prev;
+      targetTourneyTitle = targetTourney.title;
+
+      const participant = (targetTourney.participants || []).find(p => p.id === participantId);
+      if (participant) {
+        const pCopy = JSON.parse(JSON.stringify(participant));
+        const isSquadMode = (targetTourney.mode || '').toLowerCase().includes('squad');
+        const pPlayers = (Array.isArray(pCopy.players) && pCopy.players.length > 0)
+          ? pCopy.players
+          : (isSquadMode ? [
+              { role: 'Captain (P1)', ign: pCopy.leaderIgn || pCopy.ign || 'Captain', uid: pCopy.leaderUid || pCopy.uid || 'UID1' },
+              { role: 'Player 2', ign: `${pCopy.leaderIgn || pCopy.ign || 'Player'}_P2`, uid: `${pCopy.leaderUid || pCopy.uid || 'UID'}2` },
+              { role: 'Player 3', ign: `${pCopy.leaderIgn || pCopy.ign || 'Player'}_P3`, uid: `${pCopy.leaderUid || pCopy.uid || 'UID'}3` },
+              { role: 'Player 4', ign: `${pCopy.leaderIgn || pCopy.ign || 'Player'}_P4`, uid: `${pCopy.leaderUid || pCopy.uid || 'UID'}4` }
+            ] : [
+              { role: 'Player', ign: pCopy.ign || 'Player', uid: pCopy.uid || 'UID' }
+            ]);
+
+        disqualifiedRecord = {
+          id: `disq_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+          participantId: participant.id,
+          originalParticipant: { ...pCopy, players: pPlayers },
+          tournamentId: targetTourney.id,
+          tournamentTitle: targetTourney.title,
+          type: participant.type || (pPlayers.length > 1 ? 'squad' : 'solo'),
+          slotNumber: participant.slotNumber || participant.slot,
+          teamName: participant.teamName || participant.ign || 'Player',
+          ign: participant.ign || participant.leaderIgn || 'Player',
+          leaderIgn: participant.leaderIgn || participant.ign || 'Player',
+          uid: participant.uid || participant.leaderUid || '',
+          leaderUid: participant.leaderUid || participant.uid || '',
+          phone: participant.phone || '',
+          discord: participant.discord || '',
+          ticketCost: participant.ticketCost,
+          ticketUsed: participant.ticketUsed,
+          players: pPlayers,
+          uids: [participant.uid, participant.leaderUid, ...pPlayers.map(p => p.uid)].filter(Boolean),
+          igns: [participant.ign, participant.leaderIgn, ...pPlayers.map(p => p.ign)].filter(Boolean),
+          reason: reason || 'Fair-play regulation violation (Disqualified by Admin)',
+          disqualifiedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
+        };
+      }
+
       const updated = prev.map(t => {
         if (String(t.id) !== idStr) return t;
         const updatedList = (t.participants || []).filter(p => p.id !== participantId);
         const newCount = updatedList.length;
-        const maxSlotsNum = Number(t.maxSlots) || 16;
+        const maxSlotsNum = getTournamentTotalSlots(t);
         const isSolo = (t.mode || '').toLowerCase().includes('solo');
+        const isSquad = (t.mode || '').toLowerCase().includes('squad');
+        const isDuo = (t.mode || '').toLowerCase().includes('duo');
+
+        const existingDisq = t.disqualifiedParticipants || [];
+        const newDisqList = disqualifiedRecord 
+          ? [disqualifiedRecord, ...existingDisq.filter(d => d.participantId !== participantId)]
+          : existingDisq;
 
         return {
           ...t,
           participants: updatedList,
+          disqualifiedParticipants: newDisqList,
           registeredCount: newCount,
-          slots: `${newCount}/${maxSlotsNum} ${isSolo ? 'Players' : 'Teams'}`,
+          slots: `${newCount}/${maxSlotsNum} ${isSolo ? 'Players' : isSquad ? 'Squads' : isDuo ? 'Duos' : 'Teams'}`,
           status: (t.status === 'closed' && newCount < maxSlotsNum) ? 'open' : t.status
         };
       });
@@ -1403,12 +1627,217 @@ export const AdminProvider = ({ children }) => {
       } catch (err) {}
       return updated;
     });
+
+    // 1. Dispatch custom event and cross-tab BroadcastChannel
+    if (disqualifiedRecord) {
+      const disqEventData = {
+        tournamentId: idStr,
+        tournamentTitle: targetTourneyTitle,
+        disqRecord: disqualifiedRecord
+      };
+      window.dispatchEvent(new CustomEvent('haarshxo_tournament_disqualified', { detail: disqEventData }));
+      if (globalBroadcastChannel) {
+        globalBroadcastChannel.postMessage({ type: 'tournament_disqualified', data: disqEventData });
+      }
+
+      // 2. Add high-priority in-app inbox notification for the player
+      try {
+        const inbox = JSON.parse(localStorage.getItem('haarshxo_notification_inbox') || '[]');
+        const notifItem = {
+          id: `notif_disq_${Date.now()}`,
+          message: `🚫 Disqualified from ${targetTourneyTitle}`,
+          subtitle: `Team "${disqualifiedRecord.teamName}" was disqualified by the tournament admin. Reason: ${disqualifiedRecord.reason}. Re-registration is locked.`,
+          type: 'warning',
+          time: 'Just now',
+          read: false
+        };
+        const updatedInbox = [notifItem, ...inbox.filter(n => n.id !== notifItem.id).slice(0, 49)];
+        localStorage.setItem('haarshxo_notification_inbox', JSON.stringify(updatedInbox));
+        window.dispatchEvent(new CustomEvent('haarshxo_inbox_updated', { detail: updatedInbox }));
+        if (globalBroadcastChannel) {
+          globalBroadcastChannel.postMessage({ type: 'inbox_updated', data: updatedInbox });
+        }
+      } catch (e) {}
+
+      // 3. Remove tournament from user's registered list and record disqualification in local storage
+      try {
+        const regTourneys = JSON.parse(localStorage.getItem('harshxo_registeredTournaments') || '[]');
+        const updatedReg = regTourneys.filter(id => String(id) !== idStr);
+        localStorage.setItem('harshxo_registeredTournaments', JSON.stringify(updatedReg));
+
+        const disqList = JSON.parse(localStorage.getItem('harshxo_disqualified_tournaments') || '[]');
+        const updatedDisq = Array.from(new Set([...disqList, idStr]));
+        localStorage.setItem('harshxo_disqualified_tournaments', JSON.stringify(updatedDisq));
+      } catch (e) {}
+    }
+
     setTimeout(() => {
       const stored = localStorage.getItem('haarshxo_admin_tournaments');
       if (stored) syncToBackend({ tournaments: JSON.parse(stored) });
     }, 0);
 
-    addAuditLog('PARTICIPANT_REMOVED', 'TOURNAMENTS', `Disqualified/Removed participant ${participantId} from tournament ${tourneyId}`);
+    const targetName = disqualifiedRecord?.teamName || participantId;
+    addAuditLog('PARTICIPANT_DISQUALIFIED', 'TOURNAMENTS', `Disqualified "${targetName}" from tournament ${targetTourneyTitle} (${tourneyId}). Reason: ${disqualifiedRecord?.reason || reason}`);
+  };
+
+  const reinstateTournamentParticipant = (tourneyId, disqId) => {
+    lastLocalActionTime.current = Date.now();
+    const idStr = String(tourneyId);
+    let targetTourneyTitle = '';
+    let targetDisqRecord = null;
+    let newlyAssignedSlot = 1;
+    let restoredParticipant = null;
+
+    setTournaments(prev => {
+      const targetTourney = prev.find(t => String(t.id) === idStr);
+      if (!targetTourney) return prev;
+      targetTourneyTitle = targetTourney.title;
+
+      const disqRecord = (targetTourney.disqualifiedParticipants || []).find(d => String(d.id) === String(disqId));
+      if (!disqRecord) return prev;
+      targetDisqRecord = disqRecord;
+
+      // Assign an unoccupied random slot for the reinstated player
+      newlyAssignedSlot = assignRandomSlot(targetTourney) || 1;
+
+      // Robust recovery of full roster:
+      let recoveredPlayers = [];
+      if (Array.isArray(disqRecord.originalParticipant?.players) && disqRecord.originalParticipant.players.length > 0) {
+        recoveredPlayers = JSON.parse(JSON.stringify(disqRecord.originalParticipant.players));
+      } else if (Array.isArray(disqRecord.players) && disqRecord.players.length > 0) {
+        recoveredPlayers = JSON.parse(JSON.stringify(disqRecord.players));
+      } else if (Array.isArray(disqRecord.uids) && disqRecord.uids.length > 1) {
+        recoveredPlayers = disqRecord.uids.map((uidVal, idx) => ({
+          role: idx === 0 ? 'Captain (P1)' : `Player ${idx + 1}`,
+          ign: disqRecord.igns?.[idx] || (idx === 0 ? disqRecord.leaderIgn || disqRecord.ign : `Player ${idx + 1}`),
+          uid: String(uidVal)
+        }));
+      } else if ((targetTourney.mode || '').toLowerCase().includes('squad') || disqRecord.type === 'squad') {
+        const capIgn = disqRecord.leaderIgn || disqRecord.ign || 'Captain';
+        const capUid = disqRecord.leaderUid || disqRecord.uid || '10001';
+        recoveredPlayers = [
+          { role: 'Captain (P1)', ign: capIgn, uid: capUid },
+          { role: 'Player 2', ign: `${capIgn}_P2`, uid: `${capUid}2` },
+          { role: 'Player 3', ign: `${capIgn}_P3`, uid: `${capUid}3` },
+          { role: 'Player 4', ign: `${capIgn}_P4`, uid: `${capUid}4` }
+        ];
+      } else {
+        recoveredPlayers = [
+          { role: 'Player', ign: disqRecord.leaderIgn || disqRecord.ign, uid: disqRecord.leaderUid || disqRecord.uid }
+        ];
+      }
+
+      const isSquad = (targetTourney.mode || '').toLowerCase().includes('squad') || recoveredPlayers.length > 1;
+
+      restoredParticipant = {
+        ...(disqRecord.originalParticipant || {}),
+        id: disqRecord.participantId || `reg_${Date.now()}`,
+        tournamentId: targetTourney.id,
+        tournamentTitle: targetTourney.title,
+        type: disqRecord.originalParticipant?.type || disqRecord.type || (isSquad ? 'squad' : 'solo'),
+        teamName: disqRecord.teamName || disqRecord.originalParticipant?.teamName || disqRecord.ign || 'Player / Squad',
+        ign: disqRecord.ign || disqRecord.originalParticipant?.ign,
+        leaderIgn: disqRecord.leaderIgn || disqRecord.ign || disqRecord.originalParticipant?.leaderIgn,
+        uid: disqRecord.uid || disqRecord.originalParticipant?.uid,
+        leaderUid: disqRecord.leaderUid || disqRecord.uid || disqRecord.originalParticipant?.leaderUid,
+        phone: disqRecord.originalParticipant?.phone || disqRecord.phone || '',
+        discord: disqRecord.originalParticipant?.discord || disqRecord.discord || '',
+        ticketCost: disqRecord.originalParticipant?.ticketCost || disqRecord.ticketCost,
+        ticketUsed: disqRecord.originalParticipant?.ticketUsed || disqRecord.ticketUsed || (isSquad ? '4x Tickets' : '1x Ticket'),
+        players: recoveredPlayers,
+        slotNumber: newlyAssignedSlot,
+        slot: newlyAssignedSlot,
+        status: 'confirmed',
+        isUnbanned: true,
+        unbannedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
+        registeredAt: disqRecord.originalParticipant?.registeredAt || disqRecord.registeredAt || new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
+      };
+
+      const updated = prev.map(t => {
+        if (String(t.id) !== idStr) return t;
+        const updatedDisq = (t.disqualifiedParticipants || []).filter(d => String(d.id) !== String(disqId));
+        const updatedParticipants = [...(t.participants || []).filter(p => p.id !== restoredParticipant.id), restoredParticipant];
+        const newCount = updatedParticipants.length;
+        const maxSlotsNum = getTournamentTotalSlots(t);
+        const isSolo = (t.mode || '').toLowerCase().includes('solo');
+        const isSquad = (t.mode || '').toLowerCase().includes('squad');
+        const isDuo = (t.mode || '').toLowerCase().includes('duo');
+
+        return {
+          ...t,
+          participants: updatedParticipants,
+          disqualifiedParticipants: updatedDisq,
+          registeredCount: newCount,
+          slots: `${newCount}/${maxSlotsNum} ${isSolo ? 'Players' : isSquad ? 'Squads' : isDuo ? 'Duos' : 'Teams'}`,
+          status: newCount >= maxSlotsNum ? 'closed' : t.status
+        };
+      });
+
+      try {
+        localStorage.setItem('haarshxo_admin_tournaments', JSON.stringify(updated));
+        broadcastChange('tournaments', updated);
+        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'tournaments', data: updated } }));
+      } catch (err) {}
+      return updated;
+    });
+
+    // Notify reinstatement with new assigned slot
+    if (targetDisqRecord && restoredParticipant) {
+      const reinEventData = { 
+        tournamentId: idStr, 
+        tournamentTitle: targetTourneyTitle,
+        newSlotNumber: newlyAssignedSlot,
+        participant: restoredParticipant,
+        uids: targetDisqRecord.uids || [targetDisqRecord.uid, targetDisqRecord.leaderUid].filter(Boolean),
+        igns: targetDisqRecord.igns || [targetDisqRecord.ign, targetDisqRecord.leaderIgn].filter(Boolean),
+        teamName: targetDisqRecord.teamName
+      };
+
+      window.dispatchEvent(new CustomEvent('haarshxo_tournament_reinstated', { detail: reinEventData }));
+      if (globalBroadcastChannel) {
+        globalBroadcastChannel.postMessage({ type: 'tournament_reinstated', data: reinEventData });
+      }
+
+      // Add high-priority in-app inbox notification
+      try {
+        const inbox = JSON.parse(localStorage.getItem('haarshxo_notification_inbox') || '[]');
+        const notifItem = {
+          id: `notif_rein_${Date.now()}`,
+          message: `🎉 Unbanned & Reinstated: ${targetTourneyTitle}`,
+          subtitle: `You were unbanned by Admin. Your new assigned room slot is Slot #${newlyAssignedSlot}.`,
+          type: 'success',
+          time: 'Just now',
+          read: false
+        };
+        const updatedInbox = [notifItem, ...inbox.filter(n => n.id !== notifItem.id).slice(0, 49)];
+        localStorage.setItem('haarshxo_notification_inbox', JSON.stringify(updatedInbox));
+        window.dispatchEvent(new CustomEvent('haarshxo_inbox_updated', { detail: updatedInbox }));
+        if (globalBroadcastChannel) {
+          globalBroadcastChannel.postMessage({ type: 'inbox_updated', data: updatedInbox });
+        }
+      } catch (e) {}
+
+      // Remove from disqualified list and restore to registered tournaments in localStorage
+      try {
+        const disqList = JSON.parse(localStorage.getItem('harshxo_disqualified_tournaments') || '[]');
+        const updatedDisq = disqList.filter(id => String(id) !== idStr);
+        localStorage.setItem('harshxo_disqualified_tournaments', JSON.stringify(updatedDisq));
+
+        const regList = JSON.parse(localStorage.getItem('harshxo_registeredTournaments') || '[]');
+        const updatedReg = Array.from(new Set([...regList, idStr]));
+        localStorage.setItem('harshxo_registeredTournaments', JSON.stringify(updatedReg));
+      } catch (e) {}
+    }
+
+    setTimeout(() => {
+      const stored = localStorage.getItem('haarshxo_admin_tournaments');
+      if (stored) syncToBackend({ tournaments: JSON.parse(stored) });
+    }, 0);
+
+    const targetName = targetDisqRecord?.teamName || disqId;
+    addAuditLog('PARTICIPANT_REINSTATED', 'TOURNAMENTS', `Reinstated "${targetName}" in tournament ${targetTourneyTitle} (${tourneyId}). New slot assigned: Slot #${newlyAssignedSlot}`);
+
+    return { slotNumber: newlyAssignedSlot, participant: restoredParticipant };
   };
 
   const declareTournamentResults = (tourneyId, resultsData) => {
@@ -1583,12 +2012,10 @@ export const AdminProvider = ({ children }) => {
         broadcastChange('codes', updated);
         window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'redeemCodes', data: updated } }));
       } catch {}
+      // Sync inside setState callback — no setTimeout race condition
+      syncToBackend({ redeemCodes: updated });
       return updated;
     });
-    setTimeout(() => {
-      const stored = localStorage.getItem('haarshxo_admin_codes');
-      if (stored) syncToBackend({ redeemCodes: JSON.parse(stored) });
-    }, 0);
     addAuditLog('CODE_DELETED', 'CODES', `Deleted redeem code "${c?.code || id}"`);
   };
 
@@ -2237,6 +2664,12 @@ export const AdminProvider = ({ children }) => {
   // ─── Store Rewards CRUD ───────────────────────────────────────────────────
   const createReward = (data) => {
     lastLocalActionTime.current = Date.now();
+    // Parse instantCodes if provided (array of {code, used} objects)
+    const parsedInstantCodes = Array.isArray(data.instantCodes) ? data.instantCodes : [];
+    const fType = data.fulfillmentType || 'manual';
+    // Stock stays manual — admin sets it. Instant codes running out = auto out-of-stock
+    // regardless of stock value (handled in isOutOfStock helper on frontend)
+    const stockVal = Number(data.stock) || 0;
     const newReward = {
       id: Date.now(),
       storeType: data.storeType || 'main',
@@ -2246,7 +2679,9 @@ export const AdminProvider = ({ children }) => {
       description: data.description || 'Instant delivery to your Free Fire account via UID.',
       image: data.image || 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?q=80&w=2071&auto=format&fit=crop',
       tag: data.tag || 'NEW',
-      stock: Number(data.stock) || 100,
+      fulfillmentType: fType,
+      instantCodes: parsedInstantCodes,
+      stock: stockVal,
       active: true
     };
     setStoreRewards(prev => {
@@ -2256,13 +2691,10 @@ export const AdminProvider = ({ children }) => {
         broadcastChange('store', updated);
         window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'storeRewards', data: updated } }));
       } catch {}
+      syncToBackend({ storeRewards: updated });
       return updated;
     });
-    setTimeout(() => {
-      const stored = localStorage.getItem('haarshxo_admin_store');
-      if (stored) syncToBackend({ storeRewards: JSON.parse(stored) });
-    }, 0);
-    addAuditLog('REWARD_CREATED', 'STORE', `Created store reward "${newReward.title}" (${newReward.cost} XO Coins, Store: ${newReward.storeType})`);
+    addAuditLog('REWARD_CREATED', 'STORE', `Created store reward "${newReward.title}" (${newReward.cost} XO Coins, Store: ${newReward.storeType}, Fulfillment: ${fType})`);
     return newReward;
   };
 
@@ -2305,31 +2737,59 @@ export const AdminProvider = ({ children }) => {
 
   const recordStoreRedemption = (item, user) => {
     lastLocalActionTime.current = Date.now();
-    // 1. Decrement stock and sync
+
+    // ─── STEP 1: Pre-select instant delivery code synchronously ───────────────
+    // Must be done BEFORE setState because we need the code value immediately.
+    let deliveredCode = null;
+    const isInstant = item.fulfillmentType === 'instant';
+
+    if (isInstant) {
+      const availableCodes = (item.instantCodes || []).filter(c => !c.used);
+      if (availableCodes.length === 0) {
+        // No codes left — block the redemption
+        return { success: false, error: 'OUT_OF_CODES', message: 'No redemption codes available right now. Please contact admin.' };
+      }
+      const randomIdx = Math.floor(Math.random() * availableCodes.length);
+      deliveredCode = availableCodes[randomIdx].code;
+    }
+
+    // ─── STEP 2: Decrement stock + mark code as used in storeRewards ──────────
     setStoreRewards(prev => {
       const updated = prev.map(r => {
-        if (r.id !== item.id) return r;
-        return { ...r, stock: Math.max(0, (r.stock || 10) - 1) };
+        if (String(r.id) !== String(item.id)) return r;
+        // FIXED: was `(r.stock || 10) - 1` which defaults to 10 when stock=0
+        const newStock = Math.max(0, (Number(r.stock) || 0) - 1);
+        let updatedInstantCodes = r.instantCodes || [];
+        if (deliveredCode) {
+          updatedInstantCodes = updatedInstantCodes.map(c =>
+            c.code === deliveredCode ? { ...c, used: true } : c
+          );
+        }
+        return { ...r, stock: newStock, instantCodes: updatedInstantCodes };
       });
       try {
         localStorage.setItem('haarshxo_admin_store', JSON.stringify(updated));
         broadcastChange('store', updated);
       } catch {}
+      // Sync store (with updated stock + used codes) directly — no setTimeout race
+      syncToBackend({ storeRewards: updated });
       return updated;
     });
 
-    // 2. Add redemption record (separately from Razorpay payments ledger!)
+    // ─── STEP 3: Record the redemption entry ──────────────────────────────────
     const newRedemption = {
       id: `red_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       rewardId: item.id,
       rewardTitle: item.title,
       rewardType: item.type || 'reward',
       cost: item.cost,
-      userUid: user?.uid || '849204812',
-      userIgn: user?.inGameName || 'HaarshFan_99',
+      userUid: user?.uid || '',
+      userIgn: user?.inGameName || 'Player',
       userEmail: user?.email || '',
-      status: 'pending', // 'pending' | 'delivered' | 'cancelled'
-      deliveryDetails: '',
+      fulfillmentType: item.fulfillmentType || 'manual',
+      // Instant = auto-delivered; manual = admin must fulfill
+      status: deliveredCode ? 'delivered' : 'pending',
+      deliveryDetails: deliveredCode || '',
       createdAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
       timestamp: Date.now()
     };
@@ -2340,30 +2800,40 @@ export const AdminProvider = ({ children }) => {
         localStorage.setItem('haarshxo_admin_redemptions', JSON.stringify(updated));
         broadcastChange('redemptions', updated);
       } catch {}
+      // Single source of truth — syncToBackend replaces entire array on server.
+      // No separate /api/redemptions POST — that caused duplicate entries because
+      // the endpoint APPENDS while syncToBackend REPLACES, creating 2 records.
+      syncToBackend({ redemptions: updated });
       return updated;
     });
 
-    // Also send directly to backend /api/redemptions endpoint for instant sync
+    // Also save to user's personal redemption history in localStorage (keyed by UID)
+    // This lets the user view their history + codes without hitting the admin store
     try {
-      const baseUrl = getBackendBaseUrl();
-      const redUrl = baseUrl ? `${baseUrl}/api/redemptions` : '/api/redemptions';
-      fetch(redUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newRedemption)
-      }).catch(err => console.warn('[AdminSync] /api/redemptions post error:', err));
+      const uid = user?.uid || 'guest';
+      const userHistoryKey = `haarshxo_user_redemptions_${uid}`;
+      const existing = JSON.parse(localStorage.getItem(userHistoryKey) || '[]');
+      const userEntry = {
+        id: newRedemption.id,
+        rewardTitle: item.title,
+        rewardType: item.type || 'reward',
+        cost: item.cost,
+        fulfillmentType: item.fulfillmentType || 'manual',
+        status: deliveredCode ? 'delivered' : 'pending',
+        code: deliveredCode || null, // stored for user to view later
+        image: item.image || '',
+        redeemedAt: newRedemption.createdAt,
+      };
+      localStorage.setItem(userHistoryKey, JSON.stringify([userEntry, ...existing.slice(0, 49)]));
     } catch {}
 
-    setTimeout(() => {
-      const storedStore = localStorage.getItem('haarshxo_admin_store');
-      const storedRed = localStorage.getItem('haarshxo_admin_redemptions');
-      const payload = {};
-      if (storedStore) payload.storeRewards = JSON.parse(storedStore);
-      if (storedRed) payload.redemptions = JSON.parse(storedRed);
-      if (Object.keys(payload).length) syncToBackend(payload);
-    }, 0);
+    addAuditLog('STORE_REDEMPTION', 'STORE',
+      `Player ${user?.inGameName || 'Player'} (UID: ${user?.uid || 'N/A'}) redeemed "${item.title}" for ${item.cost} XO Coins${
+        deliveredCode ? ` — Code delivered: ${deliveredCode}` : ' — Awaiting manual fulfillment'
+      }`
+    );
 
-    addAuditLog('STORE_REDEMPTION', 'STORE', `Player ${user?.inGameName || 'Player'} (UID: ${user?.uid || 'N/A'}) redeemed "${item.title}" for ${item.cost} XO Coins`);
+    return { success: true, deliveredCode, fulfillmentType: item.fulfillmentType || 'manual' };
   };
 
   const updateRedemptionStatus = (id, newStatus, deliveryDetails = '') => {
@@ -2432,6 +2902,7 @@ export const AdminProvider = ({ children }) => {
         toggleTournamentStatus,
         addTournamentParticipant,
         removeTournamentParticipant,
+        reinstateTournamentParticipant,
         declareTournamentResults,
 
         // Passes
