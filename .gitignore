@@ -15,6 +15,7 @@ dist-ssr
 .env.*
 
 # Editor directories and files
+.vscode/
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -24,3 +25,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+/*.png
+
+# Python & Backend
+__pycache__/
+*.py[cod]
+*$py.class
+server/__pycache__/
+server/arena.db
+server/data/
+server/uploads/
+*.db
+
