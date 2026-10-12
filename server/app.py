@@ -1,0 +1,667 @@
+import os
+import sys
+import json
+import hmac
+import hashlib
+import sqlite3
+from datetime import datetime
+import razorpay
+from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
+from dotenv import load_dotenv
+
+# Ensure local server directory is on sys.path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+from storage import get_all_collections, update_collections, save_base64_image, UPLOAD_DIR, DATA_DIR
+
+# Load .env from the server/ folder
+load_dotenv(os.path.join(BASE_DIR, '.env'))
+
+app = Flask(__name__)
+
+# Allow requests from all origins (localhost, LAN IP, mobile devices, etc.)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+
+# ─── Razorpay Client ─────────────────────────────────────────────────────────
+RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID", "")
+RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
+
+razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+
+# ─── Dedicated Users Database ─────────────────────────────────────────────────
+USERS_DB_PATH = os.path.join(DATA_DIR, 'users.db')
+
+def get_users_db():
+    conn = sqlite3.connect(USERS_DB_PATH, timeout=10)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_users_db():
+    """Create users table if it doesn't exist."""
+    with get_users_db() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id TEXT PRIMARY KEY,
+                supabase_id TEXT UNIQUE,
+                email TEXT,
+                in_game_name TEXT,
+                game_uid TEXT,
+                coins INTEGER DEFAULT 0,
+                cs_tickets INTEGER DEFAULT 0,
+                br_tickets INTEGER DEFAULT 0,
+                status TEXT DEFAULT 'active',
+                status_reason TEXT DEFAULT '',
+                role TEXT DEFAULT 'player',
+                join_date TEXT,
+                last_seen TEXT,
+                notes TEXT DEFAULT ''
+            )
+        """)
+        conn.commit()
+
+init_users_db()
+
+def user_row_to_dict(row):
+    return {
+        "id": row["id"],
+        "supabaseId": row["supabase_id"],
+        "email": row["email"],
+        "inGameName": row["in_game_name"],
+        "uid": row["game_uid"],
+        "coins": row["coins"] or 0,
+        "csTickets": row["cs_tickets"] or 0,
+        "brTickets": row["br_tickets"] or 0,
+        "status": row["status"] or "active",
+        "statusReason": row["status_reason"] or "",
+        "role": row["role"] or "player",
+        "joinDate": row["join_date"],
+        "lastSeen": row["last_seen"],
+        "notes": row["notes"] or "",
+    }
+
+# ─── Users API Endpoints ───────────────────────────────────────────────────────
+
+@app.route("/api/users", methods=["GET"])
+def list_users():
+    """Return all registered users (for admin panel)."""
+    init_users_db()
+    with get_users_db() as conn:
+        rows = conn.execute("SELECT * FROM users ORDER BY join_date DESC").fetchall()
+    return jsonify([user_row_to_dict(r) for r in rows]), 200
+
+@app.route("/api/users/upsert", methods=["POST"])
+def upsert_user():
+    """
+    Called by frontend on login/register to ensure user exists in our DB.
+    Creates a new record if not found, updates inGameName/email/lastSeen if found.
+    Also returns the user's current balance from our DB.
+    """
+    init_users_db()
+    data = request.get_json() or {}
+    supabase_id  = data.get("supabaseId", "")
+    email        = data.get("email", "")
+    in_game_name = data.get("inGameName", "Player")
+    game_uid     = data.get("uid", "")
+    now          = datetime.now().isoformat()
+
+    if not supabase_id:
+        return jsonify({"error": "supabaseId is required"}), 400
+
+    with get_users_db() as conn:
+        existing = conn.execute(
+            "SELECT * FROM users WHERE supabase_id = ?", (supabase_id,)
+        ).fetchone()
+
+        if existing:
+            conn.execute("""
+                UPDATE users SET email = ?, in_game_name = ?, last_seen = ?
+                WHERE supabase_id = ?
+            """, (email, in_game_name, now, supabase_id))
+            conn.commit()
+            row = conn.execute(
+                "SELECT * FROM users WHERE supabase_id = ?", (supabase_id,)
+            ).fetchone()
+        else:
+            user_id = f"u_{supabase_id[:12]}_{datetime.now().strftime('%f')}"
+            conn.execute("""
+                INSERT INTO users
+                    (id, supabase_id, email, in_game_name, game_uid, coins, cs_tickets, br_tickets,
+                     status, status_reason, role, join_date, last_seen, notes)
+                VALUES (?, ?, ?, ?, ?, 0, 0, 0, 'active', '', 'player', ?, ?, '')
+            """, (user_id, supabase_id, email, in_game_name, game_uid, now[:10], now))
+            conn.commit()
+            row = conn.execute(
+                "SELECT * FROM users WHERE supabase_id = ?", (supabase_id,)
+            ).fetchone()
+
+    return jsonify({"success": True, "user": user_row_to_dict(row)}), 200
+
+def find_user_by_identifier(conn, identifier):
+    """Finds user by supabase_id, game_uid, or internal id."""
+    if not identifier:
+        return None
+    ident = str(identifier).strip()
+    return conn.execute(
+        "SELECT * FROM users WHERE supabase_id = ? OR game_uid = ? OR id = ?",
+        (ident, ident, ident)
+    ).fetchone()
+
+@app.route("/api/users/<user_identifier>/balance", methods=["GET"])
+def get_user_balance(user_identifier):
+    """Returns the server-side balance for a specific user."""
+    init_users_db()
+    with get_users_db() as conn:
+        row = find_user_by_identifier(conn, user_identifier)
+    if not row:
+        return jsonify({"error": "User not found"}), 404
+    return jsonify(user_row_to_dict(row)), 200
+
+@app.route("/api/users/<user_identifier>/update-balance", methods=["POST"])
+def update_user_balance(user_identifier):
+    """Admin endpoint: adjust coins, csTickets, brTickets by delta values."""
+    init_users_db()
+    data       = request.get_json() or {}
+    coin_delta = int(data.get("coinDelta", 0))
+    cs_delta   = int(data.get("csDelta", 0))
+    br_delta   = int(data.get("brDelta", 0))
+    reason     = data.get("reason", "Admin Adjustment")
+
+    with get_users_db() as conn:
+        row = find_user_by_identifier(conn, user_identifier)
+        if not row:
+            return jsonify({"error": "User not found"}), 404
+
+        new_coins = max(0, (row["coins"] or 0) + coin_delta)
+        new_cs    = max(0, (row["cs_tickets"] or 0) + cs_delta)
+        new_br    = max(0, (row["br_tickets"] or 0) + br_delta)
+
+        conn.execute("""
+            UPDATE users SET coins = ?, cs_tickets = ?, br_tickets = ? WHERE id = ?
+        """, (new_coins, new_cs, new_br, row["id"]))
+        conn.commit()
+        updated = conn.execute(
+            "SELECT * FROM users WHERE id = ?", (row["id"],)
+        ).fetchone()
+
+    # Audit log
+    try:
+        store = get_all_collections()
+        audit_logs = store.get("auditLogs", [])
+        audit_logs.insert(0, {
+            "id": f"log_{os.urandom(4).hex()}",
+            "action": "USER_BALANCE_ADJUSTED",
+            "category": "USERS",
+            "details": f"Admin adjusted balance for {row['in_game_name']} (UID: {row['game_uid']}): {'+' if coin_delta>=0 else ''}{coin_delta} Coins, {'+' if cs_delta>=0 else ''}{cs_delta} CS, {'+' if br_delta>=0 else ''}{br_delta} BR. Reason: {reason}",
+            "timestamp": datetime.now().isoformat(),
+            "adminUser": "ADMIN"
+        })
+        store["auditLogs"] = audit_logs[:300]
+        update_collections({"auditLogs": store["auditLogs"]})
+    except Exception:
+        pass
+
+    return jsonify({"success": True, "user": user_row_to_dict(updated)}), 200
+
+@app.route("/api/users/<user_identifier>/update-status", methods=["POST"])
+def update_user_status(user_identifier):
+    """Admin endpoint: ban, suspend, or unban a user."""
+    init_users_db()
+    data       = request.get_json() or {}
+    new_status = data.get("status", "active")
+    reason     = data.get("reason", "")
+
+    valid_statuses = ["active", "suspended", "banned"]
+    if new_status not in valid_statuses:
+        return jsonify({"error": f"Invalid status. Must be one of: {valid_statuses}"}), 400
+
+    with get_users_db() as conn:
+        row = find_user_by_identifier(conn, user_identifier)
+        if not row:
+            return jsonify({"error": "User not found"}), 404
+
+        conn.execute("""
+            UPDATE users SET status = ?, status_reason = ? WHERE id = ?
+        """, (new_status, reason, row["id"]))
+        conn.commit()
+        updated = conn.execute(
+            "SELECT * FROM users WHERE id = ?", (row["id"],)
+        ).fetchone()
+
+    # Audit log
+    try:
+        store = get_all_collections()
+        audit_logs = store.get("auditLogs", [])
+        audit_logs.insert(0, {
+            "id": f"log_{os.urandom(4).hex()}",
+            "action": "USER_STATUS_CHANGE",
+            "category": "USERS",
+            "details": f"Changed status for {row['in_game_name']} (UID: {row['game_uid']}) to {new_status.upper()}. Reason: {reason or 'N/A'}",
+            "timestamp": datetime.now().isoformat(),
+            "adminUser": "ADMIN"
+        })
+        store["auditLogs"] = audit_logs[:300]
+        update_collections({"auditLogs": store["auditLogs"]})
+    except Exception:
+        pass
+
+    return jsonify({"success": True, "user": user_row_to_dict(updated)}), 200
+
+@app.route("/api/users/<user_identifier>/sync-balance", methods=["POST"])
+def sync_user_balance(user_identifier):
+    """Called by GameContext to push local balance updates to the server."""
+    init_users_db()
+    data       = request.get_json() or {}
+    coins      = data.get("coins")
+    cs_tickets = data.get("csTickets")
+    br_tickets = data.get("brTickets")
+
+    if coins is None and cs_tickets is None and br_tickets is None:
+        return jsonify({"error": "No balance fields provided"}), 400
+
+    with get_users_db() as conn:
+        row = find_user_by_identifier(conn, user_identifier)
+        if not row:
+            return jsonify({"error": "User not found"}), 404
+
+        new_coins = int(coins) if coins is not None else row["coins"]
+        new_cs    = int(cs_tickets) if cs_tickets is not None else row["cs_tickets"]
+        new_br    = int(br_tickets) if br_tickets is not None else row["br_tickets"]
+        new_coins = max(0, new_coins)
+        new_cs    = max(0, new_cs)
+        new_br    = max(0, new_br)
+
+        conn.execute("""
+            UPDATE users SET coins = ?, cs_tickets = ?, br_tickets = ?, last_seen = ?
+            WHERE id = ?
+        """, (new_coins, new_cs, new_br, datetime.now().isoformat(), row["id"]))
+        conn.commit()
+        updated = conn.execute(
+            "SELECT * FROM users WHERE id = ?", (row["id"],)
+        ).fetchone()
+
+    return jsonify({"success": True, "user": user_row_to_dict(updated)}), 200
+
+# ─── Data Storage Operations (SQLite + Uploaded Files) ────────────────────────
+def load_store():
+    return get_all_collections()
+
+def save_store(data):
+    return update_collections(data)
+
+# Dynamic passes dictionary — seeded with defaults, updated from store
+DEFAULT_PASSES = {
+    1: {"name": "CLASH SQUAD TICKET PACK",   "amount": 3900,  "grantCs": 5, "grantBr": 0, "grantCoins": 100},
+    2: {"name": "BATTLE ROYALE TICKET PACK", "amount": 5900,  "grantCs": 0, "grantBr": 5, "grantCoins": 150},
+    3: {"name": "HAARSH XO ALL-STAR COMBO",  "amount": 9900,  "grantCs": 5, "grantBr": 5, "grantCoins": 300},
+}
+
+def get_current_passes():
+    store = load_store()
+    passes = dict(DEFAULT_PASSES)
+    if "passes" in store and isinstance(store["passes"], list):
+        for p in store["passes"]:
+            pid = int(p.get("id", 0))
+            if pid > 0:
+                amount_paise = int(float(p.get("inrPrice", 39)) * 100)
+                passes[pid] = {
+                    "name":       p.get("title", f"Pass #{pid}"),
+                    "amount":     amount_paise,
+                    "grantCs":    int(p.get("grantCs", 0)),
+                    "grantBr":    int(p.get("grantBr", 0)),
+                    "grantCoins": int(p.get("grantCoins", 0)),
+                }
+    return passes
+
+# ─── Health Check ─────────────────────────────────────────────────────────────
+@app.route("/api/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok", "service": "HAARSH XO Backend", "port": int(os.getenv("PORT", 5001))}), 200
+
+# ─── Create Razorpay Order ────────────────────────────────────────────────────
+@app.route("/api/create-order", methods=["POST"])
+def create_order():
+    try:
+        data    = request.get_json() or {}
+        pass_id = int(data.get("pass_id", 0))
+
+        valid_passes = get_current_passes()
+        if pass_id not in valid_passes:
+            return jsonify({"error": f"Invalid pass ID: {pass_id}"}), 400
+
+        pass_info = valid_passes[pass_id]
+        order = razorpay_client.order.create({
+            "amount":   pass_info["amount"],
+            "currency": "INR",
+            "receipt":  f"pass_{pass_id}_{os.urandom(4).hex()}",
+            "notes": {
+                "pass_id":   str(pass_id),
+                "pass_name": pass_info["name"],
+                "grant_cs":  str(pass_info["grantCs"]),
+                "grant_br":  str(pass_info["grantBr"]),
+            }
+        })
+
+        return jsonify({
+            "order_id":    order["id"],
+            "amount":      order["amount"],
+            "currency":    order["currency"],
+            "key_id":      RAZORPAY_KEY_ID,
+            "pass_id":     pass_id,
+            "grant_cs":    pass_info["grantCs"],
+            "grant_br":    pass_info["grantBr"],
+            "grant_coins": pass_info.get("grantCoins", 0),
+            "pass_name":   pass_info["name"],
+        }), 200
+
+    except razorpay.errors.BadRequestError as e:
+        return jsonify({"error": f"Razorpay error: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
+
+# ─── Verify Payment Signature ─────────────────────────────────────────────────
+@app.route("/api/verify-payment", methods=["POST"])
+def verify_payment():
+    try:
+        data = request.get_json() or {}
+
+        razorpay_order_id   = data.get("razorpay_order_id", "")
+        razorpay_payment_id = data.get("razorpay_payment_id", "")
+        razorpay_signature  = data.get("razorpay_signature", "")
+        pass_id             = int(data.get("pass_id", 0))
+        user_uid            = data.get("user_uid", "Unknown")
+        user_ign            = data.get("user_ign", "Player")
+        supabase_id         = data.get("supabase_id", "")
+
+        if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
+            return jsonify({"success": False, "error": "Missing payment fields"}), 400
+
+        valid_passes = get_current_passes()
+        if pass_id not in valid_passes:
+            return jsonify({"success": False, "error": "Invalid pass ID"}), 400
+
+        # ── HMAC-SHA256 Signature Verification ──
+        message = f"{razorpay_order_id}|{razorpay_payment_id}"
+        mac = hmac.new(
+            RAZORPAY_KEY_SECRET.encode("utf-8"),
+            message.encode("utf-8"),
+            hashlib.sha256
+        )
+        expected_signature = mac.hexdigest()
+
+        if not hmac.compare_digest(expected_signature, razorpay_signature):
+            return jsonify({"success": False, "error": "Payment signature invalid — possible fraud attempt"}), 400
+
+        # ── Fetch payment details from Razorpay ──
+        payment = razorpay_client.payment.fetch(razorpay_payment_id)
+        if payment.get("status") not in ["captured", "authorized"]:
+            return jsonify({"success": False, "error": f"Payment not captured (status: {payment.get('status')})"}), 400
+
+        pass_info = valid_passes[pass_id]
+
+        # ── Credit tickets & coins to user's real balance in users.db ──
+        if supabase_id:
+            try:
+                init_users_db()
+                with get_users_db() as conn:
+                    row = conn.execute(
+                        "SELECT * FROM users WHERE supabase_id = ?", (supabase_id,)
+                    ).fetchone()
+                    if row:
+                        new_coins = (row["coins"] or 0) + pass_info.get("grantCoins", 0)
+                        new_cs    = (row["cs_tickets"] or 0) + pass_info["grantCs"]
+                        new_br    = (row["br_tickets"] or 0) + pass_info["grantBr"]
+                        conn.execute("""
+                            UPDATE users SET coins = ?, cs_tickets = ?, br_tickets = ?
+                            WHERE supabase_id = ?
+                        """, (new_coins, new_cs, new_br, supabase_id))
+                        conn.commit()
+            except Exception as e:
+                print(f"[PAYMENT] Failed to credit balance to user {supabase_id}: {e}")
+
+        # ── Record transaction in store ──
+        store        = load_store()
+        transactions = store.get("transactions", [])
+        new_tx = {
+            "id":         f"tx_{os.urandom(4).hex()}",
+            "paymentId":  razorpay_payment_id,
+            "orderId":    razorpay_order_id,
+            "passId":     pass_id,
+            "passTitle":  pass_info["name"],
+            "amount":     pass_info["amount"] / 100,
+            "currency":   "INR",
+            "userUid":    user_uid,
+            "userIgn":    user_ign,
+            "status":     "captured",
+            "createdAt":  datetime.now().isoformat(),
+        }
+        transactions.insert(0, new_tx)
+        store["transactions"] = transactions[:200]
+
+        # Audit log
+        audit_logs = store.get("auditLogs", [])
+        audit_logs.insert(0, {
+            "id":        f"log_{os.urandom(4).hex()}",
+            "action":    "PAYMENT_CAPTURED",
+            "category":  "PAYMENTS",
+            "details":   f"Payment \u20b9{pass_info['amount']/100} captured for {pass_info['name']} by {user_ign} (UID: {user_uid}). ID: {razorpay_payment_id}",
+            "timestamp": datetime.now().isoformat(),
+            "adminUser": "SYSTEM / RAZORPAY",
+        })
+        store["auditLogs"] = audit_logs[:300]
+        save_store(store)
+
+        return jsonify({
+            "success":     True,
+            "payment_id":  razorpay_payment_id,
+            "pass_id":     pass_id,
+            "grant_cs":    pass_info["grantCs"],
+            "grant_br":    pass_info["grantBr"],
+            "grant_coins": pass_info.get("grantCoins", 0),
+            "pass_name":   pass_info["name"],
+            "transaction": new_tx,
+        }), 200
+
+    except razorpay.errors.BadRequestError as e:
+        return jsonify({"success": False, "error": f"Razorpay API error: {str(e)}"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": f"Server error: {str(e)}"}), 500
+
+# ─── Admin Sync Endpoints ─────────────────────────────────────────────────────
+@app.route("/api/admin/data", methods=["GET"])
+def get_admin_data():
+    """Fetch stored admin state with authoritative real users from users.db."""
+    store = load_store()
+    try:
+        init_users_db()
+        with get_users_db() as conn:
+            rows = conn.execute("SELECT * FROM users ORDER BY join_date DESC").fetchall()
+            store["users"] = [user_row_to_dict(r) for r in rows]
+    except Exception as e:
+        print(f"[ADMIN_DATA] Error fetching users from users.db: {e}")
+    return jsonify(store), 200
+
+@app.route("/api/admin/sync", methods=["POST"])
+def sync_admin_data():
+    """
+    Update and persist admin data from the frontend dashboard into SQLite.
+    Any uploaded base64 images are automatically decoded and saved as physical
+    image files on disk in server/uploads/, and replaced with lightweight URL paths.
+
+    IMPORTANT: 'transactions' and 'users' are NEVER accepted from this endpoint.
+    - transactions: written exclusively by verify_payment (Razorpay webhook-style)
+    - users: managed via /api/users/* dedicated endpoints
+    Allowing the frontend to overwrite these would cause real payment/user records
+    to be wiped by a stale empty-array from localStorage on cache clear.
+    """
+    try:
+        payload = request.get_json() or {}
+        # Strip backend-owned fields — these must NEVER be overwritten from the frontend
+        payload.pop("transactions", None)
+        payload.pop("users", None)
+        payload.pop("usersList", None)
+        update_collections(payload)
+        return jsonify({"success": True, "message": "Admin data synchronized successfully"}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─── Image Upload & Static File Serving ───────────────────────────────────────
+@app.route("/api/uploads/<path:filename>", methods=["GET"])
+def serve_upload(filename):
+    """Serve uploaded tournament and reward images from disk."""
+    return send_from_directory(UPLOAD_DIR, filename)
+
+@app.route("/api/upload", methods=["POST"])
+def upload_file():
+    """Upload image file (multipart or base64) and get persistent image URL."""
+    try:
+        # Multipart form file upload
+        if 'file' in request.files:
+            f = request.files['file']
+            if f.filename:
+                import uuid
+                ext = f.filename.rsplit('.', 1)[-1].lower() if '.' in f.filename else 'png'
+                filename = f"img_{uuid.uuid4().hex[:12]}.{ext}"
+                filepath = os.path.join(UPLOAD_DIR, filename)
+                f.save(filepath)
+                return jsonify({"success": True, "url": f"/api/uploads/{filename}"}), 200
+
+        # Base64 JSON upload
+        body     = request.get_json() or {}
+        img_data = body.get('image') or body.get('data')
+        if img_data and isinstance(img_data, str) and img_data.startswith('data:image/'):
+            url = save_base64_image(img_data)
+            return jsonify({"success": True, "url": url}), 200
+
+        return jsonify({"success": False, "error": "No valid file or image data provided"}), 400
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─── Reward Redemptions (XO Coins) Endpoints ─────────────────────────────────
+@app.route("/api/redemptions", methods=["GET"])
+def get_redemptions():
+    """Fetch all store/reward redemptions made with XO coins."""
+    try:
+        store = load_store()
+        redemptions = store.get("redemptions", [])
+        return jsonify(redemptions), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/redemptions", methods=["POST"])
+def create_redemption():
+    """Record a new reward redemption by a user."""
+    try:
+        data = request.get_json() or {}
+        store = load_store()
+        redemptions = store.get("redemptions", [])
+
+        user_uid = str(data.get("userUid", "")).strip()
+        user_ign = str(data.get("userIgn", "")).strip() or "Player"
+        reward_id = data.get("rewardId")
+        reward_title = data.get("rewardTitle", "Reward")
+        reward_type = data.get("rewardType", "general")
+        cost = int(data.get("cost", 0))
+
+        new_redemption = {
+            "id": f"red_{int(datetime.now().timestamp()*1000)}_{os.urandom(3).hex()}",
+            "rewardId": reward_id,
+            "rewardTitle": reward_title,
+            "rewardType": reward_type,
+            "cost": cost,
+            "userUid": user_uid,
+            "userIgn": user_ign,
+            "userEmail": data.get("userEmail", ""),
+            "status": "pending",
+            "deliveryDetails": "",
+            "createdAt": datetime.now().strftime("%d/%m/%Y, %I:%M:%S %p"),
+            "timestamp": int(datetime.now().timestamp() * 1000),
+        }
+
+        redemptions.insert(0, new_redemption)
+        store["redemptions"] = redemptions[:300]
+
+        # Log in audit
+        audit_logs = store.get("auditLogs", [])
+        audit_logs.insert(0, {
+            "id": f"log_{os.urandom(4).hex()}",
+            "action": "REWARD_REDEEMED",
+            "category": "STORE",
+            "details": f"User {user_ign} (UID: {user_uid}) redeemed '{reward_title}' for {cost} XO Coins.",
+            "timestamp": datetime.now().isoformat(),
+            "adminUser": "SYSTEM",
+        })
+        store["auditLogs"] = audit_logs[:300]
+
+        save_store(store)
+        return jsonify({"success": True, "redemption": new_redemption}), 201
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/redemptions/<redemption_id>/status", methods=["PUT", "POST"])
+def update_redemption_status(redemption_id):
+    """Admin updates redemption status (pending / delivered / cancelled) and optional delivery details."""
+    try:
+        data = request.get_json() or {}
+        new_status = data.get("status", "delivered")
+        delivery_details = data.get("deliveryDetails", "")
+
+        store = load_store()
+        redemptions = store.get("redemptions", [])
+
+        updated = False
+        target = None
+        for r in redemptions:
+            if r.get("id") == redemption_id:
+                r["status"] = new_status
+                if delivery_details is not None:
+                    r["deliveryDetails"] = delivery_details
+                r["updatedAt"] = datetime.now().strftime("%d/%m/%Y, %I:%M:%S %p")
+                target = r
+                updated = True
+                break
+
+        if not updated:
+            return jsonify({"success": False, "error": "Redemption not found"}), 404
+
+        store["redemptions"] = redemptions
+
+        # Add audit log
+        audit_logs = store.get("auditLogs", [])
+        audit_logs.insert(0, {
+            "id": f"log_{os.urandom(4).hex()}",
+            "action": "REDEMPTION_UPDATED",
+            "category": "STORE",
+            "details": f"Redemption {redemption_id} for {target.get('rewardTitle')} marked '{new_status}' (UID: {target.get('userUid')}). Note: {delivery_details}",
+            "timestamp": datetime.now().isoformat(),
+            "adminUser": data.get("adminUser", "ADMIN"),
+        })
+        store["auditLogs"] = audit_logs[:300]
+
+        save_store(store)
+        return jsonify({"success": True, "redemption": target}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─── Run ──────────────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    if sys.stdout.encoding != 'utf-8':
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except Exception:
+            pass
+
+    if not RAZORPAY_KEY_ID or not RAZORPAY_KEY_SECRET:
+        print("\n[WARNING] Razorpay keys not set in server/.env")
+        print("   Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to enable payments.\n")
+    else:
+        print(f"\n[OK] Razorpay connected: {RAZORPAY_KEY_ID[:12]}...")
+
+    port = int(os.getenv("PORT", 5001))
+    print(f"[OK] Flask backend running on port {port}")
+    app.run(debug=True, host="0.0.0.0", port=port)
