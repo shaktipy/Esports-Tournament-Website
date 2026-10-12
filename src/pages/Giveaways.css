@@ -346,9 +346,64 @@
   cursor: default;
 }
 
+.gw-enter-btn.concluded {
+  background: rgba(148, 163, 184, 0.12);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  cursor: not-allowed;
+}
+
+.gw-enter-btn.closed {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  cursor: not-allowed;
+}
+
+.gw-enter-btn.live-locked {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  cursor: not-allowed;
+}
+
 .gw-enter-btn.pending {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+/* Status variants for top-left live badge */
+.gw-live-badge.gw-status-open {
+  background: #10b981;
+  color: #0b0c10;
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.45);
+  animation: none;
+}
+
+.gw-live-badge.gw-status-ongoing,
+.gw-live-badge.gw-status-live {
+  background: #ef4444;
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
+  animation: pulse-badge 1.8s infinite;
+}
+
+.gw-live-badge.gw-status-closed {
+  background: #475569;
+  color: #e2e8f0;
+  font-weight: 700;
+  box-shadow: none;
+  animation: none;
+}
+
+.gw-live-badge.gw-status-completed {
+  background: #f59e0b;
+  color: #0b0c10;
+  font-weight: 800;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);
+  animation: none;
 }
 
 /* ─── Empty state ───────────────────────────────────────── */
