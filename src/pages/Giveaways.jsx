@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trophy, Users, Clock, CheckCircle, Share2, Youtube, Instagram, ChevronRight, CheckCircle2, Award, Sparkles, Gift } from 'lucide-react';
+import { Trophy, Users, Clock, CheckCircle, Share2, Youtube, Instagram, ChevronRight, CheckCircle2, Award, Sparkles, Gift, XCircle } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { useAdmin } from '../context/AdminContext';
 import './Giveaways.css';
@@ -17,7 +17,8 @@ const MOCK_GIVEAWAYS = [
     title: 'Monthly Mega Diamond Giveaway', 
     prize: '10,000 Free Fire Diamonds', 
     daysLeft: 14,
-    participants: 18420,
+    status: 'open',
+    participants: 0,
     participantsList: [],
     requirements: DEFAULT_REQUIREMENTS,
     image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop',
@@ -30,7 +31,8 @@ const MOCK_GIVEAWAYS = [
     title: 'Weekend Special: Booyah Pass Giveaway', 
     prize: '5x Booyah Passes + 1,000 Diamonds', 
     daysLeft: 3,
-    participants: 5850,
+    status: 'open',
+    participants: 0,
     participantsList: [],
     requirements: [
       { id: 'req4', text: "Watch today's live stream for 15 mins", completed: true, icon: <Youtube size={15} /> },
@@ -81,15 +83,30 @@ const Giveaways = () => {
       return;
     }
 
-    setEnteredGiveaways(prev => ({ ...prev, [giveaway.id]: true }));
+    const currentStatus = giveaway.status || (giveaway.winner ? 'completed' : 'open');
+    if (currentStatus !== 'open' || giveaway.winner) {
+      if (currentStatus === 'completed' || giveaway.winner) {
+        showNotification('Giveaway Concluded', 'warning', 'Winner has already been announced. Entries are closed.');
+      } else if (currentStatus === 'closed') {
+        showNotification('Registrations Closed', 'warning', 'Registrations are currently closed for this giveaway.');
+      } else {
+        showNotification('Giveaway Live', 'warning', 'Giveaway is currently live on stream! Entries are locked.');
+      }
+      return;
+    }
 
     if (addGiveawayParticipant) {
-      addGiveawayParticipant(giveaway.id, {
+      const res = addGiveawayParticipant(giveaway.id, {
         uid: user.uid,
         ign: user.inGameName
       });
+      if (res && res.success === false) {
+        showNotification(res.reason || 'Cannot enter this giveaway right now', 'warning');
+        return;
+      }
     }
 
+    setEnteredGiveaways(prev => ({ ...prev, [giveaway.id]: true }));
     showNotification('🎉 Registered Successfully!', 'special', `You have successfully entered the ${giveaway.title}!`);
   };
 
@@ -125,13 +142,19 @@ const Giveaways = () => {
             const allCompleted = normalizedReqs.every(r => isTaskCompleted(giveaway.id, r.id, r.completed));
             const hasUserJoined = giveaway.participantsList?.some(p => p.uid === user?.uid) || !!enteredGiveaways[giveaway.id];
 
+            const currentStatus = giveaway.status || (giveaway.winner ? 'completed' : 'open');
+            const realCount = (giveaway.participantsList || []).length;
+
             return (
               <div key={giveaway.id} className={`gw-card glass-panel ${idx === 0 ? 'gw-featured' : ''}`}>
                 {/* Left: Image */}
                 <div className="gw-image-wrap">
                   <img src={giveaway.image} alt={giveaway.title} className="gw-image" />
-                  <div className="gw-live-badge">
-                    {giveaway.winner ? '🏆 WINNER DRAWN' : '🔴 LIVE GIVEAWAY'}
+                  <div className={`gw-live-badge gw-status-${currentStatus}`}>
+                    {(currentStatus === 'completed' || giveaway.winner) && '🏆 WINNER ANNOUNCED'}
+                    {currentStatus === 'closed' && '🔒 REGISTRATION CLOSED'}
+                    {(currentStatus === 'ongoing' || currentStatus === 'live') && '🔴 LIVE STREAM NOW'}
+                    {currentStatus === 'open' && !giveaway.winner && '🟢 OPEN FOR REGISTRATION'}
                   </div>
                 </div>
 
@@ -168,8 +191,8 @@ const Giveaways = () => {
                     <div className="gw-stat">
                       <Users size={20} className="gw-stat-icon users" />
                       <div className="gw-stat-info">
-                        <span className="gw-stat-label">Entries</span>
-                        <span className="gw-stat-value">{(giveaway.participants || 0).toLocaleString()}</span>
+                        <span className="gw-stat-label">Verified Entries</span>
+                        <span className="gw-stat-value">{realCount.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
@@ -201,6 +224,18 @@ const Giveaways = () => {
                   {hasUserJoined ? (
                     <button className="gw-enter-btn entered" disabled>
                       <CheckCircle2 size={18} /> YOU ARE ENTERED ✅
+                    </button>
+                  ) : (currentStatus === 'completed' || giveaway.winner) ? (
+                    <button className="gw-enter-btn concluded" disabled>
+                      <Award size={18} /> GIVEAWAY CONCLUDED (ENTRIES CLOSED)
+                    </button>
+                  ) : currentStatus === 'closed' ? (
+                    <button className="gw-enter-btn closed" disabled>
+                      <XCircle size={18} /> REGISTRATIONS CLOSED
+                    </button>
+                  ) : (currentStatus === 'ongoing' || currentStatus === 'live') ? (
+                    <button className="gw-enter-btn live-locked" disabled>
+                      <Clock size={18} /> LIVE ON STREAM — ENTRIES LOCKED
                     </button>
                   ) : (
                     <button
