@@ -13,7 +13,17 @@ const Redeem = ({ onLoginClick }) => {
   const [copiedCode, setCopiedCode] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState(null);
-  const [userHistory, setUserHistory] = useState([]);
+  const [userHistory, setUserHistory] = useState(() => {
+    try {
+      const u = localStorage.getItem('harshxo_user');
+      const uid = u ? JSON.parse(u)?.uid : null;
+      if (uid) {
+        const saved = localStorage.getItem(`haarshxo_user_redemptions_${uid}`);
+        if (saved) return JSON.parse(saved);
+      }
+    } catch {}
+    return [];
+  });
 
   const { coins, setCoins, setCsTickets, setBrTickets, user, showNotification, isBanned } = useGame();
   const { storeRewards, redeemPromoCode, recordStoreRedemption } = useAdmin();
@@ -24,7 +34,7 @@ const Redeem = ({ onLoginClick }) => {
     try {
       const key = `haarshxo_user_redemptions_${user.uid}`;
       const saved = localStorage.getItem(key);
-      if (saved) setUserHistory(JSON.parse(saved));
+      setUserHistory(saved ? JSON.parse(saved) : []);
     } catch {}
   }, [user?.uid, deliveredCode]); // re-read after new redemption
 
