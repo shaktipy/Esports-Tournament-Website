@@ -14,31 +14,31 @@ const Footer = () => {
               <span className="footer-logo-accent">HAARSH</span> XO
             </div>
             <p className="footer-tagline">
-              Official community platform by Harsh Vardhan. Watch streams, participate in daily missions, compete in custom esports tournaments, and earn rewards.
+              Official community platform by HaarshXO. Watch streams, participate in daily missions, compete in custom esports tournaments, and earn rewards.
             </p>
             <div className="footer-socials">
-              <a 
-                href="https://www.youtube.com/@HaarshXO" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://www.youtube.com/@HaarshXO"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="footer-social-link yt"
                 aria-label="YouTube Channel"
               >
                 <Youtube size={18} />
                 <span>YouTube</span>
               </a>
-              <a 
-                href="https://www.instagram.com/haarsh_xo" 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href="https://www.instagram.com/haarsh_xo"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="footer-social-link ig"
                 aria-label="Instagram Profile"
               >
                 <Instagram size={18} />
                 <span>Instagram</span>
               </a>
-              <a 
-                href="mailto:trmental6@gmail.com" 
+              <a
+                href="mailto:trmental6@gmail.com"
                 className="footer-social-link mail"
                 aria-label="Email Support"
               >
@@ -91,7 +91,7 @@ const Footer = () => {
         {/* Bottom Section: Disclaimer & Copyright */}
         <div className="footer-bottom">
           <p className="footer-disclaimer">
-            Disclaimer: HAARSH XO is an independent gaming & streaming community run by Harsh Vardhan. It is not affiliated with, endorsed by, or sponsored by Garena Free Fire, 111dots Studio, or their respective affiliates. All game trademarks belong to their respective owners.
+            Disclaimer: HAARSH XO is an independent gaming & streaming community run by Harsh Vardhan Singh. It is not affiliated with, endorsed by, or sponsored by Garena Free Fire, 111dots Studio, or their respective affiliates. All game trademarks belong to their respective owners.
           </p>
           <div className="footer-copy-row">
             <span>© {new Date().getFullYear()} HAARSH XO. All rights reserved.</span>

@@ -39,7 +39,7 @@ const PrivacyPolicy = () => {
 
         <h2>1. Controller & Operator Identity</h2>
         <p>
-          This platform, <strong>HAARSH XO</strong>, is owned and operated by Harsh Vardhan (individual content creator and streamer). For any privacy inquiries, data deletion requests, or concerns, contact our designated grievance email at{' '}
+          This platform, <strong>HAARSH XO</strong>, is owned and operated by Harsh Vardhan Singh (individual content creator and streamer). For any privacy inquiries, data deletion requests, or concerns, contact our designated grievance email at{' '}
           <a href="mailto:trmental6@gmail.com" style={{ color: '#ffaa00' }}>trmental6@gmail.com</a>.
         </p>
 
