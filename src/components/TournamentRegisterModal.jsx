@@ -1,8 +1,13 @@
 import { useState, useEffect } from 'react';
 import { 
   Trophy, Users, Shield, CheckCircle2, AlertCircle, 
-  X, Phone, User, Hash, Ticket, MessageSquare, Flame
+  X, Phone, User, Hash, Ticket, MessageSquare, Flame, Dices, XCircle
 } from 'lucide-react';
+import { 
+  getTournamentTotalSlots, 
+  getAvailableSlots, 
+  getOccupiedSlotNumbers 
+} from '../utils/tournamentSlots';
 import './TournamentRegisterModal.css';
 
 const TournamentRegisterModal = ({ 
@@ -16,9 +21,29 @@ const TournamentRegisterModal = ({
   if (!isOpen || !tournament) return null;
 
   const modeLower = (tournament.mode || '').toLowerCase();
-  const isSquad = modeLower.includes('squad') || modeLower.includes('4v4') || modeLower.includes('cs') && !modeLower.includes('solo');
+  const isSquad = modeLower.includes('squad') || modeLower.includes('4v4') || (modeLower.includes('cs') && !modeLower.includes('solo'));
   const isDuo = modeLower.includes('duo') || modeLower.includes('2v2');
-  const isSolo = !isSquad && !isDuo || modeLower.includes('solo') || modeLower.includes('1v1');
+  const isSolo = (!isSquad && !isDuo) || modeLower.includes('solo') || modeLower.includes('1v1');
+
+  // Disqualification check
+  const isDisqualified = Array.isArray(tournament.disqualifiedParticipants) && tournament.disqualifiedParticipants.some(d => {
+    const dUids = (d.uids || [d.uid, d.leaderUid]).filter(Boolean).map(String);
+    const dIgns = (d.igns || [d.ign, d.leaderIgn]).filter(Boolean).map(i => i.toLowerCase());
+    const userUidMatch = user?.uid && dUids.includes(String(user.uid));
+    const userIgnMatch = user?.inGameName && dIgns.includes(user.inGameName.toLowerCase());
+    return userUidMatch || userIgnMatch;
+  });
+  const disqRecord = isDisqualified ? (tournament.disqualifiedParticipants || []).find(d => {
+    const dUids = (d.uids || [d.uid, d.leaderUid]).filter(Boolean).map(String);
+    const dIgns = (d.igns || [d.ign, d.leaderIgn]).filter(Boolean).map(i => i.toLowerCase());
+    return (user?.uid && dUids.includes(String(user.uid))) || (user?.inGameName && dIgns.includes(user.inGameName.toLowerCase()));
+  }) : null;
+
+  // Slot calculations
+  const totalSlots = getTournamentTotalSlots(tournament);
+  const availableSlots = getAvailableSlots(tournament);
+  const occupiedSlots = getOccupiedSlotNumbers(tournament.participants);
+  const isSlotsFull = availableSlots.length === 0;
 
   // Solo Form State
   const [soloForm, setSoloForm] = useState({
@@ -204,12 +229,40 @@ const TournamentRegisterModal = ({
       };
     }
 
-    setSubmittedData(payload);
-    if (onSuccessRegister) {
-      onSuccessRegister(payload);
+    if (isDisqualified) {
+      setErrorMsg(`Cannot register: You were disqualified from this tournament by the admin. Reason: ${disqRecord?.reason || 'Fair-play regulation violation'}`);
+      return;
     }
+
+    const disqList = tournament.disqualifiedParticipants || [];
+    const payloadUids = [payload.uid, payload.leaderUid, ...(payload.players || []).map(p => p.uid)].filter(Boolean).map(String);
+    const payloadIgns = [payload.ign, payload.leaderIgn, ...(payload.players || []).map(p => p.ign)].filter(Boolean).map(i => i.toLowerCase());
+    const rosterDisq = disqList.find(d => {
+      const dUids = (d.uids || [d.uid, d.leaderUid]).filter(Boolean).map(String);
+      const dIgns = (d.igns || [d.ign, d.leaderIgn]).filter(Boolean).map(i => i.toLowerCase());
+      return payloadUids.some(u => dUids.includes(u)) || payloadIgns.some(i => dIgns.includes(i));
+    });
+
+    if (rosterDisq) {
+      setErrorMsg(`Cannot register: Player/roster member (${rosterDisq.teamName || rosterDisq.ign}) is disqualified by the admin. Reason: ${rosterDisq.reason}`);
+      return;
+    }
+
+    if (isSlotsFull) {
+      setErrorMsg(`Tournament registration closed! All ${totalSlots} match slots are fully occupied.`);
+      return;
+    }
+
+    let regResult = null;
+    if (onSuccessRegister) {
+      regResult = onSuccessRegister(payload);
+    }
+    const finalData = regResult ? { ...payload, ...regResult } : payload;
+    setSubmittedData(finalData);
     setRegisteredSuccess(true);
   };
+
+  const assignedSlotNum = submittedData?.slotNumber || submittedData?.slot;
 
   return (
     <div className="treg-modal-overlay">
@@ -236,10 +289,27 @@ const TournamentRegisterModal = ({
             </div>
             <h2>Registration Confirmed! 🎉</h2>
             <p className="treg-success-sub">
-              Your slot has been successfully registered for <strong>{tournament.title}</strong>.
+              Your registration is complete for <strong>{tournament.title}</strong>.
             </p>
 
+            {/* Prominent Slot Reveal Badge */}
+            <div className="treg-assigned-slot-hero">
+              <div className="slot-hero-badge-tag">
+                <Dices size={15} /> RANDOM SLOT ASSIGNED
+              </div>
+              <div className="slot-hero-number">
+                SLOT #{assignedSlotNum || '—'}
+              </div>
+              <p className="slot-hero-caption">
+                Free Fire Custom Room Slot <strong>#{assignedSlotNum}</strong> is officially reserved for your team.
+              </p>
+            </div>
+
             <div className="treg-success-summary-box">
+              <div className="summary-row highlight-slot-row">
+                <span>🎯 Match Room Slot:</span>
+                <strong className="text-slot-gold">SLOT #{assignedSlotNum || 'N/A'}</strong>
+              </div>
               <div className="summary-row">
                 <span>Registration Mode:</span>
                 <strong>{submittedData?.type?.toUpperCase()}</strong>
@@ -265,7 +335,7 @@ const TournamentRegisterModal = ({
             <div className="treg-room-instructions">
               <AlertCircle size={20} className="text-warning flex-shrink-0" />
               <p>
-                <strong>Important Notice:</strong> Custom Room ID and Password will be sent to your WhatsApp number (<code>{submittedData?.phone}</code>) 15 minutes before the match start time. Make sure your team is ready!
+                <strong>Room Entry Rule:</strong> Custom Room ID and Password will be sent to your WhatsApp (<code>{submittedData?.phone}</code>) 15 minutes before match start. You and your squad <strong>MUST sit in Slot #{assignedSlotNum}</strong> in the custom room lobby!
               </p>
             </div>
 
@@ -274,8 +344,9 @@ const TournamentRegisterModal = ({
             </button>
           </div>
         ) : (
-          /* Registration Form View */
-          <form onSubmit={handleSubmit} className="treg-form-scroll">
+          /* Registration Form View with Fixed Footer */
+          <form onSubmit={handleSubmit} className="treg-modal-form">
+            <div className="treg-form-scroll">
             {/* Quick Tourney Info Banner */}
             <div className="treg-info-strip">
               <div className="info-strip-item">
@@ -312,6 +383,55 @@ const TournamentRegisterModal = ({
                 <span className="ticket-status-tag low">⚠️ Need {requiredTickets - userTickets} More</span>
               )}
             </div>
+
+            {/* Match Slot Status Strip */}
+            <div className={`treg-slot-strip ${isSlotsFull ? 'strip-full' : 'strip-open'}`}>
+              <div className="slot-strip-info">
+                <div className="slot-strip-badge">
+                  <Dices size={14} /> RANDOM SLOT SYSTEM
+                </div>
+                <div className="slot-strip-desc">
+                  {isSlotsFull ? (
+                    <span className="text-danger font-bold">⚠️ All slots full (0/{totalSlots} available). Registration closed.</span>
+                  ) : (
+                    <span>
+                      <strong>{availableSlots.length} of {totalSlots} Slots Available</strong> • 1 random unoccupied slot will be assigned to you
+                    </span>
+                  )}
+                </div>
+              </div>
+              <span className={`slot-count-tag ${isSlotsFull ? 'tag-full' : 'tag-open'}`}>
+                {isSlotsFull ? 'FULL' : `${availableSlots.length} AVAILABLE`}
+              </span>
+            </div>
+
+            {isDisqualified && (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(185, 28, 28, 0.25))',
+                border: '1px solid rgba(239, 68, 68, 0.6)',
+                borderRadius: '10px',
+                padding: '12px 16px',
+                color: '#fca5a5',
+                fontSize: '0.84rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                boxShadow: '0 4px 16px rgba(239, 68, 68, 0.15)'
+              }}>
+                <XCircle size={24} className="text-danger flex-shrink-0" style={{ color: '#ef4444' }} />
+                <div>
+                  <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.9rem', marginBottom: '2px' }}>
+                    🚫 Disqualified by Tournament Admin
+                  </div>
+                  <div>You have been removed from this tournament and cannot re-register.</div>
+                  {disqRecord?.reason && (
+                    <div style={{ marginTop: '4px', fontSize: '0.8rem', color: '#fecaca', fontWeight: 600 }}>
+                      Reason: {disqRecord.reason}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {errorMsg && (
               <div className="treg-error-box fade-in">
@@ -649,16 +769,30 @@ const TournamentRegisterModal = ({
             </div>
 
             {/* Actions */}
-            <div className="treg-actions">
+            </div>
+
+            {/* Fixed Modal Footer - Always in Viewport */}
+            <div className="treg-modal-footer">
               <button type="button" className="treg-btn-cancel" onClick={onClose}>
                 Cancel
               </button>
               <button 
                 type="submit" 
                 className="treg-btn-submit"
-                disabled={!hasEnoughTickets}
+                disabled={!hasEnoughTickets || isSlotsFull || isDisqualified}
+                style={isDisqualified ? { background: '#991b1b', cursor: 'not-allowed', opacity: 0.75 } : {}}
               >
-                <Flame size={16} /> Confirm &amp; Register ({requiredTickets}x {ticketType} Tickets)
+                {isDisqualified ? (
+                  <>
+                    <XCircle size={16} /> Cannot Register (Disqualified 🚫)
+                  </>
+                ) : isSlotsFull ? (
+                  '🔒 Tournament Slots Full'
+                ) : (
+                  <>
+                    <Flame size={16} /> Confirm &amp; Register ({requiredTickets}x {ticketType} Tickets)
+                  </>
+                )}
               </button>
             </div>
           </form>
