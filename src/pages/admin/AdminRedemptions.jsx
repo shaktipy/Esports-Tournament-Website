@@ -2,38 +2,49 @@ import { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import { 
   Gift, Search, CheckCircle2, Clock, XCircle, 
-  Copy, Check, Coins, Sparkles, X, Send, Eye, ShieldAlert
+  Copy, Check, Sparkles, X, Send, Eye, Trash2, Trash, AlertTriangle
 } from 'lucide-react';
 
 const AdminRedemptions = () => {
-  const { redemptions = [], updateRedemptionStatus } = useAdmin();
+  const { 
+    redemptions = [], 
+    updateRedemptionStatus,
+    deleteRedemption,
+    deleteRedemptions,
+    clearAllRedemptions,
+  } = useAdmin();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchTerm, setSearchTerm]       = useState('');
+  const [filterStatus, setFilterStatus]   = useState('all');
   const [statusModalItem, setStatusModalItem] = useState(null);
-  const [modalStatus, setModalStatus] = useState('delivered');
+  const [modalStatus, setModalStatus]     = useState('delivered');
   const [deliveryDetails, setDeliveryDetails] = useState('');
-  const [copiedUid, setCopiedUid] = useState(null);
+  const [copiedUid, setCopiedUid]         = useState(null);
 
-  // Stats
-  const totalCount = redemptions.length;
-  const pendingItems = redemptions.filter(r => r.status === 'pending');
-  const deliveredItems = redemptions.filter(r => r.status === 'delivered');
-  const instantItems = redemptions.filter(r => r.fulfillmentType === 'instant');
-  const totalCoinsSpent = redemptions.reduce((sum, r) => sum + (Number(r.cost) || 0), 0);
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
-  // Filtered List
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState(null); // { type: 'single'|'bulk'|'all', ids? }
+
+  // ── Stats ────────────────────────────────────────────────────────────────────
+  const totalCount       = redemptions.length;
+  const pendingItems     = redemptions.filter(r => r.status === 'pending');
+  const deliveredItems   = redemptions.filter(r => r.status === 'delivered');
+  const totalCoinsSpent  = redemptions.reduce((sum, r) => sum + (Number(r.cost) || 0), 0);
+
+  // ── Filtered List ────────────────────────────────────────────────────────────
   const filteredRedemptions = redemptions.filter(r => {
     const matchesSearch = 
-      (r.userIgn || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (r.userUid || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (r.rewardTitle || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (r.id || '').toLowerCase().includes(searchTerm.toLowerCase());
-
+      (r.userIgn    || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (r.userUid    || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (r.rewardTitle|| '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (r.id         || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = filterStatus === 'all' || r.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
 
+  // ── Helpers ──────────────────────────────────────────────────────────────────
   const handleCopyUid = (uid) => {
     if (!uid) return;
     navigator.clipboard.writeText(uid);
@@ -54,6 +65,44 @@ const AdminRedemptions = () => {
     setStatusModalItem(null);
   };
 
+  // ── Selection helpers ────────────────────────────────────────────────────────
+  const allFilteredIds   = filteredRedemptions.map(r => r.id);
+  const allSelected      = allFilteredIds.length > 0 && allFilteredIds.every(id => selectedIds.has(id));
+  const someSelected     = allFilteredIds.some(id => selectedIds.has(id));
+  const selectedCount    = [...selectedIds].filter(id => allFilteredIds.includes(id)).length;
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(prev => { const s = new Set(prev); allFilteredIds.forEach(id => s.delete(id)); return s; });
+    } else {
+      setSelectedIds(prev => { const s = new Set(prev); allFilteredIds.forEach(id => s.add(id)); return s; });
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const s = new Set(prev);
+      s.has(id) ? s.delete(id) : s.add(id);
+      return s;
+    });
+  };
+
+  // ── Confirm delete handlers ──────────────────────────────────────────────────
+  const handleConfirmDelete = () => {
+    if (!confirmModal) return;
+    if (confirmModal.type === 'single') {
+      deleteRedemption(confirmModal.id);
+      setSelectedIds(prev => { const s = new Set(prev); s.delete(confirmModal.id); return s; });
+    } else if (confirmModal.type === 'bulk') {
+      deleteRedemptions([...selectedIds]);
+      setSelectedIds(new Set());
+    } else if (confirmModal.type === 'all') {
+      clearAllRedemptions();
+      setSelectedIds(new Set());
+    }
+    setConfirmModal(null);
+  };
+
   return (
     <div className="admin-payments-page fade-in">
       <div className="admin-subpage-header">
@@ -63,6 +112,16 @@ const AdminRedemptions = () => {
             Monitor and fulfill store rewards, Free Fire diamonds, and gift vouchers claimed by players using their earned XO Coins.
           </p>
         </div>
+        {/* Clear All button */}
+        {totalCount > 0 && (
+          <button
+            className="admin-btn btn-danger"
+            onClick={() => setConfirmModal({ type: 'all' })}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', whiteSpace: 'nowrap' }}
+          >
+            <Trash size={15} /> Clear All History
+          </button>
+        )}
       </div>
 
       {/* KPI Cards */}
@@ -89,11 +148,11 @@ const AdminRedemptions = () => {
 
         <div className="kpi-card glass-card">
           <span className="kpi-title">TOTAL XO COINS REDEEMED</span>
-          <div className="kpi-value text-cyan" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Coins size={22} style={{ color: '#fbbf24' }} />
+          <div className="kpi-value text-cyan" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" style={{ width: 22, height: 22 }} />
             {totalCoinsSpent.toLocaleString()}
           </div>
-          <div className="kpi-meta info">Coins Burned in Store</div>
+          <div className="kpi-meta info">XO Coins Burned in Store</div>
         </div>
       </div>
 
@@ -110,32 +169,46 @@ const AdminRedemptions = () => {
         </div>
 
         <div className="filter-group">
-          <button 
-            className={`filter-tab ${filterStatus === 'all' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('all')}
-          >
+          <button className={`filter-tab ${filterStatus === 'all'       ? 'active' : ''}`} onClick={() => setFilterStatus('all')}>
             All ({totalCount})
           </button>
-          <button 
-            className={`filter-tab ${filterStatus === 'pending' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('pending')}
-          >
+          <button className={`filter-tab ${filterStatus === 'pending'   ? 'active' : ''}`} onClick={() => setFilterStatus('pending')}>
             Pending ({pendingItems.length})
           </button>
-          <button 
-            className={`filter-tab ${filterStatus === 'delivered' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('delivered')}
-          >
+          <button className={`filter-tab ${filterStatus === 'delivered' ? 'active' : ''}`} onClick={() => setFilterStatus('delivered')}>
             Delivered ({deliveredItems.length})
           </button>
-          <button 
-            className={`filter-tab ${filterStatus === 'cancelled' ? 'active' : ''}`}
-            onClick={() => setFilterStatus('cancelled')}
-          >
+          <button className={`filter-tab ${filterStatus === 'cancelled' ? 'active' : ''}`} onClick={() => setFilterStatus('cancelled')}>
             Cancelled ({redemptions.filter(r => r.status === 'cancelled').length})
           </button>
         </div>
       </div>
+
+      {/* Bulk Action Bar — appears when items are selected */}
+      {selectedCount > 0 && (
+        <div className="glass-card" style={{
+          display: 'flex', alignItems: 'center', gap: '12px',
+          padding: '10px 18px', marginBottom: '12px',
+          borderColor: 'rgba(239,68,68,0.35)', background: 'rgba(239,68,68,0.07)'
+        }}>
+          <span style={{ fontSize: '0.9rem', color: '#f87171', fontWeight: 600 }}>
+            {selectedCount} record{selectedCount !== 1 ? 's' : ''} selected
+          </span>
+          <button
+            className="admin-btn btn-danger btn-xs"
+            onClick={() => setConfirmModal({ type: 'bulk' })}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}
+          >
+            <Trash2 size={13} /> Delete Selected
+          </button>
+          <button
+            className="admin-btn btn-secondary btn-xs"
+            onClick={() => setSelectedIds(new Set())}
+          >
+            Clear Selection
+          </button>
+        </div>
+      )}
 
       {/* Table */}
       <div className="admin-card glass-card">
@@ -143,10 +216,20 @@ const AdminRedemptions = () => {
           <table className="admin-table">
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    ref={el => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                    onChange={toggleSelectAll}
+                    title="Select all visible"
+                    style={{ cursor: 'pointer', accentColor: '#ef4444' }}
+                  />
+                </th>
                 <th>Customer / Game UID</th>
                 <th>Reward Item</th>
                 <th>Type</th>
-                <th>Coins Spent</th>
+                <th>XO Coins Spent</th>
                 <th>Redeemed At</th>
                 <th>Status</th>
                 <th>Delivery Note / Code</th>
@@ -156,7 +239,7 @@ const AdminRedemptions = () => {
             <tbody>
               {filteredRedemptions.length === 0 ? (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '48px 24px', color: '#94a3b8' }}>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '48px 24px', color: '#94a3b8' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
                       <Gift size={38} style={{ color: '#fbbf24', opacity: 0.6 }} />
                       <strong style={{ fontSize: '1.05rem', color: '#f1f5f9' }}>No Redemptions Found</strong>
@@ -168,7 +251,24 @@ const AdminRedemptions = () => {
                 </tr>
               ) : (
                 filteredRedemptions.map(r => (
-                  <tr key={r.id}>
+                  <tr
+                    key={r.id}
+                    style={{
+                      background: selectedIds.has(r.id) ? 'rgba(239,68,68,0.07)' : undefined,
+                      transition: 'background 0.15s'
+                    }}
+                  >
+                    {/* Checkbox */}
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(r.id)}
+                        onChange={() => toggleSelect(r.id)}
+                        style={{ cursor: 'pointer', accentColor: '#ef4444' }}
+                      />
+                    </td>
+
+                    {/* Customer */}
                     <td>
                       <div className="tx-customer">
                         <span className="customer-ign" style={{ fontWeight: 600 }}>{r.userIgn || 'Player'}</span>
@@ -181,13 +281,9 @@ const AdminRedemptions = () => {
                             onClick={() => handleCopyUid(r.userUid)}
                             title="Copy Game UID to clipboard"
                             style={{
-                              background: 'transparent',
-                              border: 'none',
+                              background: 'transparent', border: 'none',
                               color: copiedUid === r.userUid ? '#10b981' : '#94a3b8',
-                              cursor: 'pointer',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '2px'
+                              cursor: 'pointer', display: 'inline-flex', alignItems: 'center', padding: '2px'
                             }}
                           >
                             {copiedUid === r.userUid ? <Check size={13} /> : <Copy size={13} />}
@@ -195,6 +291,8 @@ const AdminRedemptions = () => {
                         </div>
                       </div>
                     </td>
+
+                    {/* Reward */}
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '1.2rem' }}>
@@ -208,6 +306,8 @@ const AdminRedemptions = () => {
                         </div>
                       </div>
                     </td>
+
+                    {/* Fulfillment type */}
                     <td>
                       <span style={{
                         fontSize: '0.68rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px',
@@ -219,24 +319,23 @@ const AdminRedemptions = () => {
                         {r.fulfillmentType === 'instant' ? '⚡ INSTANT' : '🔧 MANUAL'}
                       </span>
                     </td>
+
+                    {/* Coins */}
                     <td>
                       <span style={{ 
-                        display: 'inline-flex', 
-                        alignItems: 'center', 
-                        gap: '4px', 
-                        fontWeight: 700, 
-                        color: '#fbbf24',
-                        background: 'rgba(251, 191, 36, 0.1)',
-                        padding: '4px 8px',
-                        borderRadius: '6px'
+                        display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#c084fc',
+                        background: 'rgba(168, 85, 247, 0.12)', border: '1px solid rgba(168, 85, 247, 0.25)',
+                        padding: '4px 9px', borderRadius: '6px'
                       }}>
-                        <Coins size={14} />
-                        {Number(r.cost).toLocaleString()}
+                        <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" style={{ width: 14, height: 14 }} />
+                        {Number(r.cost).toLocaleString()} XO
                       </span>
                     </td>
-                    <td className="text-muted" style={{ fontSize: '0.85rem' }}>
-                      {r.createdAt}
-                    </td>
+
+                    {/* Date */}
+                    <td className="text-muted" style={{ fontSize: '0.85rem' }}>{r.createdAt}</td>
+
+                    {/* Status */}
                     <td>
                       <span 
                         className={`status-pill ${
@@ -244,30 +343,23 @@ const AdminRedemptions = () => {
                           (r.status === 'pending' ? 'status-active' : 'status-failed')
                         }`}
                         style={{
-                          textTransform: 'uppercase',
-                          fontWeight: 700,
-                          fontSize: '0.75rem',
-                          padding: '4px 10px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px'
+                          textTransform: 'uppercase', fontWeight: 700, fontSize: '0.75rem',
+                          padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '5px'
                         }}
                       >
-                        {r.status === 'delivered' && <CheckCircle2 size={12} />}
-                        {r.status === 'pending' && <Clock size={12} />}
-                        {r.status === 'cancelled' && <XCircle size={12} />}
+                        {r.status === 'delivered'  && <CheckCircle2 size={12} />}
+                        {r.status === 'pending'    && <Clock size={12} />}
+                        {r.status === 'cancelled'  && <XCircle size={12} />}
                         {r.status || 'PENDING'}
                       </span>
                     </td>
+
+                    {/* Delivery note */}
                     <td>
                       {r.deliveryDetails ? (
                         <code style={{ 
-                          fontSize: '0.8rem', 
-                          background: 'rgba(16, 185, 129, 0.1)', 
-                          color: '#34d399', 
-                          padding: '3px 8px', 
-                          borderRadius: '4px',
-                          border: '1px solid rgba(16, 185, 129, 0.2)'
+                          fontSize: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', 
+                          padding: '3px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.2)'
                         }}>
                           {r.deliveryDetails}
                         </code>
@@ -275,6 +367,8 @@ const AdminRedemptions = () => {
                         <span style={{ color: '#64748b', fontSize: '0.8rem' }}>None</span>
                       )}
                     </td>
+
+                    {/* Actions */}
                     <td>
                       <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                         {r.status === 'pending' ? (
@@ -294,6 +388,15 @@ const AdminRedemptions = () => {
                             <Eye size={12} /> Edit
                           </button>
                         )}
+                        {/* Single delete */}
+                        <button
+                          className="admin-btn btn-danger btn-xs"
+                          onClick={() => setConfirmModal({ type: 'single', id: r.id, label: r.rewardTitle, ign: r.userIgn })}
+                          title="Delete this record"
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          <Trash2 size={12} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -304,7 +407,7 @@ const AdminRedemptions = () => {
         </div>
       </div>
 
-      {/* ─── Fulfillment Modal ─── */}
+      {/* ─── Fulfillment Modal ───────────────────────────────────────────────────── */}
       {statusModalItem && (
         <div className="admin-modal-overlay">
           <div className="admin-modal glass-card" style={{ maxWidth: '500px' }}>
@@ -337,14 +440,7 @@ const AdminRedemptions = () => {
                 <select 
                   value={modalStatus} 
                   onChange={e => setModalStatus(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '6px',
-                    background: '#0f172a',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    color: '#f8fafc'
-                  }}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '6px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', color: '#f8fafc' }}
                 >
                   <option value="delivered">✅ Delivered / Fulfilled</option>
                   <option value="pending">⏳ Pending Fulfillment</option>
@@ -361,14 +457,7 @@ const AdminRedemptions = () => {
                   placeholder="e.g. FF-TOPUP-992104 or Google Play Code"
                   value={deliveryDetails}
                   onChange={e => setDeliveryDetails(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '9px 12px',
-                    borderRadius: '6px',
-                    background: '#0f172a',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    color: '#f8fafc'
-                  }}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: '6px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.15)', color: '#f8fafc' }}
                 />
                 <span style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px', display: 'block' }}>
                   Optional reference number or redeem code delivered to this player.
@@ -376,21 +465,57 @@ const AdminRedemptions = () => {
               </div>
 
               <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                <button 
-                  type="button" 
-                  className="admin-btn btn-secondary" 
-                  onClick={() => setStatusModalItem(null)}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  className="admin-btn btn-primary"
-                >
-                  Save & Update
-                </button>
+                <button type="button" className="admin-btn btn-secondary" onClick={() => setStatusModalItem(null)}>Cancel</button>
+                <button type="submit" className="admin-btn btn-primary">Save &amp; Update</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Confirm Delete Modal ────────────────────────────────────────────────── */}
+      {confirmModal && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal glass-card" style={{ maxWidth: '420px' }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f87171' }}>
+                <AlertTriangle size={20} /> Confirm Delete
+              </h3>
+              <button className="modal-close-btn" onClick={() => setConfirmModal(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div style={{ padding: '8px 0 20px' }}>
+              {confirmModal.type === 'single' && (
+                <p style={{ margin: 0, lineHeight: 1.6 }}>
+                  Delete redemption record for <strong style={{ color: '#fbbf24' }}>{confirmModal.label}</strong> by{' '}
+                  <strong>{confirmModal.ign || 'Player'}</strong>?
+                  <br /><span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>This action cannot be undone.</span>
+                </p>
+              )}
+              {confirmModal.type === 'bulk' && (
+                <p style={{ margin: 0, lineHeight: 1.6 }}>
+                  Delete <strong style={{ color: '#f87171' }}>{selectedCount} selected</strong> redemption record{selectedCount !== 1 ? 's' : ''}?
+                  <br /><span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>This action cannot be undone.</span>
+                </p>
+              )}
+              {confirmModal.type === 'all' && (
+                <p style={{ margin: 0, lineHeight: 1.6 }}>
+                  Clear <strong style={{ color: '#f87171' }}>all {totalCount}</strong> redemption history records permanently?
+                  <br /><span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>This will wipe the entire redemption log. This cannot be undone.</span>
+                </p>
+              )}
+            </div>
+            <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button className="admin-btn btn-secondary" onClick={() => setConfirmModal(null)}>Cancel</button>
+              <button
+                className="admin-btn btn-danger"
+                onClick={handleConfirmDelete}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <Trash2 size={14} /> Yes, Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

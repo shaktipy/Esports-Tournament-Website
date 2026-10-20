@@ -97,7 +97,12 @@ const AdminRedeemCodes = () => {
                     </td>
                     <td>
                       <div className="code-rewards-display">
-                        {codeItem.coins > 0 && <span className="reward-tag coin">+{codeItem.coins} XO Coins</span>}
+                        {codeItem.coins > 0 && (
+                          <span className="reward-tag coin" style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                            <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" style={{ width: 13, height: 13 }} />
+                            +{codeItem.coins} XO Coins
+                          </span>
+                        )}
                         {codeItem.csTickets > 0 && <span className="reward-tag cs">+{codeItem.csTickets} CS Tickets</span>}
                         {codeItem.brTickets > 0 && <span className="reward-tag br">+{codeItem.brTickets} BR Tickets</span>}
                       </div>
@@ -200,7 +205,10 @@ const AdminRedeemCodes = () => {
 
               <div className="form-row-3">
                 <div className="form-group">
-                  <label>XO Coins Reward</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" style={{ width: 14, height: 14 }} />
+                    XO Coins Reward
+                  </label>
                   <input 
                     type="number" 
                     min="0"
