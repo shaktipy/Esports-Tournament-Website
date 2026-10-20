@@ -377,3 +377,109 @@
   letter-spacing: 0.5px;
   flex-shrink: 0;
 }
+
+/* ─── Clear All Confirmation Overlay ─────────────────────────────────────── */
+.notif-confirm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 14, 26, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: notifConfirmFade 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes notifConfirmFade {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.notif-confirm-card {
+  width: 100%;
+  max-width: 320px;
+  background: rgba(18, 24, 40, 0.98);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 12px;
+  padding: 22px 18px;
+  text-align: center;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.8), 0 0 24px rgba(239, 68, 68, 0.15);
+}
+
+.notif-confirm-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.14);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.notif-confirm-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 6px;
+}
+
+.notif-confirm-desc {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #94a3b8;
+  margin: 0 0 18px;
+}
+
+.notif-confirm-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.notif-confirm-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.18s ease;
+  border: none;
+}
+
+.notif-confirm-btn.cancel {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
+}
+
+.notif-confirm-btn.cancel:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+.notif-confirm-btn.confirm {
+  background: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+.notif-confirm-btn.confirm:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.55);
+}

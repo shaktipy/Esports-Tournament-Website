@@ -9,6 +9,7 @@ import './NotificationCenter.css';
 
 const NotificationCenter = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [popoverStyle, setPopoverStyle] = useState({});
   const bellRef = useRef(null);
   const dropdownRef = useRef(null);
@@ -44,6 +45,8 @@ const NotificationCenter = () => {
   const toggleDropdown = () => {
     if (!isOpen) {
       updatePosition();
+    } else {
+      setShowClearConfirm(false);
     }
     setIsOpen(prev => !prev);
   };
@@ -56,6 +59,7 @@ const NotificationCenter = () => {
       const isInsideDropdown = dropdownRef.current && dropdownRef.current.contains(event.target);
       if (!isInsideBell && !isInsideDropdown) {
         setIsOpen(false);
+        setShowClearConfirm(false);
       }
     };
     const handleScroll = () => updatePosition();
@@ -115,22 +119,61 @@ const NotificationCenter = () => {
           )}
           {notificationInbox.length > 0 && (
             <button
-              className="notif-action-btn notif-clear-btn"
-              onClick={clearAllNotifications}
-              title="Clear all"
+              className={`notif-action-btn notif-clear-btn ${showClearConfirm ? 'active' : ''}`}
+              onClick={() => setShowClearConfirm(prev => !prev)}
+              title="Clear all notifications"
+              aria-label="Clear all notifications"
             >
               <Trash2 size={14} />
             </button>
           )}
           <button
             className="notif-close-btn"
-            onClick={() => setIsOpen(false)}
+            onClick={() => {
+              setIsOpen(false);
+              setShowClearConfirm(false);
+            }}
             title="Close"
           >
             <X size={16} />
           </button>
         </div>
       </div>
+
+      {/* Clear All Confirmation Overlay */}
+      {showClearConfirm && (
+        <div className="notif-confirm-overlay fade-in">
+          <div className="notif-confirm-card">
+            <div className="notif-confirm-icon-wrap">
+              <AlertTriangle size={24} />
+            </div>
+            <h4 className="notif-confirm-title">Clear All Notifications?</h4>
+            <p className="notif-confirm-desc">
+              Are you sure you want to remove all {notificationInbox.length} notifications? This cannot be undone.
+            </p>
+            <div className="notif-confirm-buttons">
+              <button
+                type="button"
+                className="notif-confirm-btn cancel"
+                onClick={() => setShowClearConfirm(false)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="notif-confirm-btn confirm"
+                onClick={() => {
+                  clearAllNotifications();
+                  setShowClearConfirm(false);
+                }}
+              >
+                <Trash2 size={13} />
+                <span>Yes, Clear All</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* List */}
       <div className="notif-list">
