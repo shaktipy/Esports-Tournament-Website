@@ -323,6 +323,44 @@
   font-size: 1.35rem;
 }
 
+.dl-day-token-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+  transition: transform 0.2s ease;
+}
+
+.dl-month-day-card:hover .dl-day-token-img {
+  transform: scale(1.1);
+}
+
+.dl-day-token-img.coin-token-img {
+  width: 26px;
+  height: 26px;
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.45));
+}
+
+.dl-day-token-img.cs-ticket-img {
+  width: 32px;
+  height: 26px;
+  filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.5));
+}
+
+.dl-day-token-img.br-ticket-img {
+  width: 32px;
+  height: 26px;
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+}
+
+.dl-inline-coin-img {
+  width: 13px;
+  height: 13px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-left: 3px;
+}
+
 .dl-day-reward-info {
   display: flex;
   flex-direction: column;
@@ -334,6 +372,8 @@
   font-size: 0.88rem;
   font-weight: 800;
   color: #f8fafc;
+  display: inline-flex;
+  align-items: center;
 }
 
 .dl-ticket-pill {
@@ -342,6 +382,15 @@
   padding: 1px 6px;
   border-radius: 6px;
   letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dl-ticket-pill-img {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
 }
 
 .dl-ticket-pill.cs {
@@ -360,6 +409,58 @@
   background: rgba(239, 68, 68, 0.2);
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+/* Footer Token Badges */
+.dl-footer-claim-text {
+  display: flex;
+  align-items: center;
+}
+
+.dl-footer-pending-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dl-footer-reward-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 800;
+  font-size: 0.82rem;
+}
+
+.dl-footer-reward-badge.coin {
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  color: #fbbf24;
+}
+
+.dl-footer-reward-badge.cs {
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  color: #22d3ee;
+}
+
+.dl-footer-reward-badge.br {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+}
+
+.dl-footer-token-img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.dl-footer-token-img.ticket {
+  width: 18px;
+  height: 16px;
 }
 
 /* Footer Status */

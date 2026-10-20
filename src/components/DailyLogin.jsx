@@ -160,13 +160,42 @@ const DailyLogin = ({ onClose }) => {
                   </div>
 
                   <div className="dl-day-icon-wrap">
-                    <span className="dl-day-emoji">{reward.icon}</span>
+                    {reward.tokenImage ? (
+                      <img 
+                        src={reward.tokenImage} 
+                        alt={reward.label} 
+                        className={`dl-day-token-img ${reward.csTickets ? 'cs-ticket-img' : reward.brTickets ? 'br-ticket-img' : 'coin-token-img'}`} 
+                      />
+                    ) : reward.csTickets ? (
+                      <img src="/tokens/cs-ticket.png" alt="XO CS Ticket" className="dl-day-token-img cs-ticket-img" />
+                    ) : reward.brTickets ? (
+                      <img src="/tokens/br-ticket.png" alt="XO BR Ticket" className="dl-day-token-img br-ticket-img" />
+                    ) : reward.coins ? (
+                      <img src="/tokens/xo-coin.png" alt="XO Coin" className="dl-day-token-img coin-token-img" />
+                    ) : (
+                      <span className="dl-day-emoji">{reward.icon}</span>
+                    )}
                   </div>
 
                   <div className="dl-day-reward-info">
-                    <span className="dl-day-coins">+{reward.coins}</span>
-                    {reward.csTickets && <span className="dl-ticket-pill cs">{reward.csTickets} CS</span>}
-                    {reward.brTickets && <span className="dl-ticket-pill br">{reward.brTickets} BR</span>}
+                    {reward.coins ? (
+                      <span className="dl-day-coins">
+                        +{reward.coins}
+                        <img src="/tokens/xo-coin.png" alt="XO" className="dl-inline-coin-img" />
+                      </span>
+                    ) : null}
+                    {reward.csTickets && (
+                      <span className="dl-ticket-pill cs">
+                        <img src="/tokens/cs-ticket.png" alt="CS" className="dl-ticket-pill-img" />
+                        {reward.csTickets} CS
+                      </span>
+                    )}
+                    {reward.brTickets && (
+                      <span className="dl-ticket-pill br">
+                        <img src="/tokens/br-ticket.png" alt="BR" className="dl-ticket-pill-img" />
+                        {reward.brTickets} BR
+                      </span>
+                    )}
                     {reward.diamonds && <span className="dl-ticket-pill diamond">{reward.diamonds} 💎</span>}
                   </div>
 
@@ -202,11 +231,33 @@ const DailyLogin = ({ onClose }) => {
         <div className="dl-modal-footer">
           <div className="dl-footer-left">
             <Award size={20} color="#fbbf24" />
-            <span>
-              {alreadyClaimedToday 
-                ? `You've already claimed Day ${todayDateNum}! Return tomorrow for Day ${Math.min(todayDateNum + 1, totalDaysInMonth)}.` 
-                : `Day ${todayDateNum} is ready: +${todayReward.coins} Coins ${todayReward.csTickets ? '+ CS Ticket' : ''} ${todayReward.brTickets ? '+ BR Ticket' : ''}!`}
-            </span>
+            <div className="dl-footer-claim-text">
+              {alreadyClaimedToday ? (
+                <span>You've already claimed Day {todayDateNum}! Return tomorrow for Day {Math.min(todayDateNum + 1, totalDaysInMonth)}.</span>
+              ) : (
+                <span className="dl-footer-pending-line">
+                  <span>Day {todayDateNum} is ready:</span>
+                  {todayReward?.coins && (
+                    <span className="dl-footer-reward-badge coin">
+                      +{todayReward.coins} XO Coins
+                      <img src="/tokens/xo-coin.png" alt="XO Coin" className="dl-footer-token-img" />
+                    </span>
+                  )}
+                  {todayReward?.csTickets && (
+                    <span className="dl-footer-reward-badge cs">
+                      +{todayReward.csTickets} CS Ticket
+                      <img src="/tokens/cs-ticket.png" alt="CS Ticket" className="dl-footer-token-img ticket" />
+                    </span>
+                  )}
+                  {todayReward?.brTickets && (
+                    <span className="dl-footer-reward-badge br">
+                      +{todayReward.brTickets} BR Ticket
+                      <img src="/tokens/br-ticket.png" alt="BR Ticket" className="dl-footer-token-img ticket" />
+                    </span>
+                  )}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="dl-footer-right">
