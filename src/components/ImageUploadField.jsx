@@ -67,12 +67,16 @@ const ImageUploadField = ({ value, onChange, label = 'Image', maxSizeKB = 800 })
       return;
     }
 
-    // Fallback: Read as Data URL and upload as base64
+    // Fallback: Read as Data URL and upload as base64 to server
     const reader = new FileReader();
     reader.onload = async (e) => {
       const dataUrl = e.target.result;
       const uploadedUrl = await uploadToServer(dataUrl);
-      onChange(uploadedUrl || dataUrl);
+      if (uploadedUrl) {
+        onChange(uploadedUrl);
+      } else {
+        setError('Server upload failed. Please ensure the backend server is running or provide an image URL.');
+      }
       setUploading(false);
     };
     reader.onerror = () => {
