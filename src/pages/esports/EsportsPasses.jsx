@@ -57,7 +57,7 @@ const PASSES = [
     grantCs: 5,
     grantBr: 5,
     grantCoins: 300,
-    ticketImage: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=2070&auto=format&fit=crop',
+    ticketImage: '/tokens/mascot-logo.png',
     ticketType: 'COMBO',
     icon: <Crown size={36} className="pass-icon pro-icon" />,
     features: [

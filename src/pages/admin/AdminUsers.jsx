@@ -42,6 +42,10 @@ const AdminUsers = () => {
   const [statusReason, setStatusReason] = useState('');
   const [targetStatus, setTargetStatus] = useState('banned');
 
+  // Unban Confirmation Modal
+  const [unbanConfirmUser, setUnbanConfirmUser] = useState(null);
+  const [unbanReason, setUnbanReason] = useState('Admin reinstated account');
+
   const filteredUsers = usersList.filter(u => {
     const matchesSearch = 
       (u.inGameName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,10 +85,19 @@ const AdminUsers = () => {
   const handleApplyStatus = async (e) => {
     e.preventDefault();
     if (!statusModalUser) return;
-    const targetIdentifier = statusModalUser.uid || statusModalUser.supabaseId || statusModalUser.id;
+    const targetIdentifier = statusModalUser.supabaseId || statusModalUser.uid || statusModalUser.id || statusModalUser.email;
     await updateUserStatus(targetIdentifier, targetStatus, statusReason || 'Admin Action');
     setStatusModalUser(null);
     setStatusReason('');
+  };
+
+  const handleConfirmUnban = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!unbanConfirmUser) return;
+    const targetIdentifier = unbanConfirmUser.supabaseId || unbanConfirmUser.uid || unbanConfirmUser.id || unbanConfirmUser.email;
+    await updateUserStatus(targetIdentifier, 'active', unbanReason || 'Admin reinstated account');
+    setUnbanConfirmUser(null);
+    setUnbanReason('Admin reinstated account');
   };
 
   return (
@@ -191,7 +204,8 @@ const AdminUsers = () => {
                     </td>
                     <td>
                       <span className="balance-badge coin font-bold">
-                        🪙 {(userItem.coins || 0).toLocaleString()}
+                        <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" />
+                        {(userItem.coins || 0).toLocaleString()} XO
                       </span>
                     </td>
                     <td>
@@ -218,9 +232,9 @@ const AdminUsers = () => {
                             setAdjustModalUser(userItem);
                             setAdjustData({ coinDelta: 0, csDelta: 0, brDelta: 0, reason: 'Admin Manual Grant' });
                           }}
-                          title="Add or remove coins & tickets"
+                          title="Add or remove XO coins & tickets"
                         >
-                          <Coins size={12} /> Adjust Balance
+                          <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" style={{ width: 13, height: 13 }} /> Adjust Balance
                         </button>
 
                         {userItem.status === 'active' ? (
@@ -239,8 +253,8 @@ const AdminUsers = () => {
                           <button 
                             className="admin-btn btn-secondary btn-xs"
                             onClick={() => {
-                              const targetIdentifier = userItem.uid || userItem.supabaseId || userItem.id;
-                              updateUserStatus(targetIdentifier, 'active', 'Admin reinstated account');
+                              setUnbanConfirmUser(userItem);
+                              setUnbanReason('Admin reinstated account');
                             }}
                             title="Unban player"
                           >
@@ -262,7 +276,10 @@ const AdminUsers = () => {
         <div className="admin-modal-overlay">
           <div className="admin-modal glass-card">
             <div className="modal-header">
-              <h3>🪙 Adjust Player Balance</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" style={{ width: 22, height: 22 }} />
+                Adjust Player Balance
+              </h3>
               <button className="modal-close-btn" onClick={() => setAdjustModalUser(null)}>
                 <X size={18} />
               </button>
@@ -270,11 +287,16 @@ const AdminUsers = () => {
             <form onSubmit={handleApplyBalance} className="modal-form">
               <div className="adjust-user-summary">
                 <p>Player: <strong>{adjustModalUser.inGameName}</strong> (UID: {adjustModalUser.uid})</p>
-                <p>Current: 🪙 {adjustModalUser.coins} Coins | 🎫 {adjustModalUser.csTickets} CS | 🎫 {adjustModalUser.brTickets} BR</p>
+                <p style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  Current: <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" /> <strong>{adjustModalUser.coins} XO Coins</strong> | 🎫 <strong>{adjustModalUser.csTickets} CS</strong> | 🎫 <strong>{adjustModalUser.brTickets} BR</strong>
+                </p>
               </div>
 
               <div className="form-group">
-                <label>Add / Deduct XO Coins (Positive to Add, Negative to Remove)</label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" />
+                  Add / Deduct XO Coins (Positive to Add, Negative to Remove)
+                </label>
                 <div className="quick-amount-buttons">
                   <button type="button" onClick={() => setAdjustData(p => ({ ...p, coinDelta: 100 }))}>+100</button>
                   <button type="button" onClick={() => setAdjustData(p => ({ ...p, coinDelta: 500 }))}>+500</button>
@@ -372,6 +394,60 @@ const AdminUsers = () => {
                 </button>
                 <button type="submit" className="admin-btn btn-danger">
                   Confirm Enforcement
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MODAL 3: Unban Confirmation ─────────────────────────────────── */}
+      {unbanConfirmUser && (
+        <div className="admin-modal-overlay">
+          <div className="admin-modal glass-card" style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <ShieldCheck size={20} style={{ color: '#2ed573' }} /> 
+                <span>Confirm Account Unban</span>
+              </h3>
+              <button className="modal-close-btn" onClick={() => setUnbanConfirmUser(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleConfirmUnban} className="modal-form">
+              <div className="adjust-user-summary" style={{ borderLeft: '3px solid #2ed573' }}>
+                <p style={{ color: '#a4b0be', fontSize: '0.88rem' }}>Are you sure you want to unban and reinstate:</p>
+                <p style={{ marginTop: 5 }}>
+                  <strong style={{ fontSize: '1.1rem', color: '#fff' }}>{unbanConfirmUser.inGameName}</strong> 
+                  <span style={{ color: '#00f2fe', marginLeft: 8, fontWeight: 600 }}>(UID: {unbanConfirmUser.uid})</span>
+                </p>
+                {(unbanConfirmUser.notes || unbanConfirmUser.statusReason) && (
+                  <p style={{ fontSize: '0.8rem', color: '#ff6b81', marginTop: 8, background: 'rgba(255, 107, 129, 0.1)', padding: '6px 10px', borderRadius: 6 }}>
+                    <strong>Previous Ban Reason:</strong> "{unbanConfirmUser.notes || unbanConfirmUser.statusReason}"
+                  </p>
+                )}
+              </div>
+
+              <div className="form-group" style={{ marginTop: 12 }}>
+                <label>Pardon / Reinstatement Note (Optional)</label>
+                <input 
+                  type="text"
+                  value={unbanReason}
+                  onChange={e => setUnbanReason(e.target.value)}
+                  placeholder="e.g. Admin reinstated account, Appeal accepted, False report..."
+                />
+              </div>
+
+              <p style={{ fontSize: '0.82rem', color: '#2ed573', background: 'rgba(46, 213, 115, 0.08)', border: '1px solid rgba(46, 213, 115, 0.2)', padding: '8px 12px', borderRadius: 8, margin: '0.5rem 0 1.25rem' }}>
+                ✓ This player will immediately be able to log in, join tournaments, and use their XO Coins &amp; tickets normally.
+              </p>
+
+              <div className="modal-actions">
+                <button type="button" className="admin-btn btn-secondary" onClick={() => setUnbanConfirmUser(null)}>
+                  Cancel
+                </button>
+                <button type="submit" className="admin-btn btn-success">
+                  <ShieldCheck size={14} /> Confirm &amp; Unban Player
                 </button>
               </div>
             </form>
