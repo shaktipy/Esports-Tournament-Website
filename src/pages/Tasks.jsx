@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   CheckCircle2, 
   CircleDashed, 
@@ -14,21 +14,38 @@ import {
 } from 'lucide-react';
 import { 
   useGame, 
-  DAILY_MISSIONS, 
-  WEEKLY_MISSIONS, 
-  MONTHLY_MISSIONS, 
-  EXTRA_REWARD_TARGET 
+  EXTRA_REWARD_TARGET,
+  getActiveMissionsByFrequency
 } from '../context/GameContext';
 import './Tasks.css';
 
 const Tasks = () => {
   const [activeTab, setActiveTab] = useState('daily');
   const [showExtraRewardModal, setShowExtraRewardModal] = useState(false);
+  // Live missions — re-read whenever localStorage changes (admin edits)
+  const [liveMissions, setLiveMissions] = useState({
+    daily: getActiveMissionsByFrequency('daily'),
+    weekly: getActiveMissionsByFrequency('weekly'),
+    monthly: getActiveMissionsByFrequency('monthly'),
+  });
+
+  useEffect(() => {
+    const refresh = () => {
+      setLiveMissions({
+        daily: getActiveMissionsByFrequency('daily'),
+        weekly: getActiveMissionsByFrequency('weekly'),
+        monthly: getActiveMissionsByFrequency('monthly'),
+      });
+    };
+    window.addEventListener('haarshxo_admin_updated', refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener('haarshxo_admin_updated', refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
 
   const { 
-    coins, 
-    csTickets, 
-    brTickets, 
     watchStats, 
     claimedMissions, 
     claimMission, 
@@ -40,12 +57,12 @@ const Tasks = () => {
   const getMissionsForTab = () => {
     switch (activeTab) {
       case 'weekly':
-        return WEEKLY_MISSIONS;
+        return liveMissions.weekly;
       case 'monthly':
-        return MONTHLY_MISSIONS;
+        return liveMissions.monthly;
       case 'daily':
       default:
-        return DAILY_MISSIONS;
+        return liveMissions.daily;
     }
   };
 
@@ -86,10 +103,10 @@ const Tasks = () => {
               <Gift size={24} className="pulsing-gift" />
             </div>
             <div>
-              <div className="extra-reward-tag">SPECIAL MILESTONE BONUS</div>
-              <h2 className="extra-reward-title">🎯 Complete 5 Missions</h2>
+              <div className="extra-reward-tag">DAILY BONUS MISSION</div>
+              <h2 className="extra-reward-title">🎯 Complete 5 Daily Missions</h2>
               <p className="extra-reward-desc">
-                Complete any 5 missions and get an Extra Reward! Extra reward includes <strong>500 XO Coins</strong>, <strong>Free Fire Diamond Vouchers</strong>, <strong>CS & BR Tournament Registration Tickets</strong>!
+                Complete all 5 eligible daily missions to unlock your <strong>+20 Bonus Coins</strong> reward!
               </p>
             </div>
           </div>
@@ -234,13 +251,13 @@ const Tasks = () => {
                     )}
                     {task.reward.csTickets > 0 && (
                       <div className="task-reward-pill cs-pill">
-                        <Ticket size={14} />
+                        <img src="/tokens/cs-ticket.png" alt="CS Ticket" style={{ width: 15, height: 15, objectFit: 'contain' }} />
                         <span>+{task.reward.csTickets} CS Ticket</span>
                       </div>
                     )}
                     {task.reward.brTickets > 0 && (
                       <div className="task-reward-pill br-pill">
-                        <Ticket size={14} />
+                        <img src="/tokens/br-ticket.png" alt="BR Ticket" style={{ width: 15, height: 15, objectFit: 'contain' }} />
                         <span>+{task.reward.brTickets} BR Ticket</span>
                       </div>
                     )}
@@ -282,25 +299,13 @@ const Tasks = () => {
             <div className="modal-confetti-header">
               <Sparkles size={48} color="#fbbf24" />
               <h2>🎉 CONGRATULATIONS!</h2>
-              <p>You completed 5 Missions and claimed the Grand Extra Reward!</p>
+              <p>You completed 5 Daily Missions and claimed your Daily Bonus!</p>
             </div>
 
             <div className="modal-reward-prizes">
-              <div className="prize-item">
-                <img src="/tokens/xo-coin.png" alt="XO Coins" className="prize-coin-img" />
-                <span className="prize-val">+500 XO Coins</span>
-              </div>
-              <div className="prize-item">
-                <img src="/tokens/cs-ticket.png" alt="CS Ticket" className="prize-ticket-img" />
-                <span className="prize-val">+1 CS Tournament Ticket</span>
-              </div>
-              <div className="prize-item">
-                <img src="/tokens/br-ticket.png" alt="BR Ticket" className="prize-ticket-img" />
-                <span className="prize-val">+1 BR Tournament Ticket</span>
-              </div>
-              <div className="prize-item redeem-code-box">
-                <span className="code-label">Free Fire 100 Diamond Code:</span>
-                <span className="code-val">XO-FF-7729-CLAIM</span>
+              <div className="prize-item" style={{ gridColumn: 'span 2', justifyContent: 'center' }}>
+                <img src="/tokens/xo-coin.png" alt="XO Coins" className="prize-coin-img" style={{ width: 36, height: 36 }} />
+                <span className="prize-val" style={{ fontSize: '1.25rem' }}>+20 Bonus Coins</span>
               </div>
             </div>
 
