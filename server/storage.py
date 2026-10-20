@@ -283,7 +283,7 @@ DEFAULT_PASSES = [
         "grantCs": 5,
         "grantBr": 5,
         "grantCoins": 300,
-        "ticketImage": "https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=2070&auto=format&fit=crop",
+        "ticketImage": "/tokens/mascot-logo.png",
         "ticketType": "COMBO",
         "features": [
             "10 Total Tournament Tickets (5 CS + 5 BR)",
@@ -463,6 +463,26 @@ DEFAULT_REDEEM_CODES = [
     }
 ]
 
+DEFAULT_MISSIONS = [
+    {"id": "daily_live_1", "frequency": "daily", "category": "Live Watch Missions", "title": "Watch Live for 15 Minutes", "description": "Tune into Haarsh XO live stream for 15 minutes.", "target": 15, "unit": "Minutes", "type": "live", "reward": {"coins": 10, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "daily_live_2", "frequency": "daily", "category": "Live Watch Missions", "title": "Watch Live for 30 Minutes", "description": "Tune into Haarsh XO live stream for 30 minutes.", "target": 30, "unit": "Minutes", "type": "live", "reward": {"coins": 15, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "daily_live_3", "frequency": "daily", "category": "Live Watch Missions", "title": "Watch Live for 60 Minutes", "description": "Watch live stream gameplay for 1 full hour.", "target": 60, "unit": "Minutes", "type": "live", "reward": {"coins": 25, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "daily_vid_1", "frequency": "daily", "category": "Video Watch Missions", "title": "Watch Video for 10 Minutes", "description": "Watch uploaded videos or highlights for 10 minutes.", "target": 10, "unit": "Minutes", "type": "video", "reward": {"coins": 5, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "daily_vid_2", "frequency": "daily", "category": "Video Watch Missions", "title": "Watch Video for 20 Minutes", "description": "Watch tips, tricks, and clutch videos for 20 minutes.", "target": 20, "unit": "Minutes", "type": "video", "reward": {"coins": 10, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "daily_vid_3", "frequency": "daily", "category": "Video Watch Missions", "title": "Watch Video for 30 Minutes", "description": "Watch 30 minutes of high skill Free Fire content.", "target": 30, "unit": "Minutes", "type": "video", "reward": {"coins": 15, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "daily_ext_1", "frequency": "daily", "category": "Extended Live Watch Missions", "title": "Watch Live for 90 Minutes", "description": "Extended watch session for loyal fans (1.5 Hours).", "target": 90, "unit": "Minutes", "type": "live", "reward": {"coins": 35, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "daily_ext_2", "frequency": "daily", "category": "Extended Live Watch Missions", "title": "Watch Live for 120 Minutes", "description": "Watch 2 hours of live custom rooms and tournaments.", "target": 120, "unit": "Minutes", "type": "live", "reward": {"coins": 45, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "daily_ext_3", "frequency": "daily", "category": "Extended Live Watch Missions", "title": "Watch Live for 150 Minutes", "description": "Marathon live watch: 2.5 hours of stream entertainment.", "target": 150, "unit": "Minutes", "type": "live", "reward": {"coins": 60, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "weekly_live_1", "frequency": "weekly", "category": "Weekly Live Grinder", "title": "Watch Live for 5 Hours", "description": "Accumulate 5 total hours (300 mins) of live stream watch time this week.", "target": 300, "unit": "Hours", "displayTarget": "5 Hours (300m)", "type": "totalLive", "reward": {"coins": 100, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "weekly_live_2", "frequency": "weekly", "category": "Weekly Live Grinder", "title": "Watch Live for 10 Hours", "description": "Stay active on live streams for 10 hours (600 mins) this week.", "target": 600, "unit": "Hours", "displayTarget": "10 Hours (600m)", "type": "totalLive", "reward": {"coins": 200, "csTickets": 1, "brTickets": 0}, "active": True},
+    {"id": "weekly_live_3", "frequency": "weekly", "category": "Weekly Live Grinder", "title": "Watch Live for 15 Hours", "description": "Accumulate 15 hours (900 mins) on Haarsh XO live streams.", "target": 900, "unit": "Hours", "displayTarget": "15 Hours (900m)", "type": "totalLive", "reward": {"coins": 300, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "weekly_live_4", "frequency": "weekly", "category": "Weekly Live Grinder", "title": "Watch Live for 20 Hours", "description": "Top weekly grinder: 20 hours (1200 mins) live watch time.", "target": 1200, "unit": "Hours", "displayTarget": "20 Hours (1200m)", "type": "totalLive", "reward": {"coins": 450, "csTickets": 0, "brTickets": 1}, "active": True},
+    {"id": "monthly_live_1", "frequency": "monthly", "category": "Monthly Champions", "title": "Watch Live for 45 Hours", "description": "Watch 45 hours (2,700 mins) of Haarsh XO live streams this month.", "target": 2700, "unit": "Hours", "displayTarget": "45 Hours (2700m)", "type": "totalLive", "reward": {"coins": 400, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "monthly_live_2", "frequency": "monthly", "category": "Monthly Champions", "title": "Watch Live for 50 Hours", "description": "Watch 50 hours (3,000 mins) of live streams this month.", "target": 3000, "unit": "Hours", "displayTarget": "50 Hours (3000m)", "type": "totalLive", "reward": {"coins": 500, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "monthly_live_3", "frequency": "monthly", "category": "Monthly Champions", "title": "Watch Live for 54 Hours", "description": "Watch 54 hours (3,240 mins) of live streams this month.", "target": 3240, "unit": "Hours", "displayTarget": "54 Hours (3240m)", "type": "totalLive", "reward": {"coins": 600, "csTickets": 0, "brTickets": 0}, "active": True},
+    {"id": "monthly_live_4", "frequency": "monthly", "category": "Monthly Champions", "title": "Watch Live for 72 Hours", "description": "The Ultimate HAARSH XO Legend: 72 hours (4,320 mins) of stream dedication.", "target": 4320, "unit": "Hours", "displayTarget": "72 Hours (4320m)", "type": "totalLive", "reward": {"coins": 800, "csTickets": 0, "brTickets": 0}, "active": True}
+]
+
 # ─── SQLite Storage Operations ────────────────────────────────────────────────
 def get_db():
     conn = sqlite3.connect(DB_PATH, timeout=10)
@@ -497,6 +517,7 @@ def init_db():
         defaults = {
             "tournaments":   saved_backup["tournaments"]   if "tournaments"   in saved_backup else DEFAULT_TOURNAMENTS,
             "passes":        saved_backup["passes"]        if "passes"        in saved_backup else DEFAULT_PASSES,
+            "missions":      saved_backup["missions"]      if "missions"      in saved_backup else DEFAULT_MISSIONS,
             "storeRewards":  saved_backup["storeRewards"]  if "storeRewards"  in saved_backup else DEFAULT_STORE_REWARDS,
             "announcements": saved_backup["announcements"] if "announcements" in saved_backup else DEFAULT_ANNOUNCEMENTS,
             "redeemCodes":   saved_backup["redeemCodes"]   if "redeemCodes"   in saved_backup else DEFAULT_REDEEM_CODES,
