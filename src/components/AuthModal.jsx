@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { X, Mail, User as UserIcon, Hash, Lock, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './AuthModal.css';
@@ -8,6 +9,7 @@ const AuthModal = ({ onClose, onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [consent, setConsent] = useState(false);
 
   const [formData, setFormData] = useState({
     email: '',
@@ -25,6 +27,12 @@ const AuthModal = ({ onClose, onLogin }) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
+
+    if (!isLogin && !consent) {
+      setErrorMsg('Please accept the Terms & Conditions, Privacy Policy and confirm you are 13+ to register.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -232,6 +240,22 @@ const AuthModal = ({ onClose, onLogin }) => {
             />
           </div>
 
+          {!isLogin && (
+            <div className="auth-consent-group" style={{ margin: '14px 0 6px', display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.4' }}>
+              <input 
+                type="checkbox" 
+                id="register-consent"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                style={{ marginTop: '3px', accentColor: '#ffaa00', cursor: 'pointer' }}
+                required
+              />
+              <label htmlFor="register-consent" style={{ cursor: 'pointer' }}>
+                I agree to the <Link to="/terms" target="_blank" style={{ color: '#ffaa00', textDecoration: 'underline' }}>Terms & Conditions</Link> and <Link to="/privacy-policy" target="_blank" style={{ color: '#ffaa00', textDecoration: 'underline' }}>Privacy Policy</Link>. I confirm that I am <strong>13 years or older</strong>.
+              </label>
+            </div>
+          )}
+
           <button 
             type="submit" 
             className="btn-primary w-full mt-4"
@@ -243,9 +267,13 @@ const AuthModal = ({ onClose, onLogin }) => {
                 {isLogin ? 'LOGGING IN...' : 'CREATING ACCOUNT...'}
               </span>
             ) : (
-              isLogin ? 'LOGIN WITH SUPABASE' : 'CREATE ACCOUNT'
+              isLogin ? 'LOGIN' : 'CREATE ACCOUNT'
             )}
           </button>
+
+          <p style={{ textAlign: 'center', fontSize: '0.74rem', color: '#64748b', margin: '12px 0 0' }}>
+            We collect only minimal data strictly required to operate your gaming account.
+          </p>
         </form>
       </div>
     </div>

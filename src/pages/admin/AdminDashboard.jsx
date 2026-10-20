@@ -6,7 +6,7 @@ import {
   Trophy, Ticket, Gift, CreditCard, Users, 
   Megaphone, ShoppingBag, FileText, LayoutDashboard, 
   Lock, Unlock, ShieldAlert, Sparkles, LogOut, ExternalLink, 
-  Menu, X, CheckCircle2, ChevronRight, Eye, EyeOff, Mail, KeyRound, ShieldCheck, Coins, Target
+  Menu, X, CheckCircle2, ChevronRight, Eye, EyeOff, Mail, KeyRound, ShieldCheck, Coins, Target, MessageSquare
 } from 'lucide-react';
 
 import AdminOverview from './AdminOverview';
@@ -20,6 +20,8 @@ import AdminUsers from './AdminUsers';
 import AdminAnnouncements from './AdminAnnouncements';
 import AdminGiveawaysStore from './AdminGiveawaysStore';
 import AdminAuditLogs from './AdminAuditLogs';
+import AdminContacts from './AdminContacts';
+import { getStoredContactRequests } from '../ContactUs';
 import './AdminDashboard.css';
 
 const AdminDashboard = () => {
@@ -37,6 +39,31 @@ const AdminDashboard = () => {
   const { user } = useGame();
 
   const [activeTab, setActiveTab] = useState('overview');
+  const [newContactCount, setNewContactCount] = useState(() => {
+    try {
+      const list = getStoredContactRequests();
+      return list.filter(r => r.status === 'new').length;
+    } catch {
+      return 0;
+    }
+  });
+
+  useEffect(() => {
+    const updateCount = () => {
+      try {
+        const list = getStoredContactRequests();
+        setNewContactCount(list.filter(r => r.status === 'new').length);
+      } catch {
+        setNewContactCount(0);
+      }
+    };
+    window.addEventListener('haarshxo_contact_updated', updateCount);
+    window.addEventListener('storage', updateCount);
+    return () => {
+      window.removeEventListener('haarshxo_contact_updated', updateCount);
+      window.removeEventListener('storage', updateCount);
+    };
+  }, []);
   const [emailInput, setEmailInput] = useState(() => {
     if (user?.email && isAuthorizedAdminEmail(user.email)) return user.email;
     try {
@@ -165,6 +192,12 @@ const AdminDashboard = () => {
       badge: (redemptions || []).filter(r => r.status === 'pending').length || undefined 
     },
     { id: 'users', label: 'Player Management', icon: <Users size={18} /> },
+    { 
+      id: 'contacts', 
+      label: 'Contact Requests', 
+      icon: <MessageSquare size={18} />, 
+      badge: newContactCount || undefined 
+    },
     { id: 'announcements', label: 'Announcements', icon: <Megaphone size={18} /> },
     { id: 'store', label: 'Giveaways & Store', icon: <ShoppingBag size={18} /> },
     { id: 'logs', label: 'Audit Logs', icon: <FileText size={18} /> },
@@ -270,6 +303,7 @@ const AdminDashboard = () => {
           {activeTab === 'payments' && <AdminPayments />}
           {activeTab === 'redemptions' && <AdminRedemptions />}
           {activeTab === 'users' && <AdminUsers />}
+          {activeTab === 'contacts' && <AdminContacts />}
           {activeTab === 'announcements' && <AdminAnnouncements />}
           {activeTab === 'store' && <AdminGiveawaysStore />}
           {activeTab === 'logs' && <AdminAuditLogs />}

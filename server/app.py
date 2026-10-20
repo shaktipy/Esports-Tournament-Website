@@ -60,6 +60,19 @@ def init_users_db():
                 notes TEXT DEFAULT ''
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS contact_requests (
+                id TEXT PRIMARY KEY,
+                name TEXT,
+                email TEXT,
+                uid TEXT,
+                category TEXT,
+                priority TEXT,
+                message TEXT,
+                submitted_at TEXT,
+                status TEXT DEFAULT 'new'
+            )
+        """)
         conn.commit()
 
 init_users_db()
@@ -670,6 +683,72 @@ def update_redemption_status(redemption_id):
 
         save_store(store)
         return jsonify({"success": True, "redemption": target}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ─── Contact & Support Requests Endpoints ─────────────────────────────────────
+@app.route('/api/contact-requests', methods=['GET', 'POST'])
+def handle_contact_requests():
+    try:
+        if request.method == 'POST':
+            data = request.json or {}
+            req_id = data.get('id') or f"req_{int(datetime.now().timestamp() * 1000)}"
+            with get_users_db() as conn:
+                conn.execute("""
+                    INSERT OR REPLACE INTO contact_requests 
+                    (id, name, email, uid, category, priority, message, submitted_at, status)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    req_id,
+                    data.get('name', ''),
+                    data.get('email', ''),
+                    data.get('uid', 'N/A'),
+                    data.get('category', 'General Inquiry'),
+                    data.get('priority', 'Normal'),
+                    data.get('message', ''),
+                    data.get('submittedAt') or datetime.now().isoformat(),
+                    data.get('status', 'new')
+                ))
+                conn.commit()
+            return jsonify({"success": True, "id": req_id}), 201
+        else:
+            with get_users_db() as conn:
+                cursor = conn.execute("SELECT * FROM contact_requests ORDER BY submitted_at DESC")
+                rows = cursor.fetchall()
+                items = []
+                for r in rows:
+                    items.append({
+                        "id": r["id"],
+                        "name": r["name"],
+                        "email": r["email"],
+                        "uid": r["uid"],
+                        "category": r["category"],
+                        "priority": r["priority"],
+                        "message": r["message"],
+                        "submittedAt": r["submitted_at"],
+                        "status": r["status"]
+                    })
+                return jsonify({"success": True, "requests": items}), 200
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route('/api/contact-requests/<req_id>', methods=['DELETE', 'PATCH'])
+def manage_contact_request(req_id):
+    try:
+        if request.method == 'DELETE':
+            with get_users_db() as conn:
+                conn.execute("DELETE FROM contact_requests WHERE id = ?", (req_id,))
+                conn.commit()
+            return jsonify({"success": True, "deleted": req_id}), 200
+        elif request.method == 'PATCH':
+            data = request.json or {}
+            new_status = data.get('status', 'resolved')
+            with get_users_db() as conn:
+                conn.execute("UPDATE contact_requests SET status = ? WHERE id = ?", (new_status, req_id))
+                conn.commit()
+            return jsonify({"success": True, "updated": req_id, "status": new_status}), 200
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 

@@ -7,6 +7,14 @@ import Tasks from './pages/Tasks';
 import Redeem from './pages/Redeem';
 import Giveaways from './pages/Giveaways';
 
+// Legal & Compliance Pages
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
+import TermsConditions from './pages/legal/TermsConditions';
+import CookiesPolicy from './pages/legal/CookiesPolicy';
+import RefundPolicy from './pages/legal/RefundPolicy';
+import ContactUs from './pages/ContactUs';
+import CookieConsent from './components/CookieConsent';
+
 // Esports Imports
 import EsportsLayout from './layouts/EsportsLayout';
 import EsportsHome from './pages/esports/EsportsHome';
@@ -69,6 +77,11 @@ function AppContent() {
             <Route path="/tasks" element={<Tasks />} />
             <Route path="/redeem" element={<Redeem onLoginClick={() => setShowAuthModal(true)} />} />
             <Route path="/giveaways" element={<Giveaways />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsConditions />} />
+            <Route path="/cookies-policy" element={<CookiesPolicy />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/contact" element={<ContactUs />} />
           </Routes>
         </main>
       ) : (
@@ -117,6 +130,9 @@ function AppContent() {
         reason={bannedModalInfo?.reason} 
         onClose={closeBannedModal} 
       />
+
+      {/* Global Essential Cookie Consent Banner */}
+      <CookieConsent />
     </div>
   );
 }

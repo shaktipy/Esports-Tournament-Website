@@ -4,6 +4,7 @@ import { Users, Clock, Trophy, Map, Ticket, CheckCircle2, AlertCircle, Sparkles,
 import { useGame } from '../../context/GameContext';
 import { useAdmin } from '../../context/AdminContext';
 import TournamentRegisterModal from '../../components/TournamentRegisterModal';
+import Footer from '../../components/Footer';
 import './EsportsHome.css';
 
 const TOURNAMENTS = [
@@ -519,6 +520,9 @@ const EsportsHome = () => {
           userTickets={selectedTourneyForRegister.ticketType === 'BR' ? brTickets : csTickets}
         />
       )}
+
+      {/* Site Footer - Esports Arena */}
+      <Footer />
     </div>
   );
 };

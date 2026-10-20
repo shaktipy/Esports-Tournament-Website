@@ -39,6 +39,7 @@ import RewardWheel from '../components/RewardWheel';
 import { MONTH_NAMES, getDaysInMonth } from '../utils/monthlyRewards';
 import { Sparkles } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
+import Footer from '../components/Footer';
 import './Home.css';
 
 const Home = () => {
@@ -522,6 +523,9 @@ const Home = () => {
           </div>
         )}
       </section>
+
+      {/* Site Footer - Main Page */}
+      <Footer />
 
       {/* Interactive Video Player Modal with Live Watch-Time Tracking */}
       {activeVideoModal && (

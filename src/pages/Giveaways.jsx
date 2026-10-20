@@ -5,7 +5,7 @@ import { useAdmin } from '../context/AdminContext';
 import './Giveaways.css';
 
 const DEFAULT_REQUIREMENTS = [
-  { id: 'req1', text: 'Subscribe to HAARSH XO on YouTube', completed: true, icon: <Youtube size={15} /> },
+  { id: 'req1', text: 'Subscribe to HAARSH XO on YouTube', completed: false, icon: <Youtube size={15} /> },
   { id: 'req2', text: 'Follow @haarsh_xo on Instagram', completed: false, icon: <Instagram size={15} /> },
   { id: 'req3', text: 'Share this live stream giveaway', completed: false, icon: <Share2 size={15} /> }
 ];
@@ -35,8 +35,8 @@ const MOCK_GIVEAWAYS = [
     participants: 0,
     participantsList: [],
     requirements: [
-      { id: 'req4', text: "Watch today's live stream for 15 mins", completed: true, icon: <Youtube size={15} /> },
-      { id: 'req5', text: 'Comment your Free Fire UID in chat', completed: true, icon: <CheckCircle size={15} /> }
+      { id: 'req4', text: "Watch today's live stream for 15 mins", completed: false, icon: <Youtube size={15} /> },
+      { id: 'req5', text: 'Comment your Free Fire UID in chat', completed: false, icon: <CheckCircle size={15} /> }
     ],
     image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=2165&auto=format&fit=crop',
     active: true,
@@ -246,6 +246,10 @@ const Giveaways = () => {
                       {allCompleted ? <>ENTER GIVEAWAY <ChevronRight size={20} /></> : 'COMPLETE TASKS TO ENTER'}
                     </button>
                   )}
+
+                  <p className="gw-disclaimer-text" style={{ fontSize: '0.75rem', color: '#64748b', textAlign: 'center', margin: '10px 0 0', lineHeight: '1.4' }}>
+                    Entries are verified by HAARSH XO before winners are announced. False claims result in disqualification.
+                  </p>
                 </div>
               </div>
             );
