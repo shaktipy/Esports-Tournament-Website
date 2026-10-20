@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { getMonthlyRewards } from '../utils/monthlyRewards';
+import { DEFAULT_MISSIONS, DEFAULT_DAILY_MISSIONS, DEFAULT_WEEKLY_MISSIONS, DEFAULT_MONTHLY_MISSIONS } from '../utils/defaultMissions';
 
 const getBackendBaseUrl = () => {
   const envUrl = import.meta.env.VITE_BACKEND_URL;
@@ -22,7 +23,7 @@ export const DAILY_MISSIONS = [
     target: 15,
     unit: 'Minutes',
     type: 'live',
-    reward: { coins: 30, csTickets: 0, brTickets: 0 },
+    reward: { coins: 10, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'daily_live_2',
@@ -32,7 +33,7 @@ export const DAILY_MISSIONS = [
     target: 30,
     unit: 'Minutes',
     type: 'live',
-    reward: { coins: 60, csTickets: 0, brTickets: 0 },
+    reward: { coins: 15, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'daily_live_3',
@@ -42,7 +43,7 @@ export const DAILY_MISSIONS = [
     target: 60,
     unit: 'Minutes',
     type: 'live',
-    reward: { coins: 120, csTickets: 0, brTickets: 0 },
+    reward: { coins: 25, csTickets: 0, brTickets: 0 },
   },
   // Video Watch Missions
   {
@@ -53,7 +54,7 @@ export const DAILY_MISSIONS = [
     target: 10,
     unit: 'Minutes',
     type: 'video',
-    reward: { coins: 20, csTickets: 0, brTickets: 0 },
+    reward: { coins: 5, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'daily_vid_2',
@@ -63,7 +64,7 @@ export const DAILY_MISSIONS = [
     target: 20,
     unit: 'Minutes',
     type: 'video',
-    reward: { coins: 40, csTickets: 0, brTickets: 0 },
+    reward: { coins: 10, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'daily_vid_3',
@@ -73,7 +74,7 @@ export const DAILY_MISSIONS = [
     target: 30,
     unit: 'Minutes',
     type: 'video',
-    reward: { coins: 60, csTickets: 0, brTickets: 0 },
+    reward: { coins: 15, csTickets: 0, brTickets: 0 },
   },
   // Extended Live Watch Missions
   {
@@ -84,7 +85,7 @@ export const DAILY_MISSIONS = [
     target: 90,
     unit: 'Minutes',
     type: 'live',
-    reward: { coins: 180, csTickets: 0, brTickets: 0 },
+    reward: { coins: 35, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'daily_ext_2',
@@ -94,7 +95,7 @@ export const DAILY_MISSIONS = [
     target: 120,
     unit: 'Minutes',
     type: 'live',
-    reward: { coins: 250, csTickets: 0, brTickets: 0 },
+    reward: { coins: 45, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'daily_ext_3',
@@ -104,7 +105,7 @@ export const DAILY_MISSIONS = [
     target: 150,
     unit: 'Minutes',
     type: 'live',
-    reward: { coins: 350, csTickets: 0, brTickets: 0 },
+    reward: { coins: 60, csTickets: 0, brTickets: 0 },
   },
 ];
 
@@ -118,7 +119,7 @@ export const WEEKLY_MISSIONS = [
     unit: 'Hours',
     displayTarget: '5 Hours (300m)',
     type: 'totalLive',
-    reward: { coins: 600, csTickets: 1, brTickets: 0 },
+    reward: { coins: 100, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'weekly_live_2',
@@ -129,7 +130,7 @@ export const WEEKLY_MISSIONS = [
     unit: 'Hours',
     displayTarget: '10 Hours (600m)',
     type: 'totalLive',
-    reward: { coins: 1200, csTickets: 0, brTickets: 1 },
+    reward: { coins: 200, csTickets: 1, brTickets: 0 },
   },
   {
     id: 'weekly_live_3',
@@ -140,7 +141,7 @@ export const WEEKLY_MISSIONS = [
     unit: 'Hours',
     displayTarget: '15 Hours (900m)',
     type: 'totalLive',
-    reward: { coins: 1800, csTickets: 2, brTickets: 0 },
+    reward: { coins: 300, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'weekly_live_4',
@@ -151,7 +152,7 @@ export const WEEKLY_MISSIONS = [
     unit: 'Hours',
     displayTarget: '20 Hours (1200m)',
     type: 'totalLive',
-    reward: { coins: 2500, csTickets: 0, brTickets: 2 },
+    reward: { coins: 450, csTickets: 0, brTickets: 1 },
   },
 ];
 
@@ -165,7 +166,7 @@ export const MONTHLY_MISSIONS = [
     unit: 'Hours',
     displayTarget: '45 Hours (2700m)',
     type: 'totalLive',
-    reward: { coins: 5000, csTickets: 3, brTickets: 0 },
+    reward: { coins: 400, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'monthly_live_2',
@@ -176,7 +177,7 @@ export const MONTHLY_MISSIONS = [
     unit: 'Hours',
     displayTarget: '50 Hours (3000m)',
     type: 'totalLive',
-    reward: { coins: 6000, csTickets: 0, brTickets: 3 },
+    reward: { coins: 500, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'monthly_live_3',
@@ -187,7 +188,7 @@ export const MONTHLY_MISSIONS = [
     unit: 'Hours',
     displayTarget: '54 Hours (3240m)',
     type: 'totalLive',
-    reward: { coins: 7000, csTickets: 3, brTickets: 2, badge: 'Squad Elite' },
+    reward: { coins: 600, csTickets: 0, brTickets: 0 },
   },
   {
     id: 'monthly_live_4',
@@ -198,11 +199,27 @@ export const MONTHLY_MISSIONS = [
     unit: 'Hours',
     displayTarget: '72 Hours (4320m)',
     type: 'totalLive',
-    reward: { coins: 10000, csTickets: 5, brTickets: 5, badge: 'Pro Nexus Pass' },
+    reward: { coins: 800, csTickets: 0, brTickets: 0 },
   },
 ];
 
 export const ALL_MISSIONS = [...DAILY_MISSIONS, ...WEEKLY_MISSIONS, ...MONTHLY_MISSIONS];
+
+// Returns live missions from admin panel (localStorage) with fallback to static defaults
+export const getActiveMissions = () => {
+  try {
+    const saved = localStorage.getItem('haarshxo_admin_missions');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return DEFAULT_MISSIONS;
+};
+
+export const getActiveMissionsByFrequency = (frequency) => {
+  return getActiveMissions().filter(m => m.frequency === frequency && m.active !== false);
+};
 
 export const GameProvider = ({ children }) => {
   // Persistent state
@@ -266,6 +283,52 @@ export const GameProvider = ({ children }) => {
     }
   });
 
+  const [bannedModalInfo, setBannedModalInfo] = useState(() => {
+    try {
+      const savedStatus = localStorage.getItem('harshxo_user_status');
+      const savedReason = localStorage.getItem('harshxo_user_status_reason') || '';
+      if (savedStatus === 'banned' || savedStatus === 'suspended') {
+        return { isOpen: true, status: savedStatus, reason: savedReason };
+      }
+    } catch {}
+    return { isOpen: false, status: 'banned', reason: '' };
+  });
+
+  const closeBannedModal = useCallback(() => {
+    setBannedModalInfo(prev => ({ ...prev, isOpen: false }));
+  }, []);
+
+  const clearBan = useCallback(() => {
+    setUserStatus('active');
+    setStatusReason('');
+    localStorage.removeItem('harshxo_user_status');
+    localStorage.removeItem('harshxo_user_status_reason');
+    setBannedModalInfo({ isOpen: false, status: 'active', reason: '' });
+  }, []);
+
+  const enforceBan = useCallback(async (reason = '', status = 'banned') => {
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    setUser(null);
+    setCoins(0);
+    setCsTickets(0);
+    setBrTickets(0);
+    setUserStatus(status);
+    setStatusReason(reason || '');
+    localStorage.removeItem('harshxo_user');
+    localStorage.removeItem('harshxo_coins');
+    localStorage.removeItem('harshxo_csTickets');
+    localStorage.removeItem('harshxo_brTickets');
+    localStorage.setItem('harshxo_user_status', status);
+    localStorage.setItem('harshxo_user_status_reason', reason || '');
+    setBannedModalInfo({
+      isOpen: true,
+      status: status || 'banned',
+      reason: reason || 'Violation of community guidelines & fair play policy.',
+    });
+  }, []);
+
   const [watchStats, setWatchStats] = useState(() => {
     try {
       const saved = localStorage.getItem('harshxo_watchStats');
@@ -300,6 +363,15 @@ export const GameProvider = ({ children }) => {
   const [registeredTournaments, setRegisteredTournaments] = useState(() => {
     try {
       const saved = localStorage.getItem('harshxo_registeredTournaments');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const [disqualifiedTournaments, setDisqualifiedTournaments] = useState(() => {
+    try {
+      const saved = localStorage.getItem('harshxo_disqualified_tournaments');
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -472,6 +544,14 @@ export const GameProvider = ({ children }) => {
             setNotificationInbox(data);
           } else if (type === 'announcements' && Array.isArray(data)) {
             syncFromAnnouncements(data);
+          } else if (type === 'tournament_disqualified' && data) {
+            window.dispatchEvent(new CustomEvent('haarshxo_tournament_disqualified', { detail: data }));
+          } else if (type === 'tournament_reinstated' && data) {
+            window.dispatchEvent(new CustomEvent('haarshxo_tournament_reinstated', { detail: data }));
+          } else if (type === 'user_banned' && data) {
+            window.dispatchEvent(new CustomEvent('haarshxo_user_banned', { detail: data }));
+          } else if (type === 'user_unbanned' && data) {
+            window.dispatchEvent(new CustomEvent('haarshxo_user_unbanned', { detail: data }));
           }
         });
       }
@@ -536,8 +616,19 @@ export const GameProvider = ({ children }) => {
         res = await fetch('http://localhost:5001/api/users/upsert', opts);
       }
 
+      if (res && (res.status === 403 || res.status === 401)) {
+        const json = await res.json().catch(() => ({}));
+        await enforceBan(json.statusReason || 'Banned by admin', json.status || 'banned');
+        return;
+      }
+
       if (res && res.ok) {
         const json = await res.json();
+        if (json.banned || (json.user && (json.user.status === 'banned' || json.user.status === 'suspended'))) {
+          await enforceBan(json.statusReason || json.user?.statusReason || 'Banned by admin', json.status || json.user?.status || 'banned');
+          return;
+        }
+
         if (json.success && json.user) {
           const dbUser = json.user;
           setCoins(dbUser.coins ?? 0);
@@ -567,7 +658,28 @@ export const GameProvider = ({ children }) => {
     } catch (err) {
       console.warn('[GameContext] syncUserWithBackend error:', err);
     }
-  }, []);
+  }, [enforceBan]);
+
+  // Real-time backend ban check heartbeat: ensures any admin ban is enforced within seconds on all devices/tabs
+  useEffect(() => {
+    if (!user || !user.id) return;
+    const interval = setInterval(async () => {
+      try {
+        const identifier = user.supabaseId || user.id || user.uid;
+        const res = await fetch(`/api/users/${encodeURIComponent(identifier)}/check-status`).catch(() =>
+          fetch(`http://localhost:5001/api/users/${encodeURIComponent(identifier)}/check-status`)
+        );
+        if (res && res.ok) {
+          const data = await res.json();
+          if (data.banned || data.status === 'banned' || data.status === 'suspended') {
+            enforceBan(data.statusReason || 'Banned by admin', data.status || 'banned');
+          }
+        }
+      } catch (err) {}
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, [user, enforceBan]);
 
   // Sync balance changes from GameContext to backend (debounced)
   const syncBalanceTimerRef = useRef(null);
@@ -630,19 +742,28 @@ export const GameProvider = ({ children }) => {
           setBrTickets(Number(e.newValue));
         } else if (e.key === 'harshxo_user_status' && e.newValue !== null) {
           setUserStatus(e.newValue);
+          if (e.newValue === 'banned' || e.newValue === 'suspended') {
+            const reason = localStorage.getItem('harshxo_user_status_reason') || '';
+            enforceBan(reason, e.newValue);
+          } else if (e.newValue === 'active') {
+            clearBan();
+          }
         } else if (e.key === 'harshxo_user_status_reason' && e.newValue !== null) {
           setStatusReason(e.newValue);
         } else if (e.key === 'haarshxo_admin_users' && e.newValue) {
           const list = JSON.parse(e.newValue);
           const currentUid = user?.uid;
           if (currentUid) {
-            const match = list.find(u => u.uid === currentUid || u.id === currentUid || u.supabaseId === user?.id);
+            const match = list.find(u => u.uid === currentUid || u.id === currentUid || u.supabaseId === user?.id || (user?.email && u.email === user.email));
             if (match) {
               if (typeof match.coins === 'number') setCoins(match.coins);
               if (typeof match.csTickets === 'number') setCsTickets(match.csTickets);
               if (typeof match.brTickets === 'number') setBrTickets(match.brTickets);
-              if (match.status) setUserStatus(match.status);
-              if (match.statusReason) setStatusReason(match.statusReason);
+              if (match.status === 'banned' || match.status === 'suspended') {
+                enforceBan(match.statusReason || match.notes || 'Banned by admin', match.status);
+              } else if (match.status === 'active') {
+                clearBan();
+              }
             }
           }
         }
@@ -652,7 +773,13 @@ export const GameProvider = ({ children }) => {
     const handleCustomSync = (e) => {
       const detail = e.detail;
       if (!detail) return;
-      if (user && (detail.uid === user.uid || detail.uid === user.id || detail.uid === user.supabaseId)) {
+      if (user && (detail.uid === user.uid || detail.uid === user.id || detail.uid === user.supabaseId || (user.email && detail.uid === user.email))) {
+        if (detail.status === 'banned' || detail.status === 'suspended') {
+          enforceBan(detail.statusReason || 'Banned by admin', detail.status);
+          return;
+        } else if (detail.status === 'active') {
+          clearBan();
+        }
         if (typeof detail.coins !== 'undefined') setCoins(detail.coins);
         if (typeof detail.csTickets !== 'undefined') setCsTickets(detail.csTickets);
         if (typeof detail.brTickets !== 'undefined') setBrTickets(detail.brTickets);
@@ -663,14 +790,34 @@ export const GameProvider = ({ children }) => {
       }
     };
 
+    const handleUserBanned = (e) => {
+      const detail = e.detail;
+      if (!detail) return;
+      if (user && (detail.uid === user.uid || detail.uid === user.id || detail.uid === user.supabaseId || (user.email && detail.uid === user.email))) {
+        enforceBan(detail.reason || 'Banned by admin', detail.newStatus || 'banned');
+      }
+    };
+
+    const handleUserUnbanned = (e) => {
+      const detail = e.detail;
+      if (!detail) return;
+      if (user && (detail.uid === user.uid || detail.uid === user.id || detail.uid === user.supabaseId || (user.email && detail.uid === user.email))) {
+        clearBan();
+      }
+    };
+
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('haarshxo_player_sync', handleCustomSync);
+    window.addEventListener('haarshxo_user_banned', handleUserBanned);
+    window.addEventListener('haarshxo_user_unbanned', handleUserUnbanned);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('haarshxo_player_sync', handleCustomSync);
+      window.removeEventListener('haarshxo_user_banned', handleUserBanned);
+      window.removeEventListener('haarshxo_user_unbanned', handleUserUnbanned);
     };
-  }, [user]);
+  }, [user, enforceBan, clearBan]);
 
   // Sync to LocalStorage & Backend Users
   useEffect(() => {
@@ -704,6 +851,81 @@ export const GameProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('harshxo_registeredTournaments', JSON.stringify(registeredTournaments));
   }, [registeredTournaments]);
+
+  useEffect(() => {
+    localStorage.setItem('harshxo_disqualified_tournaments', JSON.stringify(disqualifiedTournaments));
+  }, [disqualifiedTournaments]);
+
+  // Listen for admin tournament disqualification & reinstatement events
+  useEffect(() => {
+    const handleDisqualification = (e) => {
+      const detail = e.detail;
+      if (!detail) return;
+      const { tournamentId, tournamentTitle, disqRecord } = detail;
+      
+      const userUid = user?.uid ? String(user.uid) : '';
+      const userIgn = user?.inGameName ? user.inGameName.toLowerCase() : '';
+
+      const isUserMatch = Boolean(
+        (userUid && (
+          String(disqRecord?.uid) === userUid || 
+          String(disqRecord?.leaderUid) === userUid ||
+          (Array.isArray(disqRecord?.uids) && disqRecord.uids.some(u => String(u) === userUid))
+        )) ||
+        (userIgn && (
+          disqRecord?.ign?.toLowerCase() === userIgn ||
+          disqRecord?.leaderIgn?.toLowerCase() === userIgn ||
+          disqRecord?.teamName?.toLowerCase() === userIgn ||
+          (Array.isArray(disqRecord?.igns) && disqRecord.igns.some(ig => ig?.toLowerCase() === userIgn))
+        )) ||
+        (!userUid && !userIgn)
+      );
+
+      if (isUserMatch) {
+        setRegisteredTournaments(prev => prev.filter(id => String(id) !== String(tournamentId)));
+        setDisqualifiedTournaments(prev => Array.from(new Set([...prev, String(tournamentId)])));
+        showNotification(
+          `🚫 Disqualified from Tournament!`,
+          'error',
+          `You have been disqualified from "${tournamentTitle || 'Tournament'}". Reason: ${disqRecord?.reason || 'Admin disqualification'}. Re-registration is locked.`
+        );
+      }
+    };
+
+    const handleReinstated = (e) => {
+      const detail = e.detail;
+      if (!detail) return;
+      const { tournamentId, tournamentTitle, newSlotNumber, uids = [], igns = [] } = detail;
+
+      const userUid = user?.uid ? String(user.uid) : '';
+      const userIgn = user?.inGameName ? user.inGameName.toLowerCase() : '';
+
+      const isUserMatch = (
+        (userUid && uids.some(u => String(u) === userUid)) ||
+        (userIgn && igns.some(i => i?.toLowerCase() === userIgn)) ||
+        (!userUid && !userIgn) ||
+        (disqualifiedTournaments.includes(String(tournamentId)))
+      );
+
+      if (isUserMatch) {
+        setDisqualifiedTournaments(prev => prev.filter(id => String(id) !== String(tournamentId)));
+        setRegisteredTournaments(prev => Array.from(new Set([...prev, String(tournamentId)])));
+        showNotification(
+          `🎉 Unbanned by Admin!`,
+          'success',
+          `You are unbanned by Admin for "${tournamentTitle || 'Tournament'}". New slot - #${newSlotNumber || 'N/A'}`
+        );
+      }
+    };
+
+    window.addEventListener('haarshxo_tournament_disqualified', handleDisqualification);
+    window.addEventListener('haarshxo_tournament_reinstated', handleReinstated);
+
+    return () => {
+      window.removeEventListener('haarshxo_tournament_disqualified', handleDisqualification);
+      window.removeEventListener('haarshxo_tournament_reinstated', handleReinstated);
+    };
+  }, [user]);
 
   useEffect(() => {
     localStorage.setItem('harshxo_loginStreak', JSON.stringify(loginStreak));
@@ -778,12 +1000,17 @@ export const GameProvider = ({ children }) => {
   };
 
   const showNotification = (message, type = 'success', subtitle = null) => {
-    const id = Date.now() + Math.random();
-    // 1. Toast banner
-    setNotifications(prev => [...prev.slice(-3), { id, message, type, subtitle }]);
-    setTimeout(() => {
-      setNotifications(prev => prev.filter(n => n.id !== id));
-    }, 5500);
+    // 1. Toast banner (deduplicate identical active messages)
+    setNotifications(prev => {
+      if (prev.some(n => n.message === message && n.type === type)) {
+        return prev;
+      }
+      const id = Date.now() + Math.random();
+      setTimeout(() => {
+        setNotifications(curr => curr.filter(n => n.id !== id));
+      }, 5500);
+      return [...prev.slice(-3), { id, message, type, subtitle }];
+    });
 
     // 2. Persistent notification inbox
     const newInboxItem = {
@@ -865,7 +1092,9 @@ export const GameProvider = ({ children }) => {
   };
 
   const claimMission = (missionId) => {
-    const mission = ALL_MISSIONS.find(m => m.id === missionId);
+    // Use live admin missions list so reward values reflect admin edits
+    const liveMissions = getActiveMissions();
+    const mission = liveMissions.find(m => m.id === missionId) || ALL_MISSIONS.find(m => m.id === missionId);
     if (!mission || claimedMissions[missionId]) return;
 
     const reward = mission.reward || {};
@@ -892,12 +1121,10 @@ export const GameProvider = ({ children }) => {
     if (completedMissionsCount < EXTRA_REWARD_TARGET || extraRewardClaimed) return;
 
     setExtraRewardClaimed(true);
-    setCoins(prev => prev + 500);
-    setCsTickets(prev => prev + 1);
-    setBrTickets(prev => prev + 1);
+    setCoins(prev => prev + 20);
 
     showNotification(
-      '🎁 GRAND EXTRA REWARD UNLOCKED: +500 XO Coins, +1 CS Ticket, +1 BR Ticket, & 100 Diamond Code (XO-FF-7729)!',
+      '🎁 DAILY BONUS CLAIMED: +20 Bonus Coins added to your account!',
       'special'
     );
   };
@@ -909,6 +1136,11 @@ export const GameProvider = ({ children }) => {
     }
     if (userStatus === 'banned' || userStatus === 'suspended') {
       showNotification('Account Restricted!', 'error', `Your account is ${userStatus}. Registration is disabled.`);
+      return false;
+    }
+
+    if (disqualifiedTournaments.includes(tournamentId)) {
+      showNotification('Registration Blocked!', 'error', `Cannot register: You are disqualified from ${tournamentTitle || 'this tournament'} by the admin.`);
       return false;
     }
 
@@ -1055,6 +1287,7 @@ export const GameProvider = ({ children }) => {
         extraRewardClaimed,
         claimExtraReward,
         registeredTournaments,
+        disqualifiedTournaments,
         registerTournament,
         purchaseEsportsPass,
         addTickets,
@@ -1077,6 +1310,10 @@ export const GameProvider = ({ children }) => {
         userStatus,
         statusReason,
         isBanned: userStatus === 'banned' || userStatus === 'suspended',
+        bannedModalInfo,
+        closeBannedModal,
+        enforceBan,
+        clearBan,
       }}
     >
       {children}
