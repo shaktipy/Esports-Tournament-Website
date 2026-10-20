@@ -112,17 +112,27 @@ def upsert_user():
 
     with get_users_db() as conn:
         existing = conn.execute(
-            "SELECT * FROM users WHERE supabase_id = ?", (supabase_id,)
+            "SELECT * FROM users WHERE supabase_id = ? OR (email = ? AND email != '')", (supabase_id, email)
         ).fetchone()
 
         if existing:
+            # Check if user is banned or suspended by admin
+            if existing["status"] in ["banned", "suspended"]:
+                return jsonify({
+                    "success": False,
+                    "banned": True,
+                    "status": existing["status"],
+                    "statusReason": existing["status_reason"] or "Banned by admin",
+                    "user": user_row_to_dict(existing)
+                }), 403
+
             conn.execute("""
                 UPDATE users SET email = ?, in_game_name = ?, last_seen = ?
-                WHERE supabase_id = ?
-            """, (email, in_game_name, now, supabase_id))
+                WHERE id = ?
+            """, (email, in_game_name, now, existing["id"]))
             conn.commit()
             row = conn.execute(
-                "SELECT * FROM users WHERE supabase_id = ?", (supabase_id,)
+                "SELECT * FROM users WHERE id = ?", (existing["id"],)
             ).fetchone()
         else:
             user_id = f"u_{supabase_id[:12]}_{datetime.now().strftime('%f')}"
@@ -140,14 +150,30 @@ def upsert_user():
     return jsonify({"success": True, "user": user_row_to_dict(row)}), 200
 
 def find_user_by_identifier(conn, identifier):
-    """Finds user by supabase_id, game_uid, or internal id."""
+    """Finds user by supabase_id, game_uid, internal id, or email."""
     if not identifier:
         return None
     ident = str(identifier).strip()
     return conn.execute(
-        "SELECT * FROM users WHERE supabase_id = ? OR game_uid = ? OR id = ?",
-        (ident, ident, ident)
+        "SELECT * FROM users WHERE supabase_id = ? OR game_uid = ? OR id = ? OR LOWER(email) = LOWER(?)",
+        (ident, ident, ident, ident)
     ).fetchone()
+
+@app.route("/api/users/<user_identifier>/check-status", methods=["GET"])
+def check_user_status(user_identifier):
+    """Returns the ban/suspension status for a specific user."""
+    init_users_db()
+    with get_users_db() as conn:
+        row = find_user_by_identifier(conn, user_identifier)
+    if not row:
+        return jsonify({"status": "active", "banned": False}), 200
+    is_banned = row["status"] in ["banned", "suspended"]
+    return jsonify({
+        "status": row["status"] or "active",
+        "statusReason": row["status_reason"] or "",
+        "banned": is_banned,
+        "user": user_row_to_dict(row)
+    }), 200
 
 @app.route("/api/users/<user_identifier>/balance", methods=["GET"])
 def get_user_balance(user_identifier):
