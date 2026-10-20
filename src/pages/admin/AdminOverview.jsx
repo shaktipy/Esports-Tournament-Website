@@ -1,13 +1,12 @@
 import { useAdmin } from '../../context/AdminContext';
 import { 
   Trophy, IndianRupee, Users, Ticket, Gift, 
-  CheckCircle, ArrowUpRight, TrendingUp, AlertCircle, ShieldAlert, Zap
+  CheckCircle, ArrowUpRight, TrendingUp, AlertCircle, ShieldAlert, Zap, Target
 } from 'lucide-react';
 
 const AdminOverview = ({ setActiveTab }) => {
   const { 
     tournaments, 
-    passes, 
     transactions, 
     usersList, 
     redeemCodes,
@@ -49,6 +48,9 @@ const AdminOverview = ({ setActiveTab }) => {
           </button>
           <button className="admin-btn btn-secondary" onClick={() => setActiveTab('codes')}>
             <Gift size={16} /> Generate Code
+          </button>
+          <button className="admin-btn btn-secondary" onClick={() => setActiveTab('missions')}>
+            <Target size={16} /> Missions & Rewards
           </button>
         </div>
       </div>

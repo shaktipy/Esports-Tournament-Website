@@ -375,8 +375,9 @@ const AdminGiveawaysStore = () => {
           </div>
 
           <div className="ar-price-row">
-            <div className="ar-cost font-bold text-gold">
-              🪙 {reward.cost.toLocaleString()} XO Coins
+            <div className="ar-cost font-bold text-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" style={{ width: 16, height: 16 }} />
+              <span>{reward.cost.toLocaleString()} XO Coins</span>
             </div>
             <div className="ar-stock text-muted text-xs">
               Stock: {isInstant ? `${availableCodes} codes` : `${reward.stock} units`}
@@ -802,7 +803,10 @@ const AdminGiveawaysStore = () => {
 
               <div className="form-row-2">
                 <div className="form-group">
-                  <label>Cost (XO Coins) *</label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon-inline" style={{ width: 15, height: 15 }} />
+                    Cost (XO Coins) *
+                  </label>
                   <input 
                     type="number" 
                     required
