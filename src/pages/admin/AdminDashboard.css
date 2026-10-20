@@ -438,6 +438,17 @@
   color: #fff;
 }
 
+.admin-btn.btn-success {
+  background: rgba(46, 213, 115, 0.2);
+  border: 1px solid rgba(46, 213, 115, 0.4);
+  color: #2ed573;
+}
+
+.admin-btn.btn-success:hover {
+  background: rgba(46, 213, 115, 0.35);
+  color: #fff;
+}
+
 .admin-btn.btn-sm {
   padding: 6px 12px;
   font-size: 0.8rem;
@@ -1029,11 +1040,85 @@
   position: relative;
 }
 
+.ap-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.ap-pass-thumb-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  flex-shrink: 0;
+}
+
+.ap-pass-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pass-token-presets {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.pass-token-presets .preset-label {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.preset-token-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-token-btn img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.preset-token-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.preset-token-btn.active {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: #10b981;
+  color: #34d399;
+}
+
 .ap-badge-wrap {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 8px;
+  margin-bottom: 0;
 }
 
 .ap-badge {
@@ -1298,13 +1383,30 @@
   color: #94a3b8;
 }
 
-.balance-badge {
-  font-size: 0.8rem;
-  padding: 2px 7px;
-  border-radius: 4px;
+.xo-coin-icon-inline {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  vertical-align: middle;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(168, 85, 247, 0.5));
 }
 
-.balance-badge.coin { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+.balance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.balance-badge.coin { 
+  background: rgba(168, 85, 247, 0.15); 
+  color: #c084fc; 
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
 .balance-badge.cs { background: rgba(16, 185, 129, 0.12); color: #34d399; }
 .balance-badge.br { background: rgba(148, 163, 184, 0.12); color: #cbd5e1; }
 

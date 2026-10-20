@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useAdmin, isAuthorizedAdminEmail } from '../../context/AdminContext';
 import { useGame } from '../../context/GameContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { 
   Trophy, Ticket, Gift, CreditCard, Users, 
   Megaphone, ShoppingBag, FileText, LayoutDashboard, 
   Lock, Unlock, ShieldAlert, Sparkles, LogOut, ExternalLink, 
-  Menu, X, CheckCircle2, ChevronRight, Eye, EyeOff, Mail, KeyRound, ShieldCheck, Coins
+  Menu, X, CheckCircle2, ChevronRight, Eye, EyeOff, Mail, KeyRound, ShieldCheck, Coins, Target
 } from 'lucide-react';
 
 import AdminOverview from './AdminOverview';
 import AdminTournaments from './AdminTournaments';
 import AdminPasses from './AdminPasses';
 import AdminRedeemCodes from './AdminRedeemCodes';
+import AdminMissions from './AdminMissions';
 import AdminPayments from './AdminPayments';
 import AdminRedemptions from './AdminRedemptions';
 import AdminUsers from './AdminUsers';
@@ -31,25 +32,26 @@ const AdminDashboard = () => {
     transactions,
     redemptions,
     redeemCodes,
-    usersList
   } = useAdmin();
 
   const { user } = useGame();
 
   const [activeTab, setActiveTab] = useState('overview');
-  const [emailInput, setEmailInput] = useState('');
+  const [emailInput, setEmailInput] = useState(() => {
+    if (user?.email && isAuthorizedAdminEmail(user.email)) return user.email;
+    try {
+      const u = localStorage.getItem('harshxo_user');
+      if (u) {
+        const parsed = JSON.parse(u);
+        if (parsed?.email && isAuthorizedAdminEmail(parsed.email)) return parsed.email;
+      }
+    } catch {}
+    return '';
+  });
   const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState('');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const navigate = useNavigate();
-
-  // Pre-fill email if user is already logged in on main site with authorized admin email
-  useEffect(() => {
-    if (user?.email && isAuthorizedAdminEmail(user.email) && !emailInput) {
-      setEmailInput(user.email);
-    }
-  }, [user]);
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
@@ -149,6 +151,7 @@ const AdminDashboard = () => {
     { id: 'tournaments', label: 'Tournaments', icon: <Trophy size={18} />, badge: tournaments.filter(t => t.status === 'open').length },
     { id: 'passes', label: 'Passes & Pricing', icon: <Ticket size={18} /> },
     { id: 'codes', label: 'Redeem Codes', icon: <Gift size={18} />, badge: redeemCodes.filter(c => c.active).length },
+    { id: 'missions', label: 'Missions & Rewards', icon: <Target size={18} /> },
     { 
       id: 'payments', 
       label: 'Razorpay Payments', 
@@ -263,6 +266,7 @@ const AdminDashboard = () => {
           {activeTab === 'tournaments' && <AdminTournaments />}
           {activeTab === 'passes' && <AdminPasses />}
           {activeTab === 'codes' && <AdminRedeemCodes />}
+          {activeTab === 'missions' && <AdminMissions />}
           {activeTab === 'payments' && <AdminPayments />}
           {activeTab === 'redemptions' && <AdminRedemptions />}
           {activeTab === 'users' && <AdminUsers />}
