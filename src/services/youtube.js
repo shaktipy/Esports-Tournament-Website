@@ -93,9 +93,12 @@ export const DEFAULT_FEED = [
   },
 ];
 
+export const OFFICIAL_API_KEY = 'REDACTED_YOUTUBE_API_KEY';
+export const OFFICIAL_CHANNEL_ID = 'UCn46HBkf6RSZTV9tj3cqVBg';
+
 export const getStoredCredentials = () => {
-  const apiKey = localStorage.getItem(STORAGE_KEY_API_KEY) || import.meta.env.VITE_YOUTUBE_API_KEY || '';
-  const channelId = localStorage.getItem(STORAGE_KEY_CHANNEL_ID) || import.meta.env.VITE_YOUTUBE_CHANNEL_ID || '';
+  const apiKey = localStorage.getItem(STORAGE_KEY_API_KEY) || import.meta.env.VITE_YOUTUBE_API_KEY || OFFICIAL_API_KEY;
+  const channelId = localStorage.getItem(STORAGE_KEY_CHANNEL_ID) || import.meta.env.VITE_YOUTUBE_CHANNEL_ID || OFFICIAL_CHANNEL_ID;
   return { apiKey, channelId };
 };
 
@@ -106,6 +109,13 @@ export const saveCredentials = (apiKey, channelId) => {
   if (channelId) localStorage.setItem(STORAGE_KEY_CHANNEL_ID, channelId.trim());
   else localStorage.removeItem(STORAGE_KEY_CHANNEL_ID);
 };
+
+function decodeHtml(html) {
+  if (!html) return '';
+  const txt = document.createElement('textarea');
+  txt.innerHTML = html;
+  return txt.value;
+}
 
 /**
  * Parses ISO 8601 duration (PT14M20S) into "14:20"
@@ -136,6 +146,19 @@ function formatViewCount(views) {
 }
 
 /**
+ * Parses ISO 8601 duration into total seconds
+ */
+function parseDurationSeconds(isoDuration) {
+  if (!isoDuration) return 0;
+  const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!match) return 0;
+  const hours = parseInt(match[1] || '0', 10);
+  const minutes = parseInt(match[2] || '0', 10);
+  const seconds = parseInt(match[3] || '0', 10);
+  return hours * 3600 + minutes * 60 + seconds;
+}
+
+/**
  * Fetches real-time channel videos and live status using YouTube Data API v3
  */
 export const fetchRealtimeChannelVideos = async (apiKey, channelId) => {
@@ -148,19 +171,53 @@ export const fetchRealtimeChannelVideos = async (apiKey, channelId) => {
   }
 
   try {
-    // 1. Fetch channel's recent uploads via search endpoint
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet,id&order=date&maxResults=12`;
-    const searchRes = await fetch(searchUrl);
-    
-    if (!searchRes.ok) {
-      const errData = await searchRes.json().catch(() => ({}));
-      throw new Error(errData?.error?.message || `YouTube API returned status ${searchRes.status}`);
+    const rawItems = [];
+    const uploadsPlaylistId = channelId.startsWith('UC') ? 'UU' + channelId.slice(2) : channelId;
+
+    // 1. Fetch from uploads playlist (costs only 1 quota unit per 50 videos!)
+    try {
+      const p1Url = `https://www.googleapis.com/youtube/v3/playlistItems?key=${apiKey}&playlistId=${uploadsPlaylistId}&part=snippet,contentDetails&maxResults=50`;
+      const p1Res = await fetch(p1Url);
+      if (p1Res.ok) {
+        const p1Data = await p1Res.json();
+        rawItems.push(...(p1Data.items || []));
+
+        // Fetch page 2 (up to 100 uploads total)
+        if (p1Data.nextPageToken) {
+          const p2Url = `${p1Url}&pageToken=${p1Data.nextPageToken}`;
+          const p2Res = await fetch(p2Url);
+          if (p2Res.ok) {
+            const p2Data = await p2Res.json();
+            rawItems.push(...(p2Data.items || []));
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Playlist fetch failed, falling back to search API:', e);
     }
 
-    const searchData = await searchRes.json();
-    const videoItems = (searchData.items || []).filter(item => item.id?.videoId);
+    // Fallback to search endpoint if playlistItems returned nothing
+    if (rawItems.length === 0) {
+      const searchUrl = `https://www.googleapis.com/youtube/v3/search?key=${apiKey}&channelId=${channelId}&part=snippet,id&order=date&maxResults=50`;
+      const searchRes = await fetch(searchUrl);
+      if (searchRes.ok) {
+        const searchData = await searchRes.json();
+        (searchData.items || []).forEach(item => {
+          if (item.id?.videoId) {
+            rawItems.push({
+              contentDetails: { videoId: item.id.videoId },
+              snippet: item.snippet
+            });
+          }
+        });
+      }
+    }
 
-    if (videoItems.length === 0) {
+    const videoIds = rawItems
+      .map(item => item.contentDetails?.videoId || item.id?.videoId)
+      .filter(Boolean);
+
+    if (videoIds.length === 0) {
       return {
         connected: true,
         videos: DEFAULT_FEED,
@@ -168,48 +225,73 @@ export const fetchRealtimeChannelVideos = async (apiKey, channelId) => {
       };
     }
 
-    // 2. Fetch video details for duration, statistics and live streaming details
-    const videoIds = videoItems.map(i => i.id.videoId).join(',');
-    const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?key=${apiKey}&id=${videoIds}&part=contentDetails,statistics,snippet,liveStreamingDetails`;
-    const detailsRes = await fetch(detailsUrl);
-    const detailsData = await detailsRes.json();
-
+    // 2. Fetch video details in chunks of 50
     const detailsMap = {};
-    (detailsData.items || []).forEach(v => {
-      detailsMap[v.id] = v;
-    });
+    for (let i = 0; i < videoIds.length; i += 50) {
+      const chunk = videoIds.slice(i, i + 50);
+      try {
+        const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?key=${apiKey}&id=${chunk.join(',')}&part=contentDetails,statistics,snippet,liveStreamingDetails`;
+        const detailsRes = await fetch(detailsUrl);
+        if (detailsRes.ok) {
+          const detailsData = await detailsRes.json();
+          (detailsData.items || []).forEach(v => {
+            detailsMap[v.id] = v;
+          });
+        }
+      } catch (err) {
+        console.warn('Error fetching video chunk details:', err);
+      }
+    }
 
-    const parsedVideos = videoItems.map((item, index) => {
-      const vid = item.id.videoId;
-      const detail = detailsMap[vid] || {};
-      const snippet = detail.snippet || item.snippet;
-      const liveBroadcast = snippet.liveBroadcastContent; // 'live', 'upcoming', 'none'
-      const isLive = liveBroadcast === 'live';
-      const durationSeconds = detail.contentDetails?.duration;
-      const formattedDuration = isLive ? 'LIVE NOW' : parseDuration(durationSeconds);
-      const isShort = !isLive && detail.contentDetails?.duration && detail.contentDetails.duration.includes('M') === false && parseInt(detail.contentDetails.duration.replace(/[^0-9]/g, '') || '0', 10) < 61;
+    // 3. Process, filter out shorts, and properly classify live streams vs videos
+    const parsedVideos = [];
+    const seenIds = new Set();
 
-      return {
+    for (let index = 0; index < videoIds.length; index++) {
+      const vid = videoIds[index];
+      if (seenIds.has(vid)) continue;
+      seenIds.add(vid);
+
+      const detail = detailsMap[vid];
+      if (!detail) continue;
+
+      const snippet = detail.snippet || rawItems[index]?.snippet || {};
+      const durationIso = detail.contentDetails?.duration;
+      const totalSec = parseDurationSeconds(durationIso);
+
+      // EXCLUDE SHORTS: YouTube Shorts are strictly 60 seconds or shorter
+      if (totalSec > 0 && totalSec <= 60) {
+        continue;
+      }
+
+      const isLiveNow = snippet.liveBroadcastContent === 'live';
+      const wasLiveStream = Boolean(detail.liveStreamingDetails) || isLiveNow || /live|stream|🔴/i.test(snippet.title);
+      const formattedDuration = isLiveNow ? 'LIVE NOW' : parseDuration(durationIso);
+
+      parsedVideos.push({
         id: `yt_${vid}_${index}`,
-        type: isLive ? 'live' : 'video',
-        title: snippet.title,
+        type: wasLiveStream ? 'live' : 'video',
+        isLiveNow: isLiveNow,
+        wasStream: wasLiveStream,
+        badgeText: isLiveNow ? '🔴 LIVE NOW' : (wasLiveStream ? '🔴 LIVE STREAM' : '📹 VIDEO'),
+        title: decodeHtml(snippet.title),
         duration: formattedDuration,
         videoId: vid,
         thumbnail: snippet.thumbnails?.maxres?.url || snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url,
-        viewers: isLive 
+        viewers: isLiveNow 
           ? `${detail.liveStreamingDetails?.concurrentViewers ? formatViewCount(detail.liveStreamingDetails.concurrentViewers).replace('Views', 'Watching') : 'LIVE'}`
           : formatViewCount(detail.statistics?.viewCount || '0'),
         description: snippet.description || 'HAARSH XO Free Fire content.'
-      };
-    });
+      });
+    }
 
-    // Make sure live streams appear first
-    parsedVideos.sort((a, b) => (b.type === 'live' ? 1 : 0) - (a.type === 'live' ? 1 : 0));
+    // Sort: Actively live streams first, then recent streams/videos
+    parsedVideos.sort((a, b) => (b.isLiveNow ? 1 : 0) - (a.isLiveNow ? 1 : 0));
 
     return {
       connected: true,
-      videos: parsedVideos,
-      message: `Successfully synchronized ${parsedVideos.length} real-time videos from YouTube!`
+      videos: parsedVideos.length > 0 ? parsedVideos : DEFAULT_FEED,
+      message: `Successfully synchronized ${parsedVideos.length} channel streams & videos from YouTube!`
     };
   } catch (error) {
     console.error('Error fetching YouTube API data:', error);
