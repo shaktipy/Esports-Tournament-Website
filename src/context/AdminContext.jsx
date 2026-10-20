@@ -5,6 +5,7 @@ import {
   getOccupiedSlotNumbers, 
   getAvailableSlots 
 } from '../utils/tournamentSlots';
+import { DEFAULT_MISSIONS } from '../utils/defaultMissions';
 
 const AdminContext = createContext();
 
@@ -372,7 +373,7 @@ export const INITIAL_PASSES = [
     grantCs: 5,
     grantBr: 5,
     grantCoins: 300,
-    ticketImage: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=2070&auto=format&fit=crop',
+    ticketImage: '/tokens/mascot-logo.png',
     ticketType: 'COMBO',
     features: [
       '10 Total Tournament Tickets (5 CS + 5 BR)',
@@ -861,6 +862,16 @@ export const AdminProvider = ({ children }) => {
     }
   });
 
+  // Missions
+  const [missions, setMissions] = useState(() => {
+    try {
+      const saved = localStorage.getItem('haarshxo_admin_missions');
+      return saved ? JSON.parse(saved) : DEFAULT_MISSIONS;
+    } catch {
+      return DEFAULT_MISSIONS;
+    }
+  });
+
   // Store Rewards
   const [storeRewards, setStoreRewards] = useState(() => {
     try {
@@ -959,6 +970,12 @@ export const AdminProvider = ({ children }) => {
       setGiveawaysList(gList);
       try { localStorage.setItem('haarshxo_admin_giveaways', JSON.stringify(gList)); } catch {}
       window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'giveaways', data: gList } }));
+    }
+    if (Array.isArray(data.missions) && data.missions.length > 0) {
+      remoteSyncRef.current['missions'] = true;
+      setMissions(data.missions);
+      try { localStorage.setItem('haarshxo_admin_missions', JSON.stringify(data.missions)); } catch {}
+      window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'missions', data: data.missions } }));
     }
     if (Array.isArray(data.storeRewards) && data.storeRewards.length > 0) {
       remoteSyncRef.current['store'] = true;
@@ -1092,6 +1109,7 @@ export const AdminProvider = ({ children }) => {
         else if (type === 'users')        { setUsersList(data); try { localStorage.setItem('haarshxo_admin_users', JSON.stringify(data)); } catch {} }
         else if (type === 'announcements') { setAnnouncements(data); try { localStorage.setItem('haarshxo_admin_announcements', JSON.stringify(data)); } catch {} }
         else if (type === 'giveaways')    { setGiveawaysList(data); try { localStorage.setItem('haarshxo_admin_giveaways', JSON.stringify(data)); } catch {} }
+        else if (type === 'missions')     { setMissions(data); try { localStorage.setItem('haarshxo_admin_missions', JSON.stringify(data)); } catch {} }
         else if (type === 'store')        { setStoreRewards(data); try { localStorage.setItem('haarshxo_admin_store', JSON.stringify(data)); } catch {} }
         else if (type === 'logs')         { setAuditLogs(data); try { localStorage.setItem('haarshxo_admin_logs', JSON.stringify(data)); } catch {} }
       } catch (err) {
@@ -1132,6 +1150,9 @@ export const AdminProvider = ({ children }) => {
         } else if (e.key === 'haarshxo_admin_giveaways') {
           remoteSyncRef.current['giveaways'] = true;
           setGiveawaysList(data);
+        } else if (e.key === 'haarshxo_admin_missions') {
+          remoteSyncRef.current['missions'] = true;
+          setMissions(data);
         } else if (e.key === 'haarshxo_admin_store') {
           remoteSyncRef.current['store'] = true;
           setStoreRewards(data);
@@ -1162,6 +1183,7 @@ export const AdminProvider = ({ children }) => {
         const u = tryParse('haarshxo_admin_users');
         const a = tryParse('haarshxo_admin_announcements');
         const g = tryParse('haarshxo_admin_giveaways');
+        const m = tryParse('haarshxo_admin_missions');
         const s = tryParse('haarshxo_admin_store');
         const l = tryParse('haarshxo_admin_logs');
 
@@ -1174,6 +1196,7 @@ export const AdminProvider = ({ children }) => {
         if (u !== null) { remoteSyncRef.current['users'] = true; setUsersList(u); }
         // FIXED: was `if (a)` — empty array [] is falsy so deleted announcements were never applied
         if (a !== null) { remoteSyncRef.current['announcements'] = true; setAnnouncements(a); }
+        if (m !== null) { remoteSyncRef.current['missions'] = true; setMissions(m); }
         if (g) {
           const cleanedG = g.map(item => {
             const cleanList = (item.participantsList || []).filter(p => 
@@ -1232,6 +1255,10 @@ export const AdminProvider = ({ children }) => {
   useEffect(() => {
     try { localStorage.setItem('haarshxo_admin_passes', JSON.stringify(passes)); } catch {}
   }, [passes]);
+
+  useEffect(() => {
+    try { localStorage.setItem('haarshxo_admin_missions', JSON.stringify(missions)); } catch {}
+  }, [missions]);
 
   useEffect(() => {
     try { localStorage.setItem('haarshxo_admin_codes', JSON.stringify(redeemCodes)); } catch {}
@@ -1866,6 +1893,14 @@ export const AdminProvider = ({ children }) => {
   };
 
   // ─── Passes CRUD ──────────────────────────────────────────────────────────
+  const stripBase64Pass = (passItem) => {
+    if (!passItem) return passItem;
+    if (passItem.ticketImage && passItem.ticketImage.startsWith('data:image/')) {
+      return { ...passItem, ticketImage: '/tokens/cs-ticket.png' };
+    }
+    return passItem;
+  };
+
   const createPass = (data) => {
     lastLocalActionTime.current = Date.now();
     const id = Date.now();
@@ -1886,40 +1921,43 @@ export const AdminProvider = ({ children }) => {
       active: true,
       badge: data.badge || 'SPECIAL'
     };
-    setPasses(prev => {
-      const updated = [...prev, newPass];
+    // Build full updated array synchronously so we can close over it for backend sync
+    const fullUpdated = [...passes, newPass];
+    setPasses(() => {
       try {
-        localStorage.setItem('haarshxo_admin_passes', JSON.stringify(updated));
-        broadcastChange('passes', updated);
-        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'passes', data: updated } }));
+        const safeForStorage = fullUpdated.map(stripBase64Pass);
+        localStorage.setItem('haarshxo_admin_passes', JSON.stringify(safeForStorage));
+        broadcastChange('passes', fullUpdated);
+        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'passes', data: fullUpdated } }));
       } catch {}
-      return updated;
+      return fullUpdated;
     });
+    // Sync FULL array to backend — never just the single new item
     setTimeout(() => {
-      const stored = localStorage.getItem('haarshxo_admin_passes');
-      if (stored) syncToBackend({ passes: JSON.parse(stored) });
+      syncToBackend({ passes: fullUpdated.map(stripBase64Pass) });
     }, 0);
-    addAuditLog('PASS_CREATED', 'PASSES', `Created new pass "${newPass.title}" (₹${newPass.inrPrice}, +${newPass.grantCs} CS, +${newPass.grantBr} BR, +${newPass.grantCoins} Coins)`);
+    addAuditLog('PASS_CREATED', 'PASSES', `Created new pass "${newPass.title}" (₹${newPass.inrPrice}, +${newPass.grantCs} CS, +${newPass.grantBr} BR, +${newPass.grantCoins} XO Coins)`);
     return newPass;
   };
 
   const updatePass = (id, updatedFields) => {
     lastLocalActionTime.current = Date.now();
-    setPasses(prev => {
-      const updated = prev.map(p => {
-        if (p.id !== id) return p;
-        return { ...p, ...updatedFields };
-      });
+    // Build full updated array synchronously so we can close over it for backend sync
+    const fullUpdated = passes.map(p =>
+      p.id !== id ? p : { ...p, ...updatedFields }
+    );
+    setPasses(() => {
       try {
-        localStorage.setItem('haarshxo_admin_passes', JSON.stringify(updated));
-        broadcastChange('passes', updated);
-        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'passes', data: updated } }));
+        const safeForStorage = fullUpdated.map(stripBase64Pass);
+        localStorage.setItem('haarshxo_admin_passes', JSON.stringify(safeForStorage));
+        broadcastChange('passes', fullUpdated);
+        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'passes', data: fullUpdated } }));
       } catch {}
-      return updated;
+      return fullUpdated;
     });
+    // Sync FULL array to backend — never just the single updated item
     setTimeout(() => {
-      const stored = localStorage.getItem('haarshxo_admin_passes');
-      if (stored) syncToBackend({ passes: JSON.parse(stored) });
+      syncToBackend({ passes: fullUpdated.map(stripBase64Pass) });
     }, 0);
     addAuditLog('PASS_UPDATED', 'PASSES', `Updated pass ID: ${id}`);
   };
@@ -2213,11 +2251,11 @@ export const AdminProvider = ({ children }) => {
     lastLocalActionTime.current = Date.now();
     setUsersList(prev => {
       const updated = prev.map(u => {
-        if (u.uid !== uid && u.id !== uid && u.supabaseId !== uid) return u;
+        if (u.uid !== uid && u.id !== uid && u.supabaseId !== uid && u.email !== uid) return u;
         try {
           const savedUser = localStorage.getItem('harshxo_user');
           const activeUser = savedUser ? JSON.parse(savedUser) : null;
-          if (activeUser && (activeUser.uid === uid || activeUser.id === uid || activeUser.supabaseId === uid)) {
+          if (activeUser && (activeUser.uid === uid || activeUser.id === uid || activeUser.supabaseId === uid || activeUser.email === uid)) {
             localStorage.setItem('harshxo_user_status', newStatus);
             localStorage.setItem('harshxo_user_status_reason', reason || '');
             window.dispatchEvent(new CustomEvent('haarshxo_player_sync', {
@@ -2225,7 +2263,7 @@ export const AdminProvider = ({ children }) => {
             }));
           }
         } catch (e) {}
-        return { ...u, status: newStatus, notes: reason || u.notes };
+        return { ...u, status: newStatus, notes: reason || u.notes, statusReason: reason || u.statusReason };
       });
       try {
         localStorage.setItem('haarshxo_admin_users', JSON.stringify(updated));
@@ -2234,6 +2272,19 @@ export const AdminProvider = ({ children }) => {
       } catch {}
       return updated;
     });
+
+    // Broadcast ban / unban event across tabs and to GameContext
+    try {
+      if (globalBroadcastChannel) {
+        globalBroadcastChannel.postMessage({
+          type: newStatus === 'active' ? 'user_unbanned' : 'user_banned',
+          data: { uid, newStatus, reason }
+        });
+      }
+      window.dispatchEvent(new CustomEvent(newStatus === 'active' ? 'haarshxo_user_unbanned' : 'haarshxo_user_banned', {
+        detail: { uid, newStatus, reason }
+      }));
+    } catch (e) {}
 
     // Dedicated backend status update call
     try {
@@ -2250,7 +2301,7 @@ export const AdminProvider = ({ children }) => {
       if (res && res.ok) {
         const json = await res.json();
         if (json.success && json.user) {
-          setUsersList(prev => prev.map(u => (u.uid === uid || u.id === uid || u.supabaseId === uid) ? { ...u, ...json.user } : u));
+          setUsersList(prev => prev.map(u => (u.uid === uid || u.id === uid || u.supabaseId === uid || u.email === uid) ? { ...u, ...json.user } : u));
         }
       }
     } catch (err) {
@@ -2873,6 +2924,54 @@ export const AdminProvider = ({ children }) => {
     addAuditLog('REDEMPTION_UPDATED', 'STORE', `Redemption ${id} status updated to "${newStatus}"`);
   };
 
+  const deleteRedemption = (id) => {
+    lastLocalActionTime.current = Date.now();
+    const target = redemptions.find(r => r.id === id);
+    setRedemptions(prev => {
+      const updated = prev.filter(r => r.id !== id);
+      try {
+        localStorage.setItem('haarshxo_admin_redemptions', JSON.stringify(updated));
+        broadcastChange('redemptions', updated);
+      } catch {}
+      return updated;
+    });
+    setTimeout(() => {
+      const stored = localStorage.getItem('haarshxo_admin_redemptions');
+      if (stored) syncToBackend({ redemptions: JSON.parse(stored) });
+    }, 0);
+    addAuditLog('REDEMPTION_DELETED', 'STORE', `Deleted redemption "${target?.rewardTitle || id}" by ${target?.userIgn || 'Player'}`);
+  };
+
+  const deleteRedemptions = (ids) => {
+    lastLocalActionTime.current = Date.now();
+    const idSet = new Set(ids.map(String));
+    setRedemptions(prev => {
+      const updated = prev.filter(r => !idSet.has(String(r.id)));
+      try {
+        localStorage.setItem('haarshxo_admin_redemptions', JSON.stringify(updated));
+        broadcastChange('redemptions', updated);
+      } catch {}
+      return updated;
+    });
+    setTimeout(() => {
+      const stored = localStorage.getItem('haarshxo_admin_redemptions');
+      if (stored) syncToBackend({ redemptions: JSON.parse(stored) });
+    }, 0);
+    addAuditLog('REDEMPTION_DELETED', 'STORE', `Bulk deleted ${ids.length} redemption record(s)`);
+  };
+
+  const clearAllRedemptions = () => {
+    lastLocalActionTime.current = Date.now();
+    const count = redemptions.length;
+    setRedemptions([]);
+    try {
+      localStorage.setItem('haarshxo_admin_redemptions', JSON.stringify([]));
+      broadcastChange('redemptions', []);
+    } catch {}
+    setTimeout(() => syncToBackend({ redemptions: [] }), 0);
+    addAuditLog('REDEMPTIONS_CLEARED', 'STORE', `Cleared all ${count} redemption history records`);
+  };
+
   const clearAuditLogs = () => {
     lastLocalActionTime.current = Date.now();
     setAuditLogs([]);
@@ -2881,6 +2980,89 @@ export const AdminProvider = ({ children }) => {
       broadcastChange('logs', []);
     } catch {}
     setTimeout(() => syncToBackend({ auditLogs: [] }), 0);
+  };
+
+  // ─── Missions ─────────────────────────────────────────────────────────────
+  const createMission = (newMissionData) => {
+    lastLocalActionTime.current = Date.now();
+    const newMission = {
+      id: newMissionData.id || `mission_${newMissionData.frequency || 'daily'}_${Date.now()}`,
+      frequency: newMissionData.frequency || 'daily',
+      category: newMissionData.category || (newMissionData.frequency === 'daily' ? 'Live Watch Missions' : newMissionData.frequency === 'weekly' ? 'Weekly Live Grinder' : 'Monthly Champions'),
+      title: newMissionData.title || 'New Mission',
+      description: newMissionData.description || '',
+      target: Number(newMissionData.target) || 15,
+      unit: newMissionData.unit || (newMissionData.frequency === 'daily' ? 'Minutes' : 'Hours'),
+      displayTarget: newMissionData.displayTarget || `${newMissionData.target} ${newMissionData.frequency === 'daily' ? 'Minutes' : 'Hours'}`,
+      type: newMissionData.type || 'live',
+      reward: {
+        coins: Number(newMissionData.reward?.coins) || 0,
+        csTickets: Number(newMissionData.reward?.csTickets) || 0,
+        brTickets: Number(newMissionData.reward?.brTickets) || 0,
+      },
+      active: newMissionData.active !== false,
+      createdAt: new Date().toISOString(),
+    };
+    const fullUpdated = [...missions, newMission];
+    setMissions(() => {
+      try {
+        localStorage.setItem('haarshxo_admin_missions', JSON.stringify(fullUpdated));
+        broadcastChange('missions', fullUpdated);
+        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'missions', data: fullUpdated } }));
+      } catch {}
+      return fullUpdated;
+    });
+    setTimeout(() => syncToBackend({ missions: fullUpdated }), 0);
+    addAuditLog('MISSION_CREATED', 'MISSIONS', `Created new ${newMission.frequency} mission "${newMission.title}"`);
+    return newMission;
+  };
+
+  const updateMission = (missionId, updatedFields) => {
+    lastLocalActionTime.current = Date.now();
+    const fullUpdated = missions.map(m =>
+      m.id !== missionId ? m : { ...m, ...updatedFields }
+    );
+    setMissions(() => {
+      try {
+        localStorage.setItem('haarshxo_admin_missions', JSON.stringify(fullUpdated));
+        broadcastChange('missions', fullUpdated);
+        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'missions', data: fullUpdated } }));
+      } catch {}
+      return fullUpdated;
+    });
+    setTimeout(() => syncToBackend({ missions: fullUpdated }), 0);
+    const m = missions.find(m => m.id === missionId);
+    addAuditLog('MISSION_UPDATED', 'MISSIONS', `Updated mission "${m?.title || missionId}" (ID: ${missionId})`);
+  };
+
+  const deleteMission = (missionId) => {
+    lastLocalActionTime.current = Date.now();
+    const m = missions.find(item => item.id === missionId);
+    const fullUpdated = missions.filter(item => item.id !== missionId);
+    setMissions(() => {
+      try {
+        localStorage.setItem('haarshxo_admin_missions', JSON.stringify(fullUpdated));
+        broadcastChange('missions', fullUpdated);
+        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'missions', data: fullUpdated } }));
+      } catch {}
+      return fullUpdated;
+    });
+    setTimeout(() => syncToBackend({ missions: fullUpdated }), 0);
+    addAuditLog('MISSION_DELETED', 'MISSIONS', `Deleted mission "${m?.title || missionId}" (ID: ${missionId})`);
+  };
+
+  const resetMissions = () => {
+    lastLocalActionTime.current = Date.now();
+    setMissions(() => {
+      try {
+        localStorage.setItem('haarshxo_admin_missions', JSON.stringify(DEFAULT_MISSIONS));
+        broadcastChange('missions', DEFAULT_MISSIONS);
+        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'missions', data: DEFAULT_MISSIONS } }));
+      } catch {}
+      return DEFAULT_MISSIONS;
+    });
+    setTimeout(() => syncToBackend({ missions: DEFAULT_MISSIONS }), 0);
+    addAuditLog('MISSIONS_RESET', 'MISSIONS', 'All missions reset to default configuration');
   };
 
   return (
@@ -2946,6 +3128,13 @@ export const AdminProvider = ({ children }) => {
         drawGiveawayWinner,
         addGiveawayParticipant,
 
+        // Missions
+        missions,
+        createMission,
+        updateMission,
+        deleteMission,
+        resetMissions,
+
         // Store Rewards
         storeRewards,
         createReward,
@@ -2956,6 +3145,9 @@ export const AdminProvider = ({ children }) => {
         // XO Coins Reward Redemptions
         redemptions,
         updateRedemptionStatus,
+        deleteRedemption,
+        deleteRedemptions,
+        clearAllRedemptions,
 
         // Audit Logs
         auditLogs,
