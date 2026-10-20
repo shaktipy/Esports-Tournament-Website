@@ -4,14 +4,14 @@ import { Gift, X, Sparkles, Coins } from 'lucide-react';
 import './RewardWheel.css';
 
 const WHEEL_SEGMENTS = [
-  { id: 1, label: '50 XO Coins',     emoji: '🪙',  color: '#6366f1', rewardCoins: 50,  type: 'coins' },
-  { id: 2, label: '1 CS Ticket',     emoji: '🎫',  color: '#06b6d4', rewardCs: 1,      type: 'cs' },
-  { id: 3, label: '100 XO Coins',    emoji: '💰',  color: '#a855f7', rewardCoins: 100, type: 'coins' },
-  { id: 4, label: '1 BR Ticket',     emoji: '🎟️',  color: '#f59e0b', rewardBr: 1,      type: 'br' },
-  { id: 5, label: '25 XO Coins',     emoji: '🪙',  color: '#10b981', rewardCoins: 25,  type: 'coins' },
-  { id: 6, label: '200 XO Coins',    emoji: '💎',  color: '#ef4444', rewardCoins: 200, type: 'coins' },
-  { id: 7, label: '2 CS Tickets',    emoji: '🎫',  color: '#8b5cf6', rewardCs: 2,      type: 'cs' },
-  { id: 8, label: 'JACKPOT! 500 Coins + 1 CS + 1 BR', emoji: '🏆', color: '#f97316', rewardCoins: 500, rewardCs: 1, rewardBr: 1, type: 'jackpot' },
+  { id: 1, label: 'Better luck next time', displayLabel: 'Better Luck', emoji: '🤞', image: null, color: '#1e293b', chance: 35, type: 'empty' },
+  { id: 2, label: '10 XO Coins', displayLabel: '10 XO Coins', emoji: '🪙', image: '/tokens/xo-coin.png', color: '#4338ca', chance: 25, rewardCoins: 10, type: 'coins' },
+  { id: 3, label: '1 CS Ticket', displayLabel: '1 CS Ticket', emoji: '🎫', image: '/tokens/cs-ticket.png', color: '#0891b2', chance: 4, rewardCs: 1, type: 'cs' },
+  { id: 4, label: '20 XO Coins', displayLabel: '20 XO Coins', emoji: '🪙', image: '/tokens/xo-coin.png', color: '#059669', chance: 20, rewardCoins: 20, type: 'coins' },
+  { id: 5, label: 'Better luck next time', displayLabel: 'Better Luck', emoji: '😢', image: null, color: '#334155', chance: 1, type: 'empty' },
+  { id: 6, label: '50 XO Coins', displayLabel: '50 XO Coins', emoji: '💰', image: '/tokens/xo-coin.png', color: '#d97706', chance: 10, rewardCoins: 50, type: 'coins' },
+  { id: 7, label: '1 BR Ticket', displayLabel: '1 BR Ticket', emoji: '🎟️', image: '/tokens/br-ticket.png', color: '#7c3aed', chance: 4, rewardBr: 1, type: 'br' },
+  { id: 8, label: '100 Free Fire Diamonds', displayLabel: '100 Diamonds', emoji: '💎', image: null, color: '#db2777', chance: 1, rewardDiamonds: 100, type: 'diamonds' },
 ];
 
 const NUM_SEGMENTS = WHEEL_SEGMENTS.length;
@@ -24,7 +24,7 @@ const RewardWheel = ({ onClose }) => {
   const [winner, setWinner] = useState(null);
   const currentRotRef = useRef(0);
 
-  const SPIN_COST = 100;
+  const SPIN_COST = 0; // 1 Free Spin Per Day as per configuration
   const today = new Date().toDateString();
   const alreadySpunToday = wheelSpinData.lastSpinDate === today;
 
@@ -36,24 +36,21 @@ const RewardWheel = ({ onClose }) => {
       return;
     }
 
-    if (coins < SPIN_COST) {
-      showNotification(`Need ${SPIN_COST} XO Coins to Spin!`, 'waiting', `You currently have ${coins} coins. Watch streams to earn more!`);
-      return;
-    }
-
     setSpinning(true);
     setWinner(null);
 
-    // Deduct cost
-    setCoins(prev => prev - SPIN_COST);
+    // Exact Probability-based Luck System (Weights summing to 100%):
+    // 35% + 25% + 20% + 10% + 4% + 4% + 1% + 1% = 100%
+    const rand = Math.random() * 100;
+    let cumulative = 0;
+    let winnerIndex = 0;
 
-    // Pick random winner
-    const rand = Math.random();
-    let winnerIndex;
-    if (rand < 0.08) {
-      winnerIndex = 7; // jackpot
-    } else {
-      winnerIndex = Math.floor(Math.random() * (NUM_SEGMENTS - 1));
+    for (let i = 0; i < WHEEL_SEGMENTS.length; i++) {
+      cumulative += WHEEL_SEGMENTS[i].chance;
+      if (rand < cumulative) {
+        winnerIndex = i;
+        break;
+      }
     }
     const winningSegment = WHEEL_SEGMENTS[winnerIndex];
 
@@ -69,21 +66,37 @@ const RewardWheel = ({ onClose }) => {
       setSpinning(false);
       setWinner(winningSegment);
 
-      // Give reward
-      if (winningSegment.rewardCoins) setCoins(prev => prev + winningSegment.rewardCoins);
-      if (winningSegment.rewardCs) setCsTickets(prev => prev + winningSegment.rewardCs);
-      if (winningSegment.rewardBr) setBrTickets(prev => prev + winningSegment.rewardBr);
+      if (winningSegment.type === 'empty') {
+        recordWheelSpin(winningSegment.label);
+        showNotification(
+          'Better Luck Next Time!',
+          'waiting',
+          'No reward this time, but come back tomorrow for another daily lucky spin!'
+        );
+      } else {
+        // Give reward
+        if (winningSegment.rewardCoins) setCoins(prev => prev + winningSegment.rewardCoins);
+        if (winningSegment.rewardCs) setCsTickets(prev => prev + winningSegment.rewardCs);
+        if (winningSegment.rewardBr) setBrTickets(prev => prev + winningSegment.rewardBr);
 
-      recordWheelSpin(winningSegment.label);
+        recordWheelSpin(winningSegment.label);
 
-      // Trigger 5-second sliding notification via global stack
-      showNotification(
-        winningSegment.type === 'jackpot' ? '🎉 GRAND JACKPOT WON!' : '🎊 Congratulations! You Won:',
-        winningSegment.type === 'jackpot' ? 'jackpot' : 'spin',
-        `${winningSegment.label} has been added to your inventory!`
-      );
+        if (winningSegment.type === 'diamonds') {
+          showNotification(
+            '💎 JACKPOT! 100 Free Fire Diamonds Won!',
+            'jackpot',
+            'Take a screenshot and contact Admin or support to claim your 100 Diamonds voucher!'
+          );
+        } else {
+          showNotification(
+            '🎊 Congratulations! You Won:',
+            'spin',
+            `${winningSegment.label} has been added to your inventory!`
+          );
+        }
+      }
     }, 4200);
-  }, [spinning, alreadySpunToday, coins, setCoins, setCsTickets, setBrTickets, recordWheelSpin]);
+  }, [spinning, alreadySpunToday, setCoins, setCsTickets, setBrTickets, recordWheelSpin, showNotification]);
 
   const handleAlreadySpunClick = () => {
     showNotification("Already Spun Today!", 'tomorrow', "Come back tomorrow for your next lucky spin.");
@@ -134,13 +147,13 @@ const RewardWheel = ({ onClose }) => {
           </div>
           <h2 className="wheel-title text-gradient">FORTUNE REWARD WHEEL</h2>
           <p className="wheel-subtitle">
-            Spin once per day! Win up to 500 XO Coins, CS & BR Tournament Tickets, and Grand Jackpots!
+            Spin once per day! Win up to 50 XO Coins, Tournament Tickets, or 100 Free Fire Diamonds!
           </p>
 
           <div className="wheel-meta-bar">
             <div className="wheel-meta-item">
-              <span className="wmi-lbl">Spin Cost:</span>
-              <span className="wmi-val cost">{SPIN_COST} XO Coins</span>
+              <span className="wmi-lbl">Daily Spin:</span>
+              <span className="wmi-val cost">1 Free / Day</span>
             </div>
             <div className="wheel-meta-item">
               <span className="wmi-lbl">Your Balance:</span>
@@ -175,36 +188,56 @@ const RewardWheel = ({ onClose }) => {
 
                 {WHEEL_SEGMENTS.map((seg, i) => {
                   const { x, y, rotate } = getLabelPos(i);
+                  const isCoin = seg.type === 'coins';
+
                   return (
                     <g key={seg.id}>
                       <path
                         d={getSegmentPath(i)}
                         fill={seg.color}
-                        stroke="#0f111a"
-                        strokeWidth="2.5"
+                        stroke="#090b14"
+                        strokeWidth="3"
                       />
-                      <text
-                        x={x}
-                        y={y - 12}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        fontSize="20"
-                        transform={`rotate(${rotate}, ${x}, ${y})`}
-                      >
-                        {seg.emoji}
-                      </text>
-                      <text
-                        x={x}
-                        y={y + 12}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                        fontSize={seg.type === 'jackpot' ? "6.5" : "8"}
-                        fontWeight="900"
-                        fill="#ffffff"
-                        transform={`rotate(${rotate}, ${x}, ${y})`}
-                      >
-                        {seg.type === 'jackpot' ? 'JACKPOT!' : seg.label}
-                      </text>
+                      <g transform={`rotate(${rotate}, ${x}, ${y})`}>
+                        {seg.image ? (
+                          <image
+                            href={seg.image}
+                            x={x - (isCoin ? 15 : 18)}
+                            y={y - 25}
+                            width={isCoin ? 30 : 36}
+                            height={isCoin ? 30 : 26}
+                            preserveAspectRatio="xMidYMid meet"
+                            style={{ filter: 'drop-shadow(0 2px 5px rgba(0,0,0,0.7))' }}
+                          />
+                        ) : (
+                          <text
+                            x={x}
+                            y={y - 12}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                            fontSize="22"
+                            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))' }}
+                          >
+                            {seg.emoji}
+                          </text>
+                        )}
+                        <text
+                          x={x}
+                          y={y + 13}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          fontSize="10.5"
+                          fontWeight="900"
+                          fill="#ffffff"
+                          stroke="#000000"
+                          strokeWidth="0.8"
+                          paintOrder="stroke fill"
+                          letterSpacing="0.2"
+                          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9)' }}
+                        >
+                          {seg.displayLabel || seg.label}
+                        </text>
+                      </g>
                     </g>
                   );
                 })}
@@ -224,9 +257,13 @@ const RewardWheel = ({ onClose }) => {
           {winner && (
             <div className={`wheel-winner-card ${winner.type}`}>
               <div className="wwc-info">
-                <strong>{winner.type === 'jackpot' ? '🎉 GRAND JACKPOT!' : '🎊 You Won!'}</strong>
+                <strong>{winner.type === 'empty' ? 'Better Luck Next Time!' : (winner.type === 'diamonds' ? '💎 100 DIAMONDS JACKPOT!' : '🎊 You Won!')}</strong>
                 <div className="wwc-reward-row">
-                  <span className="wwc-reward-emoji">{winner.emoji}</span>
+                  {winner.image ? (
+                    <img src={winner.image} alt={winner.label} className="wwc-token-img" />
+                  ) : (
+                    <span className="wwc-reward-emoji">{winner.emoji}</span>
+                  )}
                   <span className="wwc-reward-label">{winner.label}</span>
                 </div>
               </div>
@@ -247,14 +284,14 @@ const RewardWheel = ({ onClose }) => {
             <button
               className={`wheel-action-btn primary ${spinning ? 'spinning' : ''}`}
               onClick={handleSpin}
-              disabled={spinning || coins < SPIN_COST}
+              disabled={spinning}
             >
               {spinning ? (
                 <span>🌀 SPINNING WHEEL...</span>
               ) : (
                 <>
                   <Gift size={20} />
-                  <span>SPIN FOR {SPIN_COST} XO COINS</span>
+                  <span>SPIN THE WHEEL (DAILY FREE)</span>
                 </>
               )}
             </button>
@@ -264,7 +301,11 @@ const RewardWheel = ({ onClose }) => {
           <div className="wheel-prizes-list">
             {WHEEL_SEGMENTS.map(seg => (
               <div key={seg.id} className={`wheel-prize-chip ${seg.type}`} style={{ '--seg-c': seg.color }}>
-                <span>{seg.emoji}</span>
+                {seg.image ? (
+                  <img src={seg.image} alt={seg.label} className="wheel-chip-img" />
+                ) : (
+                  <span>{seg.emoji}</span>
+                )}
                 <span>{seg.label}</span>
               </div>
             ))}
