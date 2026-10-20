@@ -35,9 +35,57 @@ const AuthModal = ({ onClose, onLogin }) => {
           password: formData.password,
         });
 
-        if (error) throw error;
-
         const user = data.user;
+
+        // Verify with backend if user has been banned or suspended by admin
+        let isBanned = false;
+        let banReason = '';
+        try {
+          const statusRes = await fetch(`/api/users/${encodeURIComponent(user.id)}/check-status`).catch(() =>
+            fetch(`http://localhost:5001/api/users/${encodeURIComponent(user.id)}/check-status`)
+          );
+          if (statusRes && statusRes.ok) {
+            const statusData = await statusRes.json();
+            if (statusData.banned || statusData.status === 'banned' || statusData.status === 'suspended') {
+              isBanned = true;
+              banReason = statusData.statusReason || 'Violation of fair play or community rules.';
+            }
+          }
+        } catch (e) {
+          console.warn('[AuthModal] Status check error:', e);
+        }
+
+        // Additional safeguard: check local admin users cache if backend was unreachable
+        if (!isBanned) {
+          try {
+            const meta = user.user_metadata || {};
+            const userUid = meta.gameUid || 'XO-' + user.id.slice(0, 8);
+            const userEmail = (user.email || '').toLowerCase();
+            const localUsers = JSON.parse(localStorage.getItem('haarshxo_admin_users') || '[]');
+            const localMatch = localUsers.find(u => 
+              (u.id && u.id === user.id) ||
+              (u.supabaseId && u.supabaseId === user.id) ||
+              (u.email && u.email.toLowerCase() === userEmail) ||
+              (u.uid && String(u.uid) === String(userUid))
+            );
+            if (localMatch && (localMatch.status === 'banned' || localMatch.status === 'suspended')) {
+              isBanned = true;
+              banReason = localMatch.statusReason || localMatch.notes || 'Violation of fair play or community rules.';
+            }
+          } catch (e) {
+            console.warn('[AuthModal] Local status check error:', e);
+          }
+        }
+
+        if (isBanned) {
+          await supabase.auth.signOut();
+          localStorage.removeItem('harshxo_user');
+          localStorage.removeItem('harshxo_user_status');
+          localStorage.removeItem('harshxo_user_status_reason');
+          setErrorMsg(`Banned by admin: ${banReason}`);
+          return;
+        }
+
         const metadata = user.user_metadata || {};
         const profile = {
           id: user.id,
