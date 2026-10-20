@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
 import ImageUploadField from '../../components/ImageUploadField';
+import { getTournamentTotalSlots } from '../../utils/tournamentSlots';
 import { 
   Trophy, Plus, Edit, Trash2, Users, CheckCircle, 
   XCircle, Clock, Award, Shield, AlertTriangle, X, Search, ChevronRight,
-  Copy, Check, Phone, MessageSquare, ExternalLink, Filter, Flame, MapPin
+  Copy, Check, Phone, MessageSquare, ExternalLink, Filter, Flame, MapPin,
+  Hash, Dices, LayoutGrid
 } from 'lucide-react';
 
 const AdminTournaments = () => {
@@ -15,6 +17,7 @@ const AdminTournaments = () => {
     deleteTournament, 
     toggleTournamentStatus,
     removeTournamentParticipant,
+    reinstateTournamentParticipant,
     declareTournamentResults,
   } = useAdmin();
 
@@ -216,6 +219,131 @@ const AdminTournaments = () => {
     });
   };
 
+  // Visual Custom Room Slot Map Grid
+  const renderRoomSlotGrid = (tourney) => {
+    if (!tourney) return null;
+    const totalSlots = getTournamentTotalSlots(tourney);
+    const participants = tourney.participants || [];
+    
+    // Create map of slotNumber -> participant
+    const slotMap = {};
+    participants.forEach(p => {
+      const s = Number(p.slotNumber || p.slot);
+      if (s) slotMap[s] = p;
+    });
+
+    const slotsArray = [];
+    for (let s = 1; s <= totalSlots; s++) {
+      slotsArray.push(s);
+    }
+
+    return (
+      <div className="room-slot-grid-container" style={{
+        margin: '16px 0 20px',
+        background: 'rgba(15, 23, 42, 0.75)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        borderRadius: '14px',
+        padding: '18px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '14px',
+          flexWrap: 'wrap',
+          gap: '8px'
+        }}>
+          <div>
+            <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 800, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              🎯 Free Fire Custom Room Slot Map ({participants.length}/{totalSlots} Occupied)
+            </h4>
+            <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#94a3b8' }}>
+              Real-time room slot positions for <strong>{tourney.title}</strong> ({tourney.mode})
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '12px', fontSize: '0.76rem', fontWeight: 700 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#facc15' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#facc15', display: 'inline-block' }}></span>
+              Occupied ({participants.length})
+            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#94a3b8' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#64748b', display: 'inline-block' }}></span>
+              Available ({Math.max(0, totalSlots - participants.length)})
+            </span>
+          </div>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+          gap: '10px'
+        }}>
+          {slotsArray.map(slotNum => {
+            const occupant = slotMap[slotNum];
+            const isOccupied = !!occupant;
+            return (
+              <div 
+                key={slotNum}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: '10px',
+                  background: isOccupied 
+                    ? 'linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(249, 115, 22, 0.15))' 
+                    : 'rgba(255, 255, 255, 0.02)',
+                  border: isOccupied 
+                    ? '1px solid rgba(234, 179, 8, 0.45)' 
+                    : '1px dashed rgba(255, 255, 255, 0.12)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px',
+                  minHeight: '74px',
+                  justifyContent: 'space-between',
+                  boxShadow: isOccupied ? '0 0 12px rgba(234, 179, 8, 0.12)' : 'none'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ 
+                    fontSize: '0.74rem', 
+                    fontWeight: 800, 
+                    color: isOccupied ? '#facc15' : '#64748b',
+                    letterSpacing: '0.04em'
+                  }}>
+                    SLOT #{slotNum}
+                  </span>
+                  <span style={{
+                    fontSize: '0.65rem',
+                    fontWeight: 700,
+                    padding: '1px 5px',
+                    borderRadius: '4px',
+                    background: isOccupied ? 'rgba(234, 179, 8, 0.25)' : 'rgba(255,255,255,0.05)',
+                    color: isOccupied ? '#facc15' : '#64748b'
+                  }}>
+                    {isOccupied ? 'TAKEN' : 'FREE'}
+                  </span>
+                </div>
+
+                {isOccupied ? (
+                  <div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {occupant.teamName || occupant.ign}
+                    </div>
+                    <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>
+                      UID: {occupant.leaderUid || occupant.uid}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', fontStyle: 'italic' }}>
+                    Available Slot
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   // Render Table Component for Registrations
   const renderRegistrationsTable = (list, tourneyContextId = null) => {
     if (!list || list.length === 0) {
@@ -234,6 +362,7 @@ const AdminTournaments = () => {
             <tr>
               <th>#</th>
               <th>Format</th>
+              <th>Assigned Slot</th>
               <th>Team / Player Name</th>
               <th>Captain / Leader</th>
               <th>Roster (Squad Members)</th>
@@ -255,6 +384,23 @@ const AdminTournaments = () => {
                   <td>
                     <span className={`format-badge ${isSquad ? 'format-squad' : isDuo ? 'format-duo' : 'format-solo'}`}>
                       {isSquad ? '⚔️ SQUAD' : isDuo ? '👥 DUO' : '🏆 SOLO'}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="slot-badge-admin" style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      fontSize: '0.78rem',
+                      fontWeight: '800',
+                      letterSpacing: '0.04em',
+                      background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.22), rgba(249, 115, 22, 0.22))',
+                      color: '#facc15',
+                      border: '1px solid rgba(234, 179, 8, 0.4)'
+                    }}>
+                      <Hash size={12} /> Slot #{p.slotNumber || p.slot || 'N/A'}
                     </span>
                   </td>
                   <td>
@@ -284,7 +430,7 @@ const AdminTournaments = () => {
                   <td>
                     {cleanPhone ? (
                       <a 
-                        href={`https://wa.me/91${cleanPhone}?text=Hello%20${encodeURIComponent(p.leaderIgn || p.ign)}!%20Here%20is%20your%20Tournament%20Custom%20Room%20ID%20%26%20Password:`} 
+                        href={`https://wa.me/91${cleanPhone}?text=Hello%20${encodeURIComponent(p.leaderIgn || p.ign)}!%20Here%20is%20your%20Tournament%20Custom%20Room%20details.%20Your%20Assigned%20Slot%20is:%20Slot%20%23${p.slotNumber || p.slot || '1'}.%20Please%20join%20this%20slot%20in%20room.`} 
                         target="_blank" 
                         rel="noreferrer"
                         className="wa-contact-btn"
@@ -302,22 +448,68 @@ const AdminTournaments = () => {
                   <td>
                     <button 
                       className="btn-danger-sm"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(185, 28, 28, 0.9))',
+                        border: 'none',
+                        color: '#fff',
+                        fontWeight: 700,
+                        fontSize: '0.74rem',
+                        padding: '5px 10px',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}
                       onClick={() => {
                         const targetTourneyId = tourneyContextId || p.tournamentId;
                         const targetName = p.teamName || p.ign;
-                        if (window.confirm(`Disqualify/Remove "${targetName}" from tournament?`)) {
-                          removeTournamentParticipant(targetTourneyId, p.id);
+                        const reason = window.prompt(
+                          `Disqualify "${targetName}" from this tournament?\n\nEnter reason for disqualification (player will receive instant alert and cannot re-register):`,
+                          'Fair-play regulation violation (Disqualified by Admin)'
+                        );
+                        if (reason !== null) {
+                          const disqReason = reason.trim() || 'Fair-play regulation violation (Disqualified by Admin)';
+                          removeTournamentParticipant(targetTourneyId, p.id, disqReason);
                           if (viewingParticipantsTourney) {
-                            setViewingParticipantsTourney({
-                              ...viewingParticipantsTourney,
-                              participants: viewingParticipantsTourney.participants.filter(item => item.id !== p.id)
+                            setViewingParticipantsTourney(prev => {
+                              if (!prev) return null;
+                              const pPlayers = Array.isArray(p.players) && p.players.length > 0 ? p.players : [];
+                              return {
+                                ...prev,
+                                participants: (prev.participants || []).filter(item => item.id !== p.id),
+                                disqualifiedParticipants: [
+                                  ...(prev.disqualifiedParticipants || []),
+                                  {
+                                    id: `disq_${Date.now()}`,
+                                    participantId: p.id,
+                                    originalParticipant: JSON.parse(JSON.stringify(p)),
+                                    players: pPlayers,
+                                    teamName: targetName,
+                                    type: p.type,
+                                    ign: p.ign || p.leaderIgn,
+                                    leaderIgn: p.leaderIgn || p.ign,
+                                    uid: p.uid || p.leaderUid,
+                                    leaderUid: p.leaderUid || p.uid,
+                                    phone: p.phone || '',
+                                    discord: p.discord || '',
+                                    slotNumber: p.slotNumber || p.slot,
+                                    uids: [p.uid, p.leaderUid, ...pPlayers.map(m => m.uid)].filter(Boolean),
+                                    igns: [p.ign, p.leaderIgn, ...pPlayers.map(m => m.ign)].filter(Boolean),
+                                    reason: disqReason,
+                                    disqualifiedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
+                                  }
+                                ]
+                              };
                             });
                           }
+                          setCopiedToast(`Disqualified "${targetName}". Room slot freed up & re-registration blocked.`);
+                          setTimeout(() => setCopiedToast(''), 4000);
                         }
                       }}
-                      title="Disqualify or remove from bracket"
+                      title="Disqualify roster (releases room slot & locks re-registration)"
                     >
-                      Remove
+                      <XCircle size={12} /> Disqualify 🚫
                     </button>
                   </td>
                 </tr>
@@ -325,6 +517,159 @@ const AdminTournaments = () => {
             })}
           </tbody>
         </table>
+      </div>
+    );
+  };
+
+  const renderDisqualifiedTable = (disqList = [], tourneyId) => {
+    if (!disqList || disqList.length === 0) return null;
+
+    return (
+      <div className="disqualified-section-card glass-card" style={{
+        marginTop: '20px',
+        border: '1px solid rgba(239, 68, 68, 0.35)',
+        background: 'linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, rgba(15, 23, 42, 0.4) 100%)',
+        borderRadius: '12px',
+        padding: '16px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '12px',
+          borderBottom: '1px solid rgba(239, 68, 68, 0.25)',
+          paddingBottom: '10px',
+          flexWrap: 'wrap',
+          gap: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '1.1rem' }}>🚫</span>
+            <h4 style={{ margin: 0, color: '#f87171', fontSize: '0.95rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Disqualified Teams &amp; Rosters ({disqList.length})
+            </h4>
+          </div>
+          <span style={{ fontSize: '0.75rem', color: '#fca5a5', background: 'rgba(239, 68, 68, 0.2)', padding: '3px 8px', borderRadius: '4px', fontWeight: 600 }}>
+            Locked from re-registration • Slot released back to tournament
+          </span>
+        </div>
+
+        <div className="table-responsive">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Team / Player Name</th>
+                <th>Leader / UID</th>
+                <th>Freed Room Slot</th>
+                <th>Disqualification Reason</th>
+                <th>Disqualified At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {disqList.map((d, dIdx) => (
+                <tr key={d.id || dIdx} style={{ background: 'rgba(239, 68, 68, 0.03)' }}>
+                  <td>{dIdx + 1}</td>
+                  <td>
+                    <strong style={{ color: '#fca5a5' }}>{d.teamName || d.ign}</strong>
+                    {(() => {
+                      const dPlayers = Array.isArray(d.players) && d.players.length > 1
+                        ? d.players
+                        : (Array.isArray(d.originalParticipant?.players) && d.originalParticipant.players.length > 1
+                            ? d.originalParticipant.players
+                            : null);
+                      if (dPlayers) {
+                        return (
+                          <div className="roster-pills-wrap" style={{ marginTop: '4px' }}>
+                            {dPlayers.map((mem, mIdx) => (
+                              <div key={mIdx} className="roster-pill" style={{ opacity: 0.9 }}>
+                                <span>
+                                  <span className="rp-role">{mem.role || `P${mIdx + 1}`}:</span> {mem.ign}
+                                </span>
+                                <span className="rp-uid">{mem.uid}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      }
+                      if (d.igns && d.igns.length > 1) {
+                        return (
+                          <div className="text-muted text-xs" style={{ marginTop: '2px' }}>
+                            Roster: {d.igns.join(', ')}
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </td>
+                  <td>
+                    <div><strong>{d.leaderIgn || d.ign}</strong></div>
+                    <code className="uid-badge" style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.3)' }}>{d.leaderUid || d.uid}</code>
+                  </td>
+                  <td>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '3px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: '700',
+                      background: 'rgba(100, 116, 139, 0.2)',
+                      color: '#cbd5e1'
+                    }}>
+                      Slot #{d.slotNumber || 'N/A'} (Released)
+                    </span>
+                  </td>
+                  <td>
+                    <span style={{ color: '#ef4444', fontWeight: 600, fontSize: '0.8rem' }}>
+                      {d.reason || 'Admin Disqualification'}
+                    </span>
+                  </td>
+                  <td className="text-muted text-xs">{d.disqualifiedAt || 'N/A'}</td>
+                  <td>
+                    <button
+                      className="admin-btn btn-secondary btn-xs"
+                      style={{
+                        background: 'rgba(34, 197, 94, 0.15)',
+                        border: '1px solid rgba(34, 197, 94, 0.4)',
+                        color: '#4ade80',
+                        fontWeight: 700,
+                        padding: '5px 10px',
+                        cursor: 'pointer',
+                        borderRadius: '6px'
+                      }}
+                      onClick={() => {
+                        const targetName = d.teamName || d.ign;
+                        if (window.confirm(`Reinstate and Pardon "${targetName}"?\n\nThey will be restored back into the tournament roster with all squad members and assigned an unoccupied random room slot.`)) {
+                          const res = reinstateTournamentParticipant(tourneyId || d.tournamentId, d.id);
+                          const newSlot = res?.slotNumber || 'N/A';
+                          if (viewingParticipantsTourney) {
+                            setViewingParticipantsTourney(prev => {
+                              if (!prev) return null;
+                              return {
+                                ...prev,
+                                disqualifiedParticipants: (prev.disqualifiedParticipants || []).filter(item => item.id !== d.id),
+                                participants: res?.participant 
+                                  ? [...(prev.participants || []).filter(p => p.id !== res.participant.id), res.participant]
+                                  : prev.participants
+                              };
+                            });
+                          }
+                          setCopiedToast(`🎉 Reinstated "${targetName}" with all squad members! Assigned new Room Slot #${newSlot}.`);
+                          setTimeout(() => setCopiedToast(''), 4500);
+                        }
+                      }}
+                      title="Pardon and assign new random room slot"
+                    >
+                      Reinstate / Pardon ✅
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   };
@@ -708,9 +1053,18 @@ const AdminTournaments = () => {
                   </div>
                 </div>
 
+                {/* Visual Slot Grid for Room Allocation */}
+                {renderRoomSlotGrid(activeTourneyForRegistrations)}
+
                 {/* Table for this isolated tournament */}
                 {renderRegistrationsTable(
                   filterParticipantList(activeTourneyForRegistrations.participants || []),
+                  activeTourneyForRegistrations.id
+                )}
+
+                {/* Disqualified participants table */}
+                {renderDisqualifiedTable(
+                  activeTourneyForRegistrations.disqualifiedParticipants || [],
                   activeTourneyForRegistrations.id
                 )}
               </div>
@@ -757,6 +1111,7 @@ const AdminTournaments = () => {
 
                     <div className="std-body">
                       {renderRegistrationsTable(tourneyParticipants, tourney.id)}
+                      {renderDisqualifiedTable(tourney.disqualifiedParticipants || [], tourney.id)}
                     </div>
                   </div>
                 );
@@ -817,19 +1172,34 @@ const AdminTournaments = () => {
                     value={formData.mode} 
                     onChange={e => {
                       const newMode = e.target.value;
-                      const isSq = newMode.toLowerCase().includes('squad') || newMode.toLowerCase().includes('cs');
+                      const modeLower = newMode.toLowerCase();
+                      const isSquad = modeLower.includes('squad');
+                      const isDuo = modeLower.includes('duo');
+                      const isSolo = modeLower.includes('solo');
+                      const isCS = modeLower.includes('cs');
+
+                      let defSlots = 12;
+                      let defCost = 1;
+                      if (isSquad && isCS) { defSlots = 2; defCost = 4; }
+                      else if (isSquad) { defSlots = 12; defCost = 4; }
+                      else if (isDuo) { defSlots = 24; defCost = 2; }
+                      else if (isSolo && isCS) { defSlots = 2; defCost = 1; }
+                      else if (isSolo) { defSlots = 48; defCost = 1; }
+
                       setFormData({ 
                         ...formData, 
                         mode: newMode,
-                        ticketCost: isSq ? 4 : 1
+                        ticketCost: defCost,
+                        maxSlots: defSlots,
+                        ticketType: isCS ? 'CS' : 'BR'
                       });
                     }}
                   >
-                    <option value="Squad (CS)">Squad (CS 4v4) — 4 Tickets</option>
-                    <option value="Squad (BR)">Squad (BR 48 Teams) — 4 Tickets</option>
-                    <option value="Solo (CS)">Solo (CS 1v1) — 1 Ticket</option>
-                    <option value="Solo (BR)">Solo (BR 48 Players) — 1 Ticket</option>
-                    <option value="Duo (BR)">Duo (BR 2v2) — 2 Tickets</option>
+                    <option value="Squad (CS)">Squad (CS 4v4) — 2 or 4 Squads, 4 Tickets</option>
+                    <option value="Squad (BR)">Squad (BR 12 Squads / 48 Players) — 4 Tickets</option>
+                    <option value="Solo (CS)">Solo (CS 1v1) — 2 Players, 1 Ticket</option>
+                    <option value="Solo (BR)">Solo (BR 48 Players) — 48 Slots, 1 Ticket</option>
+                    <option value="Duo (BR)">Duo (BR 24 Duos / 48 Players) — 2 Tickets</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -927,53 +1297,58 @@ const AdminTournaments = () => {
       )}
 
       {/* ─── MODAL 2: Participants Viewer Drawer ────────────────────────────── */}
-      {viewingParticipantsTourney && (
-        <div className="admin-modal-overlay">
-          <div className="admin-modal glass-card participants-modal">
-            <div className="modal-header">
-              <div>
-                <h3>👥 Registered Participants &amp; Teams</h3>
-                <p className="modal-sub">
-                  {viewingParticipantsTourney.title} ({viewingParticipantsTourney.mode})
-                </p>
+      {viewingParticipantsTourney && (() => {
+        const currentModalTourney = tournaments.find(t => String(t.id) === String(viewingParticipantsTourney.id)) || viewingParticipantsTourney;
+        return (
+          <div className="admin-modal-overlay">
+            <div className="admin-modal glass-card participants-modal">
+              <div className="modal-header">
+                <div>
+                  <h3>👥 Registered Participants &amp; Teams</h3>
+                  <p className="modal-sub">
+                    {currentModalTourney.title} ({currentModalTourney.mode})
+                  </p>
+                </div>
+                <div className="modal-header-actions">
+                  <button 
+                    className="copy-uids-btn"
+                    onClick={() => copyUidsList(currentModalTourney.participants || [])}
+                    title="Copy all player UIDs for custom room invite"
+                  >
+                    <Copy size={13} /> Copy All Free Fire UIDs
+                  </button>
+                  <button 
+                    className="admin-btn btn-secondary btn-xs"
+                    onClick={() => {
+                      setSelectedTourneyId(currentModalTourney.id);
+                      setViewingParticipantsTourney(null);
+                      setAdminTab('registrations');
+                    }}
+                    title="Open in full dashboard"
+                  >
+                    <ExternalLink size={12} /> Full Page View
+                  </button>
+                  <button className="modal-close-btn" onClick={() => setViewingParticipantsTourney(null)}>
+                    <X size={18} />
+                  </button>
+                </div>
               </div>
-              <div className="modal-header-actions">
-                <button 
-                  className="copy-uids-btn"
-                  onClick={() => copyUidsList(viewingParticipantsTourney.participants || [])}
-                  title="Copy all player UIDs for custom room invite"
-                >
-                  <Copy size={13} /> Copy All Free Fire UIDs
-                </button>
-                <button 
-                  className="admin-btn btn-secondary btn-xs"
-                  onClick={() => {
-                    setSelectedTourneyId(viewingParticipantsTourney.id);
-                    setViewingParticipantsTourney(null);
-                    setAdminTab('registrations');
-                  }}
-                  title="Open in full dashboard"
-                >
-                  <ExternalLink size={12} /> Full Page View
-                </button>
-                <button className="modal-close-btn" onClick={() => setViewingParticipantsTourney(null)}>
-                  <X size={18} />
+
+              <div className="participants-content" style={{ maxHeight: '72vh', overflowY: 'auto' }}>
+                {renderRoomSlotGrid(currentModalTourney)}
+                {renderRegistrationsTable(currentModalTourney.participants || [], currentModalTourney.id)}
+                {renderDisqualifiedTable(currentModalTourney.disqualifiedParticipants || [], currentModalTourney.id)}
+              </div>
+
+              <div className="modal-actions">
+                <button className="admin-btn btn-secondary" onClick={() => setViewingParticipantsTourney(null)}>
+                  Close
                 </button>
               </div>
-            </div>
-
-            <div className="participants-content" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-              {renderRegistrationsTable(viewingParticipantsTourney.participants || [], viewingParticipantsTourney.id)}
-            </div>
-
-            <div className="modal-actions">
-              <button className="admin-btn btn-secondary" onClick={() => setViewingParticipantsTourney(null)}>
-                Close
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ─── MODAL 3: Results & Prize Distribution ──────────────────────────── */}
       {resultsTourney && (
