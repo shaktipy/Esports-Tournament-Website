@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAdmin } from '../../context/AdminContext';
+import ImageUploadField from '../../components/ImageUploadField';
 import { 
   Zap, Shield, Crown, Plus, Edit, Trash2, CheckCircle2, 
   IndianRupee, Ticket, X, Sparkles, AlertCircle 
@@ -29,7 +30,7 @@ const AdminPasses = () => {
     setEditingPass(null);
     setFormData({
       title: 'WEEKEND WARRIOR PASS',
-      subtitle: '8x CS Tournament Tickets + 100 Coins',
+      subtitle: '8x CS Tournament Tickets + 100 XO Coins',
       inrPrice: 49,
       grantCs: 8,
       grantBr: 0,
@@ -114,13 +115,22 @@ const AdminPasses = () => {
         {passes.map(pass => (
           <div key={pass.id} className="admin-pass-card glass-card" style={{ borderColor: `${pass.accentColor}44` }}>
             <div className="ap-card-top" style={{ background: pass.color || `linear-gradient(135deg, ${pass.accentColor}22 0%, rgba(15,23,42,0.9) 100%)` }}>
-              <div className="ap-badge-wrap">
-                <span className="ap-badge" style={{ backgroundColor: pass.accentColor }}>
-                  {pass.badge || 'XO PASS'}
-                </span>
-                <span className={`status-pill ${pass.active !== false ? 'status-open' : 'status-closed'}`}>
-                  {pass.active !== false ? 'ACTIVE' : 'DISABLED'}
-                </span>
+              <div className="ap-top-row">
+                <div className="ap-badge-wrap">
+                  <span className="ap-badge" style={{ backgroundColor: pass.accentColor }}>
+                    {pass.badge || 'XO PASS'}
+                  </span>
+                  <span className={`status-pill ${pass.active !== false ? 'status-open' : 'status-closed'}`}>
+                    {pass.active !== false ? 'ACTIVE' : 'DISABLED'}
+                  </span>
+                </div>
+                <div className="ap-pass-thumb-wrap">
+                  <img 
+                    src={pass.ticketImage || '/tokens/cs-ticket.png'} 
+                    alt={pass.title} 
+                    className="ap-pass-thumb"
+                  />
+                </div>
               </div>
               <h3 className="ap-title">{pass.title}</h3>
               <p className="ap-sub">{pass.subtitle}</p>
@@ -282,6 +292,42 @@ const AdminPasses = () => {
                     value={formData.accentColor} 
                     onChange={e => setFormData({ ...formData, accentColor: e.target.value })}
                   />
+                </div>
+              </div>
+
+              {/* Pass Ticket / Banner Image Upload (Direct to server, not localStorage) */}
+              <div className="form-group">
+                <ImageUploadField
+                  label="Pass Ticket / Cover Image"
+                  value={formData.ticketImage}
+                  onChange={(val) => setFormData({ ...formData, ticketImage: val })}
+                />
+                <div className="pass-token-presets">
+                  <span className="preset-label">Quick Presets:</span>
+                  <button
+                    type="button"
+                    className={`preset-token-btn ${formData.ticketImage === '/tokens/cs-ticket.png' ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, ticketImage: '/tokens/cs-ticket.png' })}
+                  >
+                    <img src="/tokens/cs-ticket.png" alt="CS Ticket" />
+                    <span>CS Ticket</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`preset-token-btn ${formData.ticketImage === '/tokens/br-ticket.png' ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, ticketImage: '/tokens/br-ticket.png' })}
+                  >
+                    <img src="/tokens/br-ticket.png" alt="BR Ticket" />
+                    <span>BR Ticket</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`preset-token-btn ${formData.ticketImage === '/tokens/xo-coin.png' ? 'active' : ''}`}
+                    onClick={() => setFormData({ ...formData, ticketImage: '/tokens/xo-coin.png' })}
+                  >
+                    <img src="/tokens/xo-coin.png" alt="XO Coin" />
+                    <span>XO Coin Pack</span>
+                  </button>
                 </div>
               </div>
 
