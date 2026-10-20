@@ -1,0 +1,144 @@
+.banned-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(8, 9, 12, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: bannedFadeIn 0.25s ease-out;
+  padding: 1.25rem;
+}
+
+@keyframes bannedFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.banned-modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  background: linear-gradient(145deg, rgba(26, 12, 16, 0.95), rgba(16, 17, 24, 0.98));
+  border: 1px solid rgba(255, 68, 68, 0.35);
+  border-radius: 18px;
+  padding: 2.2rem 2rem;
+  box-shadow: 0 0 50px rgba(255, 40, 40, 0.25), 0 20px 40px rgba(0, 0, 0, 0.8);
+  text-align: center;
+  animation: bannedPopIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes bannedPopIn {
+  from { transform: scale(0.92) translateY(15px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.banned-icon-wrapper {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1.25rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 68, 68, 0.25) 0%, rgba(255, 0, 0, 0.05) 70%);
+  border: 2px solid rgba(255, 68, 68, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ff4757;
+  box-shadow: 0 0 25px rgba(255, 71, 87, 0.4);
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 71, 87, 0.35); }
+  50% { box-shadow: 0 0 35px rgba(255, 71, 87, 0.7); }
+}
+
+.banned-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #ff4757;
+  margin-bottom: 0.35rem;
+  text-transform: uppercase;
+}
+
+.banned-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 68, 68, 0.15);
+  border: 1px solid rgba(255, 68, 68, 0.35);
+  color: #ff6b81;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  padding: 0.25rem 0.8rem;
+  border-radius: 20px;
+  margin-bottom: 1.25rem;
+  text-transform: uppercase;
+}
+
+.banned-reason-box {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #ff4757;
+  border-radius: 10px;
+  padding: 1rem 1.15rem;
+  margin: 1.2rem 0;
+  text-align: left;
+}
+
+.banned-reason-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #a4b0be;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.35rem;
+}
+
+.banned-reason-text {
+  font-size: 0.95rem;
+  color: #f1f2f6;
+  line-height: 1.45;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.banned-notice {
+  font-size: 0.85rem;
+  color: #a4b0be;
+  line-height: 1.5;
+  margin-bottom: 1.6rem;
+}
+
+.banned-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.banned-btn-close {
+  background: linear-gradient(135deg, #ff4757, #c0392b);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  padding: 0.75rem 1.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.banned-btn-close:hover {
+  background: linear-gradient(135deg, #ff6b81, #e74c3c);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 20px rgba(255, 71, 87, 0.4);
+}
