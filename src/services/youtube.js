@@ -93,11 +93,12 @@ export const DEFAULT_FEED = [
   },
 ];
 
-export const OFFICIAL_API_KEY = 'REDACTED_YOUTUBE_API_KEY';
+// API key must be set in .env as VITE_YOUTUBE_API_KEY (never hardcode here)
+export const OFFICIAL_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY || '';
 export const OFFICIAL_CHANNEL_ID = 'UCn46HBkf6RSZTV9tj3cqVBg';
 
 export const getStoredCredentials = () => {
-  const apiKey = localStorage.getItem(STORAGE_KEY_API_KEY) || import.meta.env.VITE_YOUTUBE_API_KEY || OFFICIAL_API_KEY;
+  const apiKey = localStorage.getItem(STORAGE_KEY_API_KEY) || import.meta.env.VITE_YOUTUBE_API_KEY || '';
   const channelId = localStorage.getItem(STORAGE_KEY_CHANNEL_ID) || import.meta.env.VITE_YOUTUBE_CHANNEL_ID || OFFICIAL_CHANNEL_ID;
   return { apiKey, channelId };
 };
