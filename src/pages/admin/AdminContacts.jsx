@@ -402,7 +402,7 @@ const AdminContacts = () => {
 
       {/* ─── MODAL: VIEW DETAILS & RESPOND ──────────────────────────────── */}
       {viewModalItem && (
-        <div className="modal-backdrop fade-in" onClick={() => setViewModalItem(null)}>
+        <div className="admin-modal-overlay fade-in" onClick={() => setViewModalItem(null)}>
           <div className="contact-modal-window glass-card" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="contact-modal-header">
@@ -538,7 +538,7 @@ const AdminContacts = () => {
 
       {/* ─── CONFIRM DELETE DIALOG ───────────────────────────────────────── */}
       {deleteConfirmId && (
-        <div className="modal-backdrop fade-in" onClick={() => setDeleteConfirmId(null)}>
+        <div className="admin-modal-overlay fade-in" onClick={() => setDeleteConfirmId(null)}>
           <div className="contact-confirm-modal glass-card" onClick={(e) => e.stopPropagation()}>
             <div className="confirm-modal-icon">
               <AlertTriangle size={28} />
