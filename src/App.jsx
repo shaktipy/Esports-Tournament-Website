@@ -18,6 +18,7 @@ import EsportsRedeem from './pages/esports/EsportsRedeem';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import { AdminProvider } from './context/AdminContext';
 import AnnouncementBar from './components/AnnouncementBar';
+import BannedModal from './components/BannedModal';
 
 import { GameProvider, useGame } from './context/GameContext';
 import SlidingToast from './components/SlidingToast';
@@ -26,7 +27,7 @@ import { Bell } from 'lucide-react';
 function AppContent() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const location = useLocation();
-  const { user, setUser, logout, notifications, clearNotification } = useGame();
+  const { user, setUser, logout, notifications, clearNotification, bannedModalInfo, closeBannedModal } = useGame();
 
   const handleLogin = (userData) => {
     setUser(userData);
@@ -108,6 +109,14 @@ function AppContent() {
           onLogin={handleLogin} 
         />
       )}
+
+      {/* Account Banned / Suspended Modal */}
+      <BannedModal 
+        isOpen={Boolean(bannedModalInfo?.isOpen)} 
+        status={bannedModalInfo?.status} 
+        reason={bannedModalInfo?.reason} 
+        onClose={closeBannedModal} 
+      />
     </div>
   );
 }
