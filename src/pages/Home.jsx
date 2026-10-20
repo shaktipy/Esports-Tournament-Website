@@ -7,6 +7,7 @@ import {
   Trophy, 
   Swords, 
   Radio, 
+  Video,
   Clock, 
   ExternalLink,
   Youtube,
@@ -23,13 +24,14 @@ import {
   CheckCircle,
   Lock,
   Star,
-  CalendarCheck
+  CalendarCheck,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 import { useGame } from '../context/GameContext';
 import { 
   DEFAULT_FEED, 
   getStoredCredentials, 
-  saveCredentials, 
   fetchRealtimeChannelVideos 
 } from '../services/youtube';
 import DailyLogin from '../components/DailyLogin';
@@ -42,16 +44,13 @@ import './Home.css';
 const Home = () => {
   const { tournaments } = useAdmin();
   const [filter, setFilter] = useState('all');
+  const [showAllVideos, setShowAllVideos] = useState(false);
   const [videos, setVideos] = useState(DEFAULT_FEED);
   const [activeVideoModal, setActiveVideoModal] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sessionSeconds, setSessionSeconds] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncStatus, setSyncStatus] = useState(null);
-  
-  // YouTube API configuration modal
-  const [showConfigModal, setShowConfigModal] = useState(false);
-  const [apiCredentials, setApiCredentials] = useState(getStoredCredentials());
+
 
   // Screen pop-up modals for Daily Login & Fortune Wheel
   const [showDailyLoginModal, setShowDailyLoginModal] = useState(false);
@@ -88,7 +87,7 @@ const Home = () => {
   }, []);
 
   // Sync real-time YouTube Channel Feed
-  const handleSyncChannel = async (key, chId, notify = true) => {
+  const handleSyncChannel = async (key, chId, notify = false) => {
     setIsSyncing(true);
     const result = await fetchRealtimeChannelVideos(key, chId);
     setIsSyncing(false);
@@ -97,13 +96,12 @@ const Home = () => {
       setVideos(result.videos);
     }
 
-    setSyncStatus({
-      connected: result.connected,
-      message: result.message
-    });
-
     if (notify) {
-      showNotification(result.connected ? '✅ Synced real-time YouTube channel feed!' : result.message);
+      if (result.connected) {
+        showNotification(`✅ Channel Synced! ${result.videos?.length || 0} streams & videos loaded.`);
+      } else {
+        showNotification(result.message || 'Sync failed. Showing cached feed.', 'warning');
+      }
     }
   };
 
@@ -206,6 +204,13 @@ const Home = () => {
   }, [isPlaying, activeVideoModal, addWatchTime, showNotification]);
 
   const filteredVideos = videos.filter(v => filter === 'all' || v.type === filter);
+  const hasMoreThan11 = filteredVideos.length > 11;
+  const displayedVideos = showAllVideos ? filteredVideos : filteredVideos.slice(0, 11);
+
+  const handleExpandVideos = () => {
+    setShowAllVideos(true);
+    showNotification(`🎬 Showing all ${filteredVideos.length} streams & videos!`);
+  };
 
   const formatSessionTime = (totalSec) => {
     const m = Math.floor(totalSec / 60);
@@ -213,12 +218,6 @@ const Home = () => {
     return `${m}m ${s < 10 ? '0' : ''}${s}s`;
   };
 
-  const handleSaveApiSettings = (e) => {
-    e.preventDefault();
-    saveCredentials(apiCredentials.apiKey, apiCredentials.channelId);
-    setShowConfigModal(false);
-    handleSyncChannel(apiCredentials.apiKey, apiCredentials.channelId, true);
-  };
 
   const handleCloseVideoModal = () => {
     if (ytPlayerInstance.current && ytPlayerInstance.current.destroy) {
@@ -379,7 +378,7 @@ const Home = () => {
             <div className="rlc-meta">
               <h3 className="rlc-title">Fortune Reward Wheel</h3>
               <p className="rlc-sub">
-                Win up to 500 Coins, CS/BR Tournament Tickets & Grand Jackpots! ({wheelSpinData.totalSpins || 0} spins)
+                Win up to 50 Coins, Tournament Tickets & 100 Free Fire Diamonds! ({wheelSpinData.totalSpins || 0} spins)
               </p>
             </div>
           </div>
@@ -406,15 +405,10 @@ const Home = () => {
               Watch live streams and videos to earn XO Coins, accumulate watch time, and complete missions.
             </p>
           </div>
+
         </div>
 
-        {/* Sync Status Banner if connected or cached */}
-        {syncStatus && (
-          <div className={`sync-status-alert ${syncStatus.connected ? 'connected' : 'cached'}`}>
-            <span className="sync-dot"></span>
-            <span>{syncStatus.message}</span>
-          </div>
-        )}
+
 
         {/* Video Filter Bar */}
         <div className="feed-header-bar">
@@ -425,15 +419,15 @@ const Home = () => {
 
           <div className="filter-group">
             <Filter size={16} className="filter-icon" />
-            <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All</button>
-            <button className={`filter-btn ${filter === 'live' ? 'active' : ''}`} onClick={() => setFilter('live')}>Live Streams</button>
-            <button className={`filter-btn ${filter === 'video' ? 'active' : ''}`} onClick={() => setFilter('video')}>Videos</button>
+            <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => { setFilter('all'); setShowAllVideos(false); }}>All</button>
+            <button className={`filter-btn ${filter === 'live' ? 'active' : ''}`} onClick={() => { setFilter('live'); setShowAllVideos(false); }}>Live Streams</button>
+            <button className={`filter-btn ${filter === 'video' ? 'active' : ''}`} onClick={() => { setFilter('video'); setShowAllVideos(false); }}>Videos</button>
           </div>
         </div>
 
         {/* Channel Video Grid */}
         <div className="video-grid">
-          {filteredVideos.map((video) => (
+          {displayedVideos.map((video) => (
             <div 
               key={video.id} 
               className="video-card glass-panel group"
@@ -446,7 +440,7 @@ const Home = () => {
               <div className="video-thumb-container">
                 <img src={video.thumbnail} alt={video.title} className="video-thumb" />
                 <div className={`video-duration ${video.type === 'live' ? 'live-badge' : ''}`}>
-                  {video.type === 'live' ? <span className="pulsing-dot"></span> : null}
+                  {video.isLiveNow ? <span className="pulsing-dot"></span> : null}
                   {video.duration}
                 </div>
                 
@@ -459,19 +453,74 @@ const Home = () => {
               </div>
 
               <div className="video-info">
-                <h3 className="video-title">{video.title}</h3>
-                <p className="video-desc-small">{video.description}</p>
+                <h3 className="video-title" title={video.title}>{video.title}</h3>
+                <p className="video-desc-small" title={video.description}>{video.description}</p>
                 <div className="video-meta">
-                  <span className="video-type">{video.type.toUpperCase()}</span>
+                  <span className={`video-type ${video.type === 'live' ? 'video-type-live' : ''}`}>
+                    {video.type === 'live' ? (
+                      <>
+                        <span className="live-dot-indicator"></span>
+                        <span>{video.isLiveNow ? 'LIVE NOW' : 'LIVE STREAM'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Video size={13} className="video-badge-icon" />
+                        <span>VIDEO</span>
+                      </>
+                    )}
+                  </span>
                   <div className="video-reward-badge">
-                    <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon" />
-                    <span>Earns Watch Time</span>
+                    <img src="/tokens/xo-coin.png" alt="XO Coin" className="video-coin-icon" />
+                    <span>XO Coins</span>
                   </div>
                 </div>
               </div>
             </div>
           ))}
+
+          {/* 12th Card: Interactive View All card when there are more than 11 videos */}
+          {!showAllVideos && hasMoreThan11 && (
+            <div 
+              className="video-card view-all-card glass-panel group"
+              onClick={handleExpandVideos}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="view-all-content">
+                <div className="view-all-icon-wrap">
+                  <Layers size={32} />
+                </div>
+                <h3 className="view-all-title">View All Videos</h3>
+                <p className="view-all-desc">
+                  Explore +{filteredVideos.length - 11} more channel streams & uploads
+                </p>
+                <button 
+                  className="btn-view-all" 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    handleExpandVideos(); 
+                  }}
+                >
+                  <span>VIEW ALL ({filteredVideos.length})</span>
+                  <ArrowRight size={15} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Show Less option when all videos are expanded */}
+        {showAllVideos && hasMoreThan11 && (
+          <div className="collapse-row">
+            <button 
+              className="btn-collapse-videos"
+              onClick={() => setShowAllVideos(false)}
+            >
+              <ChevronUp size={16} />
+              <span>Show Less (Show 11 videos)</span>
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Interactive Video Player Modal with Live Watch-Time Tracking */}
@@ -531,76 +580,7 @@ const Home = () => {
         </div>
       )}
 
-      {/* YouTube API Configuration Modal */}
-      {showConfigModal && (
-        <div className="modal-overlay fade-in" onClick={() => setShowConfigModal(false)}>
-          <div className="modal-content extra-modal glass-panel" onClick={e => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setShowConfigModal(false)}>
-              <X size={20} />
-            </button>
 
-            <div className="modal-header-icon-box">
-              <Youtube size={36} color="#ef4444" />
-            </div>
-
-            <h2 className="modal-title text-gradient">YOUTUBE CHANNEL INTEGRATION</h2>
-            <p className="modal-subtitle">
-              Connect the official HAARSH XO YouTube channel to automatically sync real-time live streams and video uploads.
-            </p>
-
-            <form onSubmit={handleSaveApiSettings} className="yt-config-form">
-              <div className="config-field">
-                <label className="config-label">
-                  <Key size={16} />
-                  <span>YouTube Data API v3 Key:</span>
-                </label>
-                <input 
-                  type="text"
-                  placeholder="AIzaSy..."
-                  value={apiCredentials.apiKey}
-                  onChange={(e) => setApiCredentials(prev => ({ ...prev, apiKey: e.target.value }))}
-                  className="config-input"
-                />
-                <span className="config-hint">Created from Google Cloud Console (YouTube Data API v3).</span>
-              </div>
-
-              <div className="config-field">
-                <label className="config-label">
-                  <Youtube size={16} />
-                  <span>YouTube Channel ID:</span>
-                </label>
-                <input 
-                  type="text"
-                  placeholder="UCxxxxxxxxxxxxxxxxxxxx"
-                  value={apiCredentials.channelId}
-                  onChange={(e) => setApiCredentials(prev => ({ ...prev, channelId: e.target.value }))}
-                  className="config-input"
-                />
-                <span className="config-hint">Your YouTube Channel ID (starts with "UC...").</span>
-              </div>
-
-              <div className="config-actions">
-                <button type="submit" className="btn-primary w-full">
-                  SAVE & SYNC REAL-TIME CHANNEL
-                </button>
-                <button 
-                  type="button" 
-                  className="btn-secondary w-full"
-                  onClick={() => {
-                    saveCredentials('', '');
-                    setApiCredentials({ apiKey: '', channelId: '' });
-                    setVideos(DEFAULT_FEED);
-                    setShowConfigModal(false);
-                    showNotification('Reset to default HAARSH XO feed.');
-                  }}
-                >
-                  Reset to Default Feed
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Screen Pop-up Modals for Daily Login & Fortune Wheel */}
       {showDailyLoginModal && (
