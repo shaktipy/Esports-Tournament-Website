@@ -11,6 +11,7 @@ Watch streams · Complete missions · Earn coins · Join tournaments · Win rewa
 [![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask)](https://flask.palletsprojects.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Razorpay](https://img.shields.io/badge/Razorpay-Payments-002970?style=for-the-badge)](https://razorpay.com/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker)](https://www.docker.com/)
 
 </div>
 
@@ -22,7 +23,8 @@ Watch streams · Complete missions · Earn coins · Join tournaments · Win rewa
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
+- [Running with Docker (Recommended)](#-running-with-docker-recommended)
+- [Getting Started (Manual)](#-getting-started)
 - [Database Migration (SQLite → Supabase)](#-database-migration-sqlite--supabase)
 - [Pages & Routes](#-pages--routes)
 - [Admin Panel](#-admin-panel)
@@ -212,7 +214,31 @@ FF Project/
 
 ---
 
-## 🚀 Getting Started
+## 🐳 Running with Docker (Recommended)
+
+Run the full stack (Frontend + Backend) with a single command:
+
+```bash
+# 1. Start Docker Desktop, then run:
+docker compose up --build -d
+```
+
+- **Frontend (Web App):** [http://localhost:3000](http://localhost:3000) (served via optimized Nginx Alpine)
+- **Backend API:** [http://localhost:5001](http://localhost:5001) (Flask + Supabase PostgreSQL)
+- **API Health Check:** [http://localhost:5001/api/health](http://localhost:5001/api/health)
+
+To view logs or stop:
+```bash
+# View live container logs
+docker compose logs -f
+
+# Stop containers
+docker compose down
+```
+
+---
+
+## 🚀 Getting Started (Manual)
 
 ### Prerequisites
 

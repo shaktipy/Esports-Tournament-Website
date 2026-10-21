@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+data/
+uploads/*
+!uploads/.gitkeep
+.env
+.env.*
+.vscode/
+.git/
