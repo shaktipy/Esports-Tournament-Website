@@ -9,7 +9,7 @@ Watch streams · Complete missions · Earn coins · Join tournaments · Win rewa
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-8-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev/)
 [![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask)](https://flask.palletsprojects.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-Auth-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?style=for-the-badge&logo=supabase)](https://supabase.com/)
 [![Razorpay](https://img.shields.io/badge/Razorpay-Payments-002970?style=for-the-badge)](https://razorpay.com/)
 
 </div>
@@ -23,6 +23,7 @@ Watch streams · Complete missions · Earn coins · Join tournaments · Win rewa
 - [Tech Stack](#-tech-stack)
 - [Project Structure](#-project-structure)
 - [Getting Started](#-getting-started)
+- [Database Migration (SQLite → Supabase)](#-database-migration-sqlite--supabase)
 - [Pages & Routes](#-pages--routes)
 - [Admin Panel](#-admin-panel)
 - [Esports Mode](#-esports-mode)
@@ -332,6 +333,58 @@ Spin Wheel ──► Random coin/reward prizes
 ## 📄 License
 
 This project is private. All rights reserved.
+
+---
+
+## 🗄️ Database Migration (SQLite → Supabase)
+
+The backend was migrated from local SQLite files to **Supabase PostgreSQL** for production reliability. Local SQLite files would lose all data on server sleep/redeploy.
+
+### Step 1 — Create tables in Supabase
+
+1. Go to your [Supabase Dashboard](https://supabase.com/dashboard)
+2. Open **SQL Editor**
+3. Run the contents of [`server/supabase_schema.sql`](server/supabase_schema.sql)
+
+### Step 2 — Set environment variables
+
+Copy [`server/.env.example`](server/.env.example) → `server/.env` and fill in:
+
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your_service_role_key   # From Project Settings → API
+RAZORPAY_KEY_ID=rzp_live_xxxxx
+RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxx
+```
+
+> ⚠️ Use the **service_role** key (NOT anon key) — this is backend-only and bypasses RLS.
+
+### Step 3 — Install dependencies
+
+```bash
+cd server
+pip install -r requirements.txt
+```
+
+### Step 4 — Migrate existing SQLite data
+
+Run once to copy all existing data from SQLite → Supabase:
+
+```bash
+cd server
+python migrate_to_supabase.py
+```
+
+The script migrates:
+- `arena.db` → `collections` table (tournaments, giveaways, store, missions, etc.)
+- `users.db` → `users` table (player accounts, coins, tickets)
+- `users.db` → `contact_requests` table (support tickets)
+
+### Step 5 — Start the server
+
+```bash
+python app.py
+```
 
 ---
 
