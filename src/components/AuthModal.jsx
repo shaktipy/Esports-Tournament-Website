@@ -49,9 +49,15 @@ const AuthModal = ({ onClose, onLogin }) => {
         let isBanned = false;
         let banReason = '';
         try {
-          const statusRes = await fetch(`/api/users/${encodeURIComponent(user.id)}/check-status`).catch(() =>
-            fetch(`http://localhost:5001/api/users/${encodeURIComponent(user.id)}/check-status`)
-          );
+          const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
+          const checkUrl = backendUrl ? `${backendUrl}/api/users/${encodeURIComponent(user.id)}/check-status` : `/api/users/${encodeURIComponent(user.id)}/check-status`;
+          const statusRes = await fetch(checkUrl).catch(async () => {
+            if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+              return fetch(`http://localhost:5001/api/users/${encodeURIComponent(user.id)}/check-status`).catch(() => null);
+            }
+            return null;
+          });
+
           if (statusRes && statusRes.ok) {
             const statusData = await statusRes.json();
             if (statusData.banned || statusData.status === 'banned' || statusData.status === 'suspended') {

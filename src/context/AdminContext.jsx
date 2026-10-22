@@ -1005,7 +1005,9 @@ export const AdminProvider = ({ children }) => {
       try {
         res = await fetch(primaryUrl);
       } catch {
-        res = await fetch('http://localhost:5001/api/admin/data');
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+          res = await fetch('http://localhost:5001/api/admin/data').catch(() => null);
+        }
       }
       if (res && res.ok) {
         const data = await res.json();
@@ -1048,7 +1050,9 @@ export const AdminProvider = ({ children }) => {
         try {
           res = await fetch(primaryUrl, opts);
         } catch {
-          res = await fetch(fallbackUrl, opts);
+          if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            res = await fetch(fallbackUrl, opts).catch(() => null);
+          }
         }
         if (res?.ok) {
           pendingSyncCount.current = Math.max(0, pendingSyncCount.current - 1);
@@ -2173,7 +2177,9 @@ export const AdminProvider = ({ children }) => {
       try {
         res = await fetch(primaryUrl);
       } catch {
-        res = await fetch('http://localhost:5001/api/users');
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+          res = await fetch('http://localhost:5001/api/users').catch(() => null);
+        }
       }
       if (res && res.ok) {
         const list = await res.json();
@@ -2232,7 +2238,9 @@ export const AdminProvider = ({ children }) => {
       try {
         res = await fetch(primaryUrl, opts);
       } catch {
-        res = await fetch(`http://localhost:5001/api/users/${encodeURIComponent(uid)}/update-balance`, opts);
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+          res = await fetch(`http://localhost:5001/api/users/${encodeURIComponent(uid)}/update-balance`, opts).catch(() => null);
+        }
       }
       if (res && res.ok) {
         const json = await res.json();
@@ -2296,7 +2304,9 @@ export const AdminProvider = ({ children }) => {
       try {
         res = await fetch(primaryUrl, opts);
       } catch {
-        res = await fetch(`http://localhost:5001/api/users/${encodeURIComponent(uid)}/update-status`, opts);
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+          res = await fetch(`http://localhost:5001/api/users/${encodeURIComponent(uid)}/update-status`, opts).catch(() => null);
+        }
       }
       if (res && res.ok) {
         const json = await res.json();

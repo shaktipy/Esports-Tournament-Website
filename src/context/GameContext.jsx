@@ -613,7 +613,9 @@ export const GameProvider = ({ children }) => {
       try {
         res = await fetch(primaryUrl, opts);
       } catch {
-        res = await fetch('http://localhost:5001/api/users/upsert', opts);
+        if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+          res = await fetch('http://localhost:5001/api/users/upsert', opts).catch(() => null);
+        }
       }
 
       if (res && (res.status === 403 || res.status === 401)) {
@@ -665,10 +667,14 @@ export const GameProvider = ({ children }) => {
     if (!user || !user.id) return;
     const interval = setInterval(async () => {
       try {
-        const identifier = user.supabaseId || user.id || user.uid;
-        const res = await fetch(`/api/users/${encodeURIComponent(identifier)}/check-status`).catch(() =>
-          fetch(`http://localhost:5001/api/users/${encodeURIComponent(identifier)}/check-status`)
-        );
+        const baseUrl = getBackendBaseUrl();
+        const checkUrl = baseUrl ? `${baseUrl}/api/users/${encodeURIComponent(identifier)}/check-status` : `/api/users/${encodeURIComponent(identifier)}/check-status`;
+        const res = await fetch(checkUrl).catch(async () => {
+          if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            return fetch(`http://localhost:5001/api/users/${encodeURIComponent(identifier)}/check-status`).catch(() => null);
+          }
+          return null;
+        });
         if (res && res.ok) {
           const data = await res.json();
           if (data.banned || data.status === 'banned' || data.status === 'suspended') {
@@ -695,7 +701,9 @@ export const GameProvider = ({ children }) => {
         try {
           await fetch(primaryUrl, opts);
         } catch {
-          await fetch(`http://localhost:5001/api/users/${encodeURIComponent(userId)}/sync-balance`, opts);
+          if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+            await fetch(`http://localhost:5001/api/users/${encodeURIComponent(userId)}/sync-balance`, opts).catch(() => null);
+          }
         }
       } catch (e) {
         console.warn('[GameContext] syncBalanceToBackend failed:', e);

@@ -84,7 +84,7 @@ const loadRazorpay = () =>
     document.body.appendChild(s);
   });
 
-const BACKEND = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
+const BACKEND = import.meta.env.VITE_BACKEND_URL || '';
 
 // Map ticketType to icon for passes coming from AdminContext (which store no JSX)
 const getPassIcon = (pass) => {
