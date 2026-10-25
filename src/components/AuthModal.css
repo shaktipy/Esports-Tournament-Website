@@ -124,6 +124,30 @@
   opacity: 0.5;
 }
 
+.input-group.password-group input {
+  padding-right: 44px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 14px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: color 0.2s ease, transform 0.15s ease;
+  z-index: 2;
+}
+
+.password-toggle-btn:hover {
+  color: var(--primary-color);
+  transform: scale(1.1);
+}
+
 .mt-4 {
   margin-top: 1rem;
 }

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X, Mail, User as UserIcon, Hash, Lock, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { X, Mail, User as UserIcon, Hash, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import './AuthModal.css';
 
 const AuthModal = ({ onClose, onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -246,10 +247,10 @@ const AuthModal = ({ onClose, onLogin }) => {
             </>
           )}
 
-          <div className="input-group">
+          <div className="input-group password-group">
             <Lock className="input-icon" size={20} />
             <input 
-              type="password" 
+              type={showPassword ? 'text' : 'password'} 
               name="password"
               placeholder="Password (min 6 characters)" 
               value={formData.password}
@@ -258,6 +259,15 @@ const AuthModal = ({ onClose, onLogin }) => {
               minLength={6}
               autoComplete={isLogin ? 'current-password' : 'new-password'}
             />
+            <button
+              type="button"
+              className="password-toggle-btn"
+              onClick={() => setShowPassword(!showPassword)}
+              tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           {!isLogin && (

@@ -8,9 +8,9 @@ import Footer from '../../components/Footer';
 import './EsportsHome.css';
 
 const TOURNAMENTS = [
-  { 
-    id: 'tourney_cs_1', 
-    title: 'CLASH SQUAD SHOWDOWN (4v4)', 
+  {
+    id: 'tourney_cs_1',
+    title: 'CLASH SQUAD SHOWDOWN (4v4)',
     date: 'Starts Tomorrow, 7:00 PM',
     prize: '₹25,000 + 5,000 Diamonds',
     mode: 'Squad (CS)',
@@ -22,9 +22,9 @@ const TOURNAMENTS = [
     image: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=1470&auto=format&fit=crop',
     description: 'Competitive 4v4 Clash Squad. Fast rounds, high stakes, master tier teams.'
   },
-  { 
-    id: 'tourney_br_1', 
-    title: 'HAARSH XO BATTLE ROYALE INVITATIONAL', 
+  {
+    id: 'tourney_br_1',
+    title: 'HAARSH XO BATTLE ROYALE INVITATIONAL',
     date: 'Starts Saturday, 8:30 PM',
     prize: '₹50,000 + 10,000 Diamonds',
     mode: 'Squad (BR)',
@@ -36,9 +36,9 @@ const TOURNAMENTS = [
     image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop',
     description: 'Premier Battle Royale championship streamed live on HAARSH XO YouTube channel.'
   },
-  { 
-    id: 'tourney_br_2', 
-    title: 'LONE WOLF 1v1 CHAMPIONSHIP', 
+  {
+    id: 'tourney_br_2',
+    title: 'LONE WOLF 1v1 CHAMPIONSHIP',
     date: 'Starts Sunday, 6:00 PM',
     prize: '₹15,000 + 2,500 Diamonds',
     mode: 'Solo (1v1)',
@@ -50,9 +50,9 @@ const TOURNAMENTS = [
     image: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=2071&auto=format&fit=crop',
     description: 'Pure 1v1 gun skill. Snipers, Desert Eagle, Shotguns only.'
   },
-  { 
-    id: 'tourney_cs_2', 
-    title: 'CS WEEKEND PRO SCRIMS', 
+  {
+    id: 'tourney_cs_2',
+    title: 'CS WEEKEND PRO SCRIMS',
     date: 'Starts Friday, 9:00 PM',
     prize: '₹20,000 + Custom Title',
     mode: 'Squad (CS)',
@@ -64,9 +64,9 @@ const TOURNAMENTS = [
     image: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=2165&auto=format&fit=crop',
     description: 'Official esports scrims for verified tournament rosters.'
   },
-  { 
-    id: 'tourney_br_3', 
-    title: 'BERMUDA TRIANGLE DUO CUP', 
+  {
+    id: 'tourney_br_3',
+    title: 'BERMUDA TRIANGLE DUO CUP',
     date: 'Starts Next Monday, 8:00 PM',
     prize: '₹30,000 + 7,500 Diamonds',
     mode: 'Duo (BR)',
@@ -78,9 +78,9 @@ const TOURNAMENTS = [
     image: 'https://images.unsplash.com/photo-1560253023-3ec5d502959f?q=80&w=2070&auto=format&fit=crop',
     description: 'Dynamic 2v2 Battle Royale survival cup. Coordinate with your duo partner.'
   },
-  { 
-    id: 'tourney_cs_3', 
-    title: 'CS GRAND MASTERS ALL-STARS', 
+  {
+    id: 'tourney_cs_3',
+    title: 'CS GRAND MASTERS ALL-STARS',
     date: 'Starts Next Wednesday, 7:30 PM',
     prize: '₹40,000 + Exclusive XO Jersey',
     mode: 'Squad (CS)',
@@ -98,14 +98,14 @@ const EsportsHome = () => {
   const [filter, setFilter] = useState('all');
   const navigate = useNavigate();
 
-  const { 
-    csTickets, 
-    brTickets, 
-    registeredTournaments, 
+  const {
+    csTickets,
+    brTickets,
+    registeredTournaments,
     disqualifiedTournaments = [],
     registerTournament,
     showNotification,
-    user 
+    user
   } = useGame();
 
   const { tournaments: adminTournaments, addTournamentParticipant } = useAdmin();
@@ -156,17 +156,17 @@ const EsportsHome = () => {
 
   const handleConfirmRegister = (payload) => {
     if (!selectedTourneyForRegister) return;
-    const isSquad = (selectedTourneyForRegister.mode || '').toLowerCase().includes('squad') || 
-                    (selectedTourneyForRegister.mode || '').toLowerCase().includes('4v4') ||
-                    ((selectedTourneyForRegister.mode || '').toLowerCase().includes('cs') && !(selectedTourneyForRegister.mode || '').toLowerCase().includes('solo'));
-    const isDuo = (selectedTourneyForRegister.mode || '').toLowerCase().includes('duo') || 
-                  (selectedTourneyForRegister.mode || '').toLowerCase().includes('2v2');
+    const isSquad = (selectedTourneyForRegister.mode || '').toLowerCase().includes('squad') ||
+      (selectedTourneyForRegister.mode || '').toLowerCase().includes('4v4') ||
+      ((selectedTourneyForRegister.mode || '').toLowerCase().includes('cs') && !(selectedTourneyForRegister.mode || '').toLowerCase().includes('solo'));
+    const isDuo = (selectedTourneyForRegister.mode || '').toLowerCase().includes('duo') ||
+      (selectedTourneyForRegister.mode || '').toLowerCase().includes('2v2');
     const requiredTickets = payload.ticketCost || (isSquad ? 4 : isDuo ? 2 : (Number(selectedTourneyForRegister.ticketCost) || 1));
 
     const success = registerTournament(
-      selectedTourneyForRegister.id, 
-      selectedTourneyForRegister.ticketType, 
-      requiredTickets, 
+      selectedTourneyForRegister.id,
+      selectedTourneyForRegister.ticketType,
+      requiredTickets,
       selectedTourneyForRegister.title
     );
     if (success !== false && addTournamentParticipant) {
@@ -221,19 +221,19 @@ const EsportsHome = () => {
           <p className="esports-page-subtitle">Select a tournament, register with your CS or BR Ticket, and battle for the crown.</p>
         </div>
         <div className="esports-filters">
-          <button 
+          <button
             className={`esports-filter-btn ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            ALL
+            ALL TOURNAMENTS
           </button>
-          <button 
+          <button
             className={`esports-filter-btn ${filter === 'cs' ? 'active' : ''}`}
             onClick={() => setFilter('cs')}
           >
             CS
           </button>
-          <button 
+          <button
             className={`esports-filter-btn ${filter === 'br' ? 'active' : ''}`}
             onClick={() => setFilter('br')}
           >
@@ -249,14 +249,14 @@ const EsportsHome = () => {
             const uids = d.uids || [d.uid, d.leaderUid];
             const igns = d.igns || [d.ign, d.leaderIgn];
             return (user?.uid && uids.some(u => String(u) === String(user.uid))) ||
-                   (user?.inGameName && igns.some(i => i?.toLowerCase() === user.inGameName.toLowerCase()));
+              (user?.inGameName && igns.some(i => i?.toLowerCase() === user.inGameName.toLowerCase()));
           });
           const isRegistered = registeredTournaments.includes(tournament.id);
-          const isSquad = (tournament.mode || '').toLowerCase().includes('squad') || 
-                          (tournament.mode || '').toLowerCase().includes('4v4') ||
-                          ((tournament.mode || '').toLowerCase().includes('cs') && !(tournament.mode || '').toLowerCase().includes('solo'));
-          const isDuo = (tournament.mode || '').toLowerCase().includes('duo') || 
-                        (tournament.mode || '').toLowerCase().includes('2v2');
+          const isSquad = (tournament.mode || '').toLowerCase().includes('squad') ||
+            (tournament.mode || '').toLowerCase().includes('4v4') ||
+            ((tournament.mode || '').toLowerCase().includes('cs') && !(tournament.mode || '').toLowerCase().includes('solo'));
+          const isDuo = (tournament.mode || '').toLowerCase().includes('duo') ||
+            (tournament.mode || '').toLowerCase().includes('2v2');
           const requiredTickets = isSquad ? 4 : (isDuo ? 2 : (Number(tournament.ticketCost) || 1));
 
           const userTicketBalance = tournament.ticketType === 'CS' ? csTickets : brTickets;
@@ -265,9 +265,9 @@ const EsportsHome = () => {
           return (
             <div key={tournament.id} className="tournament-card glass-panel">
               <div className="tournament-image-wrapper">
-                <img 
-                  src={tournament.image || 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=1470&auto=format&fit=crop'} 
-                  alt={tournament.title} 
+                <img
+                  src={tournament.image || 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=1470&auto=format&fit=crop'}
+                  alt={tournament.title}
                   className="tournament-image"
                   onError={(e) => {
                     e.currentTarget.onerror = null;
@@ -282,11 +282,11 @@ const EsportsHome = () => {
                   {tournament.ticketType || 'CS'} MODE
                 </div>
               </div>
-              
+
               <div className="tournament-details">
                 <h3 className="tournament-title">{tournament.title}</h3>
                 <p className="tournament-desc">{tournament.description}</p>
-                
+
                 <div className="tournament-info-grid">
                   <div className="t-info-item">
                     <Clock size={16} className="t-icon" />
@@ -307,10 +307,10 @@ const EsportsHome = () => {
                   <div className="ticket-req-left">
                     <span className="req-label">Entry Fee:</span>
                     <div className="req-token-badge">
-                      <img 
-                        src={tournament.ticketType === 'CS' ? '/tokens/cs-ticket.png' : '/tokens/br-ticket.png'} 
-                        alt="Ticket" 
-                        className="req-token-img" 
+                      <img
+                        src={tournament.ticketType === 'CS' ? '/tokens/cs-ticket.png' : '/tokens/br-ticket.png'}
+                        alt="Ticket"
+                        className="req-token-img"
                       />
                       <span className="req-token-text">
                         {requiredTickets}x {tournament.ticketType} Tickets {isSquad ? '(4 Players - 1 per player)' : isDuo ? '(2 Players)' : ''}
@@ -353,10 +353,10 @@ const EsportsHome = () => {
 
                 {isDisqualified ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-                    <button 
-                      className="join-tournament-btn need-ticket" 
-                      disabled 
-                      style={{ 
+                    <button
+                      className="join-tournament-btn need-ticket"
+                      disabled
+                      style={{
                         background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(185, 28, 28, 0.35))',
                         border: '1px solid rgba(239, 68, 68, 0.6)',
                         color: '#fca5a5',
@@ -393,7 +393,7 @@ const EsportsHome = () => {
                       <CheckCircle2 size={18} /> REGISTERED ✅
                     </button>
                     {(() => {
-                      const myReg = (tournament.participants || []).find(p => 
+                      const myReg = (tournament.participants || []).find(p =>
                         (user?.uid && (String(p.uid) === String(user.uid) || String(p.leaderUid) === String(user.uid) || (Array.isArray(p.players) && p.players.some(m => String(m.uid) === String(user.uid))))) ||
                         (user?.inGameName && (p.ign?.toLowerCase() === user.inGameName.toLowerCase() || p.leaderIgn?.toLowerCase() === user.inGameName.toLowerCase()))
                       );
@@ -480,16 +480,16 @@ const EsportsHome = () => {
                     🔴 LIVE MATCH IN PROGRESS
                   </button>
                 ) : hasTicket ? (
-                  <button 
+                  <button
                     className="join-tournament-btn ready"
                     onClick={() => handleRegisterClick(tournament)}
                   >
-                    {isSquad 
-                      ? `REGISTER SQUAD (${requiredTickets} ${tournament.ticketType} TICKETS)` 
+                    {isSquad
+                      ? `REGISTER SQUAD (${requiredTickets} ${tournament.ticketType} TICKETS)`
                       : `REGISTER WITH ${requiredTickets} ${tournament.ticketType} TICKET`}
                   </button>
                 ) : (
-                  <button 
+                  <button
                     className="join-tournament-btn need-ticket"
                     onClick={() => navigate('/esports/passes')}
                   >

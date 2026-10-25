@@ -377,14 +377,16 @@ const EsportsRedeem = () => {
                 <p className="r-item-desc">{item.description}</p>
 
                 {/* Fulfillment badge */}
-                <div style={{ marginBottom: '8px' }}>
+                <div style={{ marginBottom: '6px' }}>
                   <span style={{
                     fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px',
                     background: isInstant ? 'rgba(16,185,129,0.12)' : 'rgba(148,163,184,0.12)',
                     color: isInstant ? '#10b981' : '#94a3b8',
                     border: `1px solid ${isInstant ? 'rgba(16,185,129,0.25)' : 'rgba(148,163,184,0.15)'}`,
+                    whiteSpace: 'nowrap',
+                    display: 'inline-block'
                   }}>
-                    {isInstant ? '⚡ INSTANT DELIVERY' : '🔧 MANUAL (24-48 Hours)'}
+                    {isInstant ? '⚡ INSTANT' : '🔧 MANUAL (24-48h)'}
                   </span>
                 </div>
 
@@ -392,7 +394,7 @@ const EsportsRedeem = () => {
                   <div className="r-reward-cost">
                     <img src="/tokens/xo-coin.png" alt="XO Coin" className="r-coin-icon" />
                     <span className={canAfford ? 'r-cost-affordable' : 'r-cost-locked'}>
-                      {item.cost} XO
+                      {item.cost.toLocaleString()} XO
                     </span>
                   </div>
                   <button
@@ -407,7 +409,7 @@ const EsportsRedeem = () => {
                 {!outOfStock && !canAfford && (
                   <div className="r-progress-hint-wrap">
                     <span className="r-progress-hint-pill">
-                      Need {item.cost - coins} more XO Coins
+                      Need {(item.cost - coins).toLocaleString()} more XO Coins
                     </span>
                   </div>
                 )}

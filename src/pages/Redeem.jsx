@@ -423,21 +423,23 @@ const Redeem = ({ onLoginClick }) => {
                 <h3 className="reward-title">{reward.title}</h3>
                 <p className="reward-desc">{reward.description}</p>
 
-                <div style={{ marginBottom: '8px' }}>
+                <div style={{ marginBottom: '6px' }}>
                   <span style={{
-                    fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: '4px',
+                    fontSize: '0.65rem', fontWeight: 700, padding: '2px 7px', borderRadius: '4px',
                     background: isInstant ? 'rgba(16,185,129,0.12)' : 'rgba(148,163,184,0.12)',
                     color: isInstant ? '#10b981' : '#94a3b8',
                     border: `1px solid ${isInstant ? 'rgba(16,185,129,0.25)' : 'rgba(148,163,184,0.15)'}`,
+                    whiteSpace: 'nowrap',
+                    display: 'inline-block'
                   }}>
-                    {isInstant ? '⚡ INSTANT DELIVERY' : '🔧 MANUAL (24-48 Hours)'}
+                    {isInstant ? '⚡ INSTANT' : '🔧 MANUAL (24-48h)'}
                   </span>
                 </div>
 
                 <div className="reward-footer">
                   <div className="reward-cost">
                     <img src="/tokens/xo-coin.png" alt="XO Coin" className="xo-coin-icon" />
-                    <span className={coins >= reward.cost ? 'text-gradient' : 'text-disabled'}>{reward.cost} XO</span>
+                    <span className={coins >= reward.cost ? 'text-gradient' : 'text-disabled'}>{reward.cost.toLocaleString()} XO</span>
                   </div>
                   <button
                     className={`btn-primary btn-redeem ${!canAffordAndAvailable ? 'disabled-btn' : ''}`}
@@ -450,7 +452,7 @@ const Redeem = ({ onLoginClick }) => {
 
                 {!outOfStock && coins < reward.cost && (
                   <div className="progress-hint-wrap">
-                    <span className="progress-hint-pill">Need {reward.cost - coins} more XO Coins</span>
+                    <span className="progress-hint-pill">Need {(reward.cost - coins).toLocaleString()} more XO Coins</span>
                   </div>
                 )}
               </div>
