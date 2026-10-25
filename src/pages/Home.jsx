@@ -205,8 +205,9 @@ const Home = () => {
   }, [isPlaying, activeVideoModal, addWatchTime, showNotification]);
 
   const filteredVideos = videos.filter(v => filter === 'all' || v.type === filter);
-  const hasMoreThan11 = filteredVideos.length > 11;
-  const displayedVideos = showAllVideos ? filteredVideos : filteredVideos.slice(0, 11);
+  const initialLimit = 7;
+  const hasMoreVideos = filteredVideos.length > initialLimit;
+  const displayedVideos = showAllVideos ? filteredVideos : filteredVideos.slice(0, initialLimit);
 
   const handleExpandVideos = () => {
     setShowAllVideos(true);
@@ -329,7 +330,9 @@ const Home = () => {
                   : 'Register for Clash Squad & Battle Royale Tournaments with CS & BR Tickets'}
               </p>
             </div>
-            <button className="esports-btn">ENTER ARENA</button>
+            <div className="esports-btn-wrapper">
+              <button className="esports-btn">ENTER ARENA</button>
+            </div>
           </div>
         </div>
       </section>
@@ -479,8 +482,8 @@ const Home = () => {
             </div>
           ))}
 
-          {/* 12th Card: Interactive View All card when there are more than 11 videos */}
-          {!showAllVideos && hasMoreThan11 && (
+          {/* 8th Card: Interactive View All card when there are more videos */}
+          {!showAllVideos && hasMoreVideos && (
             <div 
               className="video-card view-all-card glass-panel group"
               onClick={handleExpandVideos}
@@ -493,7 +496,7 @@ const Home = () => {
                 </div>
                 <h3 className="view-all-title">View All Videos</h3>
                 <p className="view-all-desc">
-                  Explore +{filteredVideos.length - 11} more channel streams & uploads
+                  Explore +{filteredVideos.length - initialLimit} more channel streams & uploads
                 </p>
                 <button 
                   className="btn-view-all" 
@@ -511,14 +514,14 @@ const Home = () => {
         </div>
 
         {/* Show Less option when all videos are expanded */}
-        {showAllVideos && hasMoreThan11 && (
+        {showAllVideos && hasMoreVideos && (
           <div className="collapse-row">
             <button 
               className="btn-collapse-videos"
               onClick={() => setShowAllVideos(false)}
             >
               <ChevronUp size={16} />
-              <span>Show Less (Show 11 videos)</span>
+              <span>Show Less</span>
             </button>
           </div>
         )}

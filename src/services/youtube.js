@@ -91,6 +91,66 @@ export const DEFAULT_FEED = [
     viewers: '210K Views',
     description: 'Best character combinations for dominating Clash Squad ranked matches.'
   },
+  { 
+    id: 'yt_live_4', 
+    type: 'live', 
+    title: '🔴 HAARSH XO 24/7 Subscriber Custom Rooms & Scrims - Come Play!', 
+    duration: 'LIVE', 
+    videoId: 'jfKfPfyJRdk',
+    thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop',
+    viewers: '3.8K Watching',
+    description: 'Open custom rooms for all subscribers. Win free diamonds and tournament tickets live!'
+  },
+  { 
+    id: 'yt_vid_6', 
+    type: 'video', 
+    title: 'Solo vs Squad 28 Kills Bermuda Remastered Gameplay - Grandmaster Lobby', 
+    duration: '19:42', 
+    videoId: '5qap5aO4i9A',
+    thumbnail: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?q=80&w=1470&auto=format&fit=crop',
+    viewers: '95K Views',
+    description: 'Aggressive solo vs squad rush gameplay in high tier Grandmaster rank.'
+  },
+  { 
+    id: 'yt_vid_7', 
+    type: 'video', 
+    title: 'Fastest 360 Gloo Wall Technique & Handcam Guide for Mobile Players', 
+    duration: '11:18', 
+    videoId: '3JZ_D3ELwOQ',
+    thumbnail: 'https://images.unsplash.com/photo-1580234797602-22c37b4a24f0?q=80&w=2067&auto=format&fit=crop',
+    viewers: '180K Views',
+    description: 'Master fast 360 sit-up gloo wall on 2, 3, and 4 finger HUD setups.'
+  },
+  { 
+    id: 'yt_live_5', 
+    type: 'live', 
+    title: '🔴 Sunday Mega Tournament Finals Live Stream - ₹50,000 Prize Pool', 
+    duration: 'LIVE', 
+    videoId: '21X5lGlDOfg',
+    thumbnail: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?q=80&w=2071&auto=format&fit=crop',
+    viewers: '4.5K Watching',
+    description: 'Official tournament grand finals live casting with top esports teams.'
+  },
+  { 
+    id: 'yt_vid_8', 
+    type: 'video', 
+    title: 'Top 5 Mistakes Players Make in Clash Squad Ranked That Get You Knocked', 
+    duration: '13:50', 
+    videoId: 'fJ9rUzIMcZQ',
+    thumbnail: 'https://images.unsplash.com/photo-1538481199705-c710c4e965fc?q=80&w=2165&auto=format&fit=crop',
+    viewers: '140K Views',
+    description: 'Fix these common positioning mistakes to maintain a high win streak in CS.'
+  },
+  { 
+    id: 'yt_vid_9', 
+    type: 'video', 
+    title: 'Desert Eagle One-Tap Headshot Mastery Guide (DPI & Sensitivity Secret)', 
+    duration: '15:10', 
+    videoId: 'kJQP7kiw5Fk',
+    thumbnail: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop',
+    viewers: '230K Views',
+    description: 'Secret drag sensitivity and timing to land consistent Desert Eagle one-taps.'
+  }
 ];
 
 // API key must be set in .env as VITE_YOUTUBE_API_KEY (never hardcode here)

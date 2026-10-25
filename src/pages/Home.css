@@ -828,6 +828,12 @@
   font-size: 0.95rem;
 }
 
+.esports-btn-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .esports-btn {
   background: linear-gradient(135deg, #f59e0b 0%, #10b981 100%);
   color: #0b0c10;
@@ -839,6 +845,10 @@
   cursor: pointer;
   letter-spacing: 1px;
   transition: all 0.3s ease;
+  margin: 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .esports-btn:hover {
@@ -899,12 +909,20 @@
   padding: 0.4rem;
   border-radius: 12px;
   border: 1px solid var(--glass-border);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.filter-group::-webkit-scrollbar {
+  display: none;
 }
 
 .filter-icon {
   color: var(--text-muted);
   margin-left: 0.5rem;
+  flex-shrink: 0;
 }
 
 .filter-btn {
@@ -2157,6 +2175,34 @@
 @media (max-width: 768px) {
   .home-page {
     gap: 1.25rem;
+  }
+
+  .esports-card-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.25rem;
+  }
+
+  .esports-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .esports-badge-row {
+    justify-content: center;
+  }
+
+  .esports-btn-wrapper {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .esports-btn {
+    width: 100%;
+    max-width: 260px;
+    justify-content: center;
   }
 
   .hero-section {

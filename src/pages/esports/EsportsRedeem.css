@@ -106,14 +106,24 @@
   background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.35) 20%, rgba(245, 158, 11, 0.35) 80%, transparent);
 }
 
-/* Filter Group */
 .esports-redeem .redeem-filters {
   display: flex;
   gap: 0.6rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0.2rem 0;
+  width: 100%;
+}
+
+.esports-redeem .redeem-filters::-webkit-scrollbar {
+  display: none;
 }
 
 .esports-redeem .filter-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text-muted);
@@ -292,19 +302,25 @@
 .esports-redeem .r-image-container {
   position: relative;
   width: 100%;
-  height: 155px;
+  height: 135px;
   overflow: hidden;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
 }
 
 .esports-redeem .r-item-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
+  max-height: 115px;
+  object-fit: contain;
+  transition: transform 0.3s ease;
 }
 
 .esports-redeem .redeem-card:hover .r-item-image {
-  transform: scale(1.08);
+  transform: scale(1.05);
 }
 
 /* Badge: top-left, amber color like main site */
@@ -322,25 +338,33 @@
 }
 
 .esports-redeem .r-item-details {
-  padding: 1.15rem;
+  padding: 0.85rem 1rem;
   display: flex;
   flex-direction: column;
   flex: 1;
 }
 
+.esports-redeem .r-item-name,
 .esports-redeem .r-item-title {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: #fff;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .esports-redeem .r-item-desc {
   color: var(--text-muted);
-  font-size: 0.82rem;
-  line-height: 1.45;
-  margin-bottom: 0.9rem;
-  flex: 1;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  margin-bottom: 0.6rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Footer: cost left, button right — same as main site */

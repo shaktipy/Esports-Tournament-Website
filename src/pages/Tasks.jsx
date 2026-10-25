@@ -154,21 +154,24 @@ const Tasks = () => {
             onClick={() => setActiveTab('daily')}
           >
             <span className="tab-dot daily-dot"></span>
-            🟣 Daily Missions
+            <span className="tab-label-title">Daily</span>
+            <span className="tab-label-sub">Missions</span>
           </button>
           <button 
             className={`tab-btn weekly-tab ${activeTab === 'weekly' ? 'active' : ''}`}
             onClick={() => setActiveTab('weekly')}
           >
             <span className="tab-dot weekly-dot"></span>
-            🔵 Weekly Missions
+            <span className="tab-label-title">Weekly</span>
+            <span className="tab-label-sub">Missions</span>
           </button>
           <button 
             className={`tab-btn monthly-tab ${activeTab === 'monthly' ? 'active' : ''}`}
             onClick={() => setActiveTab('monthly')}
           >
             <span className="tab-dot monthly-dot"></span>
-            🟡 Monthly Missions
+            <span className="tab-label-title">Monthly</span>
+            <span className="tab-label-sub">Missions</span>
           </button>
         </div>
       </div>

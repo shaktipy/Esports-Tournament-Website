@@ -225,19 +225,19 @@ const EsportsHome = () => {
             className={`esports-filter-btn ${filter === 'all' ? 'active' : ''}`}
             onClick={() => setFilter('all')}
           >
-            All Tournaments
+            ALL
           </button>
           <button 
             className={`esports-filter-btn ${filter === 'cs' ? 'active' : ''}`}
             onClick={() => setFilter('cs')}
           >
-            Clash Squad (CS)
+            CS
           </button>
           <button 
             className={`esports-filter-btn ${filter === 'br' ? 'active' : ''}`}
             onClick={() => setFilter('br')}
           >
-            Battle Royale (BR)
+            BR
           </button>
         </div>
       </div>
