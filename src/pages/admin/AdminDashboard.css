@@ -3372,6 +3372,202 @@
   }
 }
 
+/* ─── Admin Giveaway Missions Builder ───────────────────────────────────── */
+.ag-missions-preview {
+  margin: 10px 0 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
+.ag-mp-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
 
+.ag-mp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
 
+.ag-mp-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.ag-mp-tag.youtube_subscribe {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.ag-mp-tag.instagram_follow {
+  background: rgba(236, 72, 153, 0.15);
+  border-color: rgba(236, 72, 153, 0.35);
+  color: #f472b6;
+}
+
+.ag-mp-tag.watch_live {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.ag-mp-tag.watch_video {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.ag-mp-tag.share {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+}
+
+.ag-mp-tag.more {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+
+.admin-missions-section {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 16px;
+  margin-top: 10px;
+}
+
+.missions-section-header {
+  margin-bottom: 12px;
+}
+
+.missions-header-label {
+  font-size: 0.95rem !important;
+  font-weight: 800 !important;
+  color: #f8fafc !important;
+}
+
+.missions-header-sub {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin: 2px 0 0 0;
+}
+
+.mission-presets-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  margin-bottom: 14px;
+}
+
+.presets-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.btn-preset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-preset-chip:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.btn-preset-chip.yt:hover { background: rgba(239, 68, 68, 0.25); border-color: #ef4444; color: #fca5a5; }
+.btn-preset-chip.ig:hover { background: rgba(236, 72, 153, 0.25); border-color: #ec4899; color: #f472b6; }
+.btn-preset-chip.live:hover { background: rgba(239, 68, 68, 0.25); border-color: #f87171; color: #fca5a5; }
+.btn-preset-chip.vid:hover { background: rgba(245, 158, 11, 0.25); border-color: #f59e0b; color: #fde68a; }
+.btn-preset-chip.share:hover { background: rgba(59, 130, 246, 0.25); border-color: #3b82f6; color: #bfdbfe; }
+.btn-preset-chip.custom:hover { background: rgba(16, 185, 129, 0.25); border-color: #10b981; color: #a7f3d0; }
+
+.admin-missions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-mission-card {
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mission-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mission-index-badge {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #38bdf8;
+  letter-spacing: 0.3px;
+}
+
+.btn-mission-del {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-mission-del:hover {
+  background: rgba(239, 68, 68, 0.28);
+  color: #fca5a5;
+}
+
+.empty-missions-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px dashed rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  color: #fbbf24;
+  font-size: 0.8rem;
+}

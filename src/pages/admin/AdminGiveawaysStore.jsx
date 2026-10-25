@@ -4,8 +4,33 @@ import ImageUploadField from '../../components/ImageUploadField';
 import { 
   Gift, ShoppingBag, Plus, Edit, Trash2, 
   Sparkles, Award, CheckCircle2, X, Dice5, Coins, Ticket,
-  Globe, Swords, Users, Lock, AlertCircle
+  Globe, Swords, Users, Lock, AlertCircle,
+  Youtube, Instagram, Radio, Video, Share2, Link2, Clock, ExternalLink
 } from 'lucide-react';
+
+const DEFAULT_GIVEAWAY_REQUIREMENTS = [
+  {
+    id: 'req_yt',
+    type: 'youtube_subscribe',
+    text: 'Subscribe to HAARSH XO on YouTube',
+    url: 'https://www.youtube.com/@HaarshXO?sub_confirmation=1',
+    durationMinutes: 0
+  },
+  {
+    id: 'req_ig',
+    type: 'instagram_follow',
+    text: 'Follow @haarshxo on Instagram',
+    url: 'https://www.instagram.com/haarshxo?stkn=dnJza2k1cHVoMzFw',
+    durationMinutes: 0
+  },
+  {
+    id: 'req_share',
+    type: 'share',
+    text: 'Share this giveaway with friends',
+    url: '',
+    durationMinutes: 0
+  }
+];
 
 const AdminGiveawaysStore = () => {
   const { 
@@ -44,6 +69,7 @@ const AdminGiveawaysStore = () => {
     daysLeft: 7,
     status: 'open',
     image: '',
+    requirements: DEFAULT_GIVEAWAY_REQUIREMENTS
   });
 
   // Store Rewards modal state
@@ -79,12 +105,38 @@ const AdminGiveawaysStore = () => {
       image: defaultCategory === 'esports' 
         ? '/tokens/cs-ticket.png' 
         : 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop',
+      requirements: DEFAULT_GIVEAWAY_REQUIREMENTS.map(m => ({ 
+        ...m, 
+        id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 4)}` 
+      }))
     });
     setShowGiveawayModal(true);
   };
 
   const openEditGiveaway = (g) => {
     setEditingGiveaway(g);
+    const existingReqs = Array.isArray(g.requirements) && g.requirements.length > 0
+      ? g.requirements.map((r, i) => {
+          if (typeof r === 'string') {
+            return {
+              id: `req_${i}`,
+              type: 'custom_link',
+              text: r,
+              url: '',
+              durationMinutes: 0
+            };
+          }
+          return {
+            id: r.id || `req_${i}`,
+            type: r.type || 'youtube_subscribe',
+            text: r.text || 'Mission task',
+            url: r.url || '',
+            videoId: r.videoId || '',
+            durationMinutes: Number(r.durationMinutes) || 0
+          };
+        })
+      : DEFAULT_GIVEAWAY_REQUIREMENTS;
+
     setGiveawayForm({
       title: g.title,
       prize: g.prize,
@@ -92,8 +144,104 @@ const AdminGiveawaysStore = () => {
       daysLeft: g.daysLeft || 7,
       status: g.status || (g.winner ? 'completed' : 'open'),
       image: g.image || '',
+      requirements: existingReqs
     });
     setShowGiveawayModal(true);
+  };
+
+  const handleAddMission = (presetType = 'youtube_subscribe') => {
+    let newMission = {
+      id: `req_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      type: presetType,
+      text: '',
+      url: '',
+      videoId: '',
+      durationMinutes: 0
+    };
+
+    if (presetType === 'youtube_subscribe') {
+      newMission.text = 'Subscribe to HAARSH XO on YouTube';
+      newMission.url = 'https://www.youtube.com/@HaarshXO?sub_confirmation=1';
+    } else if (presetType === 'instagram_follow') {
+      newMission.text = 'Follow @haarshxo on Instagram';
+      newMission.url = 'https://www.instagram.com/haarshxo?stkn=dnJza2k1cHVoMzFw';
+    } else if (presetType === 'share') {
+      newMission.text = 'Share this giveaway with friends';
+    } else if (presetType === 'watch_live') {
+      newMission.text = "Watch today's Live Stream for 15 mins";
+      newMission.durationMinutes = 15;
+      newMission.url = 'https://www.youtube.com/@HaarshXO/live';
+    } else if (presetType === 'watch_video') {
+      newMission.text = 'Watch latest highlight video for 5 mins';
+      newMission.durationMinutes = 5;
+      newMission.videoId = 'jfKfPfyJRdk';
+      newMission.url = 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
+    } else {
+      newMission.type = 'custom_link';
+      newMission.text = 'Visit official partner website';
+      newMission.url = 'https://';
+    }
+
+    setGiveawayForm(prev => ({
+      ...prev,
+      requirements: [...(prev.requirements || []), newMission]
+    }));
+  };
+
+  const handleUpdateMission = (index, field, value) => {
+    setGiveawayForm(prev => {
+      const updated = [...(prev.requirements || [])];
+      const target = { ...updated[index], [field]: value };
+
+      // Auto set text and URLs when type changes
+      if (field === 'type') {
+        if (value === 'youtube_subscribe') {
+          target.text = 'Subscribe to HAARSH XO on YouTube';
+          target.url = 'https://www.youtube.com/@HaarshXO?sub_confirmation=1';
+          target.durationMinutes = 0;
+        } else if (value === 'instagram_follow') {
+          target.text = 'Follow @haarshxo on Instagram';
+          target.url = 'https://www.instagram.com/haarshxo?stkn=dnJza2k1cHVoMzFw';
+          target.durationMinutes = 0;
+        } else if (value === 'share') {
+          target.text = 'Share this giveaway with friends';
+          target.url = '';
+          target.durationMinutes = 0;
+        } else if (value === 'watch_live') {
+          target.durationMinutes = target.durationMinutes || 10;
+          target.text = `Watch today's Live Stream for ${target.durationMinutes} mins`;
+          target.url = target.url || 'https://www.youtube.com/@HaarshXO/live';
+        } else if (value === 'watch_video') {
+          target.durationMinutes = target.durationMinutes || 5;
+          target.text = `Watch latest video for ${target.durationMinutes} mins`;
+          target.videoId = target.videoId || 'jfKfPfyJRdk';
+          target.url = target.url || 'https://www.youtube.com/watch?v=jfKfPfyJRdk';
+        } else if (value === 'custom_link') {
+          target.text = target.text || 'Visit partner link';
+          target.durationMinutes = 0;
+        }
+      }
+
+      if (field === 'durationMinutes') {
+        const mins = Number(value) || 1;
+        target.durationMinutes = mins;
+        if (target.type === 'watch_live') {
+          target.text = `Watch today's Live Stream for ${mins} mins`;
+        } else if (target.type === 'watch_video') {
+          target.text = `Watch latest video for ${mins} mins`;
+        }
+      }
+
+      updated[index] = target;
+      return { ...prev, requirements: updated };
+    });
+  };
+
+  const handleRemoveMission = (index) => {
+    setGiveawayForm(prev => ({
+      ...prev,
+      requirements: (prev.requirements || []).filter((_, i) => i !== index)
+    }));
   };
 
   const handleSaveGiveaway = (e) => {
@@ -259,6 +407,27 @@ const AdminGiveawaysStore = () => {
               >
                 Done
               </button>
+            </div>
+          </div>
+
+          {/* Missions Preview */}
+          <div className="ag-missions-preview">
+            <span className="ag-mp-label">🎯 {((g.requirements && g.requirements.length > 0) ? g.requirements : DEFAULT_GIVEAWAY_REQUIREMENTS).length} Entry Missions:</span>
+            <div className="ag-mp-tags">
+              {((g.requirements && g.requirements.length > 0) ? g.requirements : DEFAULT_GIVEAWAY_REQUIREMENTS).slice(0, 4).map((r, i) => (
+                <span key={i} className={`ag-mp-tag ${r.type || 'generic'}`}>
+                  {r.type === 'youtube_subscribe' && '🔴 YT Sub'}
+                  {r.type === 'instagram_follow' && '📸 Instagram'}
+                  {r.type === 'watch_live' && `🔴 Live ${r.durationMinutes || 10}m`}
+                  {r.type === 'watch_video' && `📹 Vid ${r.durationMinutes || 5}m`}
+                  {r.type === 'share' && '📲 Share'}
+                  {r.type === 'custom_link' && '🔗 Link'}
+                  {!r.type && (typeof r === 'string' ? r.substring(0, 15) : 'Task')}
+                </span>
+              ))}
+              {((g.requirements && g.requirements.length > 0) ? g.requirements : DEFAULT_GIVEAWAY_REQUIREMENTS).length > 4 && (
+                <span className="ag-mp-tag more">+more</span>
+              )}
             </div>
           </div>
 
@@ -735,6 +904,159 @@ const AdminGiveawaysStore = () => {
                 value={giveawayForm.image}
                 onChange={(val) => setGiveawayForm({ ...giveawayForm, image: val })}
               />
+
+              {/* ─── Giveaway Entry Missions Builder ─────────────────── */}
+              <div className="form-group admin-missions-section">
+                <div className="missions-section-header">
+                  <div>
+                    <label className="missions-header-label">🎯 Giveaway Entry Missions &amp; Tasks ({giveawayForm.requirements?.length || 0})</label>
+                    <p className="missions-header-sub">Configure required actions users must complete before entering the giveaway draw.</p>
+                  </div>
+                </div>
+
+                {/* Quick Add Presets Bar */}
+                <div className="mission-presets-bar">
+                  <span className="presets-label">Quick Add:</span>
+                  <button type="button" className="btn-preset-chip yt" onClick={() => handleAddMission('youtube_subscribe')}>
+                    <Youtube size={12} /> + YouTube Sub
+                  </button>
+                  <button type="button" className="btn-preset-chip ig" onClick={() => handleAddMission('instagram_follow')}>
+                    <Instagram size={12} /> + Instagram Follow
+                  </button>
+                  <button type="button" className="btn-preset-chip live" onClick={() => handleAddMission('watch_live')}>
+                    <Radio size={12} /> + Live Stream Watch
+                  </button>
+                  <button type="button" className="btn-preset-chip vid" onClick={() => handleAddMission('watch_video')}>
+                    <Video size={12} /> + Video Watch
+                  </button>
+                  <button type="button" className="btn-preset-chip share" onClick={() => handleAddMission('share')}>
+                    <Share2 size={12} /> + Share
+                  </button>
+                  <button type="button" className="btn-preset-chip custom" onClick={() => handleAddMission('custom_link')}>
+                    <Link2 size={12} /> + Custom Link
+                  </button>
+                </div>
+
+                {/* Missions List */}
+                <div className="admin-missions-list">
+                  {giveawayForm.requirements?.map((m, idx) => (
+                    <div key={m.id || idx} className="admin-mission-card">
+                      <div className="mission-card-top">
+                        <span className="mission-index-badge">
+                          Mission #{idx + 1}: {
+                            m.type === 'youtube_subscribe' ? '🔴 YouTube Subscribe' :
+                            m.type === 'instagram_follow' ? '📸 Instagram Follow' :
+                            m.type === 'watch_live' ? `🔴 Watch Live (${m.durationMinutes || 10}m)` :
+                            m.type === 'watch_video' ? `📹 Watch Video (${m.durationMinutes || 5}m)` :
+                            m.type === 'share' ? '📲 Share Giveaway' : '🔗 Custom Link'
+                          }
+                        </span>
+                        <button 
+                          type="button" 
+                          className="btn-mission-del" 
+                          onClick={() => handleRemoveMission(idx)} 
+                          title="Delete mission"
+                        >
+                          <Trash2 size={13} /> Remove
+                        </button>
+                      </div>
+
+                      <div className="form-row-2">
+                        <div className="form-group">
+                          <label>Mission Type</label>
+                          <select
+                            value={m.type || 'youtube_subscribe'}
+                            onChange={e => handleUpdateMission(idx, 'type', e.target.value)}
+                          >
+                            <option value="youtube_subscribe">🔴 YouTube Channel Subscribe</option>
+                            <option value="instagram_follow">📸 Instagram Profile Follow</option>
+                            <option value="watch_live">🔴 Watch Live Stream (Set Mins)</option>
+                            <option value="watch_video">📹 Watch YouTube Video (Set Mins)</option>
+                            <option value="share">📲 Share Giveaway (Native App Share)</option>
+                            <option value="custom_link">🔗 Custom Link / Website Visit</option>
+                          </select>
+                        </div>
+
+                        {(m.type === 'watch_live' || m.type === 'watch_video') ? (
+                          <div className="form-group">
+                            <label>Required Watch Duration (Minutes) *</label>
+                            <input
+                              type="number"
+                              min="1"
+                              max="180"
+                              value={m.durationMinutes || (m.type === 'watch_live' ? 10 : 5)}
+                              onChange={e => handleUpdateMission(idx, 'durationMinutes', e.target.value)}
+                            />
+                          </div>
+                        ) : (
+                          <div className="form-group">
+                            <label>Verification Method</label>
+                            <input
+                              type="text"
+                              disabled
+                              value={
+                                m.type === 'youtube_subscribe' ? 'Auto-open Channel + 30s Countdown' :
+                                m.type === 'instagram_follow' ? 'Auto-open Profile + 30s Countdown' :
+                                m.type === 'share' ? 'Web Share Dialog (WhatsApp/Insta/etc.)' :
+                                'Open Link + 30s Countdown'
+                              }
+                              style={{ opacity: 0.75, cursor: 'not-allowed' }}
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="form-group">
+                        <label>Mission Text (Shown to Users) *</label>
+                        <input
+                          type="text"
+                          required
+                          value={m.text}
+                          onChange={e => handleUpdateMission(idx, 'text', e.target.value)}
+                          placeholder="e.g. Subscribe to HAARSH XO on YouTube"
+                        />
+                      </div>
+
+                      {(m.type === 'watch_video' || m.type === 'watch_live' || m.type === 'custom_link') && (
+                        <div className="form-group">
+                          <label>
+                            {m.type === 'watch_video' ? 'YouTube Video URL or Video ID (Leave empty for default latest video)' :
+                             m.type === 'watch_live' ? 'Live Stream URL (Leave empty for official channel live stream)' :
+                             'Target Action URL *'}
+                          </label>
+                          <input
+                            type="text"
+                            value={m.url || m.videoId || ''}
+                            onChange={e => {
+                              const val = e.target.value;
+                              if (m.type === 'watch_video') {
+                                handleUpdateMission(idx, 'url', val);
+                                const match = val.match(/(?:youtu\.be\/|v=|\/embed\/)([^&?/\s]+)/);
+                                if (match) handleUpdateMission(idx, 'videoId', match[1]);
+                                else if (!val.includes('/') && val.length > 5) handleUpdateMission(idx, 'videoId', val);
+                              } else {
+                                handleUpdateMission(idx, 'url', val);
+                              }
+                            }}
+                            placeholder={
+                              m.type === 'watch_video' ? 'e.g. https://www.youtube.com/watch?v=5qap5aO4i9A or Video ID' :
+                              m.type === 'watch_live' ? 'e.g. https://www.youtube.com/@HaarshXO/live' :
+                              'https://...'
+                            }
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {(!giveawayForm.requirements || giveawayForm.requirements.length === 0) && (
+                    <div className="empty-missions-alert">
+                      <AlertCircle size={16} />
+                      <span>No missions configured. Click Quick Add above to add missions.</span>
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <div className="modal-actions">
                 <button type="button" className="admin-btn btn-secondary" onClick={() => setShowGiveawayModal(false)}>
