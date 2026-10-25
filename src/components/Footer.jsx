@@ -28,7 +28,7 @@ const Footer = () => {
                 <span>YouTube</span>
               </a>
               <a
-                href="https://www.instagram.com/haarsh_xo"
+                href="https://www.instagram.com/haarshxo?stkn=dnJza2k1cHVoMzFw"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="footer-social-link ig"

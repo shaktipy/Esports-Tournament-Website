@@ -491,7 +491,7 @@ export const INITIAL_GIVEAWAYS = [
     participantsList: [],
     requirements: [
       { id: 'req1', text: 'Subscribe to HAARSH XO on YouTube', completed: true },
-      { id: 'req2', text: 'Follow @haarsh_xo on Instagram', completed: false },
+      { id: 'req2', text: 'Follow @haarshxo on Instagram', completed: false },
       { id: 'req3', text: 'Share this live stream giveaway', completed: false }
     ],
     image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop',

@@ -6,7 +6,7 @@ import './EsportsGiveaways.css';
 
 const DEFAULT_ESPORTS_REQUIREMENTS = [
   { id: 'er1', text: 'Subscribe to HAARSH XO on YouTube', completed: false, icon: <Youtube size={15} /> },
-  { id: 'er2', text: 'Follow @haarsh_xo on Instagram', completed: false, icon: <Instagram size={15} /> },
+  { id: 'er2', text: 'Follow @haarshxo on Instagram', completed: false, icon: <Instagram size={15} /> },
   { id: 'er3', text: 'Share this giveaway post', completed: false, icon: <Share2 size={15} /> }
 ];
 
@@ -60,7 +60,20 @@ const EsportsGiveaways = () => {
     return !!defaultCompleted;
   };
 
-  const toggleRequirement = (gId, reqId) => {
+  const toggleRequirement = (gId, req) => {
+    const reqId = req.id || req;
+    if (req.type === 'youtube_subscribe') {
+      window.open(req.url || 'https://www.youtube.com/@HaarshXO?sub_confirmation=1', '_blank');
+    } else if (req.type === 'instagram_follow') {
+      window.open(req.url || 'https://www.instagram.com/haarshxo?stkn=dnJza2k1cHVoMzFw', '_blank');
+    } else if (req.type === 'share') {
+      if (navigator.share) {
+        navigator.share({ title: 'HAARSH XO Esports Giveaway', url: window.location.href }).catch(() => {});
+      }
+    } else if (req.url) {
+      window.open(req.url, '_blank');
+    }
+
     setTaskCompletedOverrides(prev => ({
       ...prev,
       [gId]: { ...(prev[gId] || {}), [reqId]: true }
@@ -207,7 +220,7 @@ const EsportsGiveaways = () => {
                         <li
                           key={req.id}
                           className={`eg-req-item ${done ? 'done' : ''}`}
-                          onClick={() => !done && toggleRequirement(giveaway.id, req.id)}
+                          onClick={() => !done && toggleRequirement(giveaway.id, req)}
                         >
                           <span className="eg-req-icon">
                             {done ? <CheckCircle2 size={15} /> : (req.icon || <Sparkles size={15} />)}
