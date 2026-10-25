@@ -643,6 +643,23 @@
   gap: 1rem;
 }
 
+.feed-header-bar .filter-group {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+
+.feed-header-bar .filter-btn {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
 .feed-header-left {
   display: flex;
   align-items: center;

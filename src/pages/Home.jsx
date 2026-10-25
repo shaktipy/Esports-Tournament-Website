@@ -79,12 +79,10 @@ const Home = () => {
   const wheelAvailable = wheelSpinData.lastSpinDate !== today;
   const claimedThisMonthCount = (loginStreak.claimedDaysThisMonth || []).length;
 
-  // Load channel videos on mount (real-time sync if credentials exist)
+  // Load channel videos on mount (real-time sync via backend feed or credentials)
   useEffect(() => {
     const creds = getStoredCredentials();
-    if (creds.apiKey && creds.channelId) {
-      handleSyncChannel(creds.apiKey, creds.channelId, false);
-    }
+    handleSyncChannel(creds.apiKey, creds.channelId, false);
   }, []);
 
   // Sync real-time YouTube Channel Feed

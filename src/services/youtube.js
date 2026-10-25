@@ -223,6 +223,25 @@ function parseDurationSeconds(isoDuration) {
  * Fetches real-time channel videos and live status using YouTube Data API v3
  */
 export const fetchRealtimeChannelVideos = async (apiKey, channelId) => {
+  // 1. Try server-side cached YouTube feed first (secure, quota-efficient, 80+ videos)
+  try {
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || '';
+    const serverRes = await fetch(`${backendUrl}/api/youtube/videos`);
+    if (serverRes.ok) {
+      const serverData = await serverRes.json();
+      if (serverData.connected && Array.isArray(serverData.videos) && serverData.videos.length > 0) {
+        return {
+          connected: true,
+          videos: serverData.videos,
+          message: `Synchronized ${serverData.videos.length} channel streams & videos!`
+        };
+      }
+    }
+  } catch (serverErr) {
+    console.warn('Server YouTube feed endpoint unavailable, trying direct fetch:', serverErr);
+  }
+
+  // 2. Fallback to client-side direct fetch if credentials provided
   if (!apiKey || !channelId) {
     return {
       connected: false,

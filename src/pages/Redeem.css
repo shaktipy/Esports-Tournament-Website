@@ -147,14 +147,14 @@
 }
 
 .redeem-filters {
-  display: flex;
+  display: flex !important;
   align-items: center;
-  gap: 0.5rem;
-  flex-wrap: nowrap;
-  overflow-x: auto;
+  gap: 0.6rem;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding: 0.2rem 0;
+  padding: 0.25rem 0;
   width: 100%;
 }
 
@@ -163,8 +163,35 @@
 }
 
 .redeem-filters .filter-btn {
-  white-space: nowrap;
-  flex-shrink: 0;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.redeem-filters .filter-btn:hover {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.4);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.redeem-filters .filter-btn.active {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(168, 85, 247, 0.35);
 }
 
 /* 4 cards per row grid on desktop, 2 cards per row on mobile */
@@ -347,20 +374,19 @@
 .reward-image-container {
   position: relative;
   width: 100%;
-  height: 135px;
+  height: 145px;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.45);
+  background: linear-gradient(180deg, rgba(20, 24, 33, 0.9) 0%, rgba(10, 12, 18, 0.95) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px;
 }
 
 .reward-image {
   width: 100%;
   height: 100%;
-  max-height: 115px;
-  object-fit: contain;
+  object-fit: cover;
+  object-position: center;
   transition: transform 0.3s ease;
 }
 

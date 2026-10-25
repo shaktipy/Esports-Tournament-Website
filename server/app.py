@@ -752,6 +752,210 @@ def manage_contact_request(req_id):
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+# ─── YouTube Official Channel Feed API (Cached) ──────────────────────────────
+YOUTUBE_CACHE = {
+    "timestamp": 0,
+    "videos": []
+}
+
+def _parse_iso_duration(iso_duration: str) -> str:
+    if not iso_duration:
+        return "10:00"
+    import re
+    m = re.match(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", iso_duration)
+    if not m:
+        return "10:00"
+    h = int(m.group(1) or 0)
+    mn = int(m.group(2) or 0)
+    s = int(m.group(3) or 0)
+    if h > 0:
+        return f"{h}:{mn:02d}:{s:02d}"
+    return f"{mn}:{s:02d}"
+
+def _duration_seconds(iso_duration: str) -> int:
+    if not iso_duration:
+        return 0
+    import re
+    m = re.match(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", iso_duration)
+    if not m:
+        return 0
+    return int(m.group(1) or 0) * 3600 + int(m.group(2) or 0) * 60 + int(m.group(3) or 0)
+
+def _format_view_count(views) -> str:
+    try:
+        cnt = int(views)
+        if cnt >= 1_000_000:
+            return f"{cnt / 1_000_000:.1f}M Views"
+        if cnt >= 1_000:
+            return f"{round(cnt / 1_000)}K Views"
+        return f"{cnt} Views"
+    except Exception:
+        return "0 Views"
+
+@app.route("/api/youtube/videos", methods=["GET"])
+def get_channel_videos():
+    """Fetch official HAARSH XO channel videos with 15-minute server caching."""
+    import time
+    import urllib.request
+    import html as html_parser
+    import re
+
+    now = time.time()
+    # Cache for 15 minutes (900 seconds)
+    if YOUTUBE_CACHE["videos"] and (now - YOUTUBE_CACHE["timestamp"]) < 900:
+        return jsonify({
+            "connected": True,
+            "cached": True,
+            "count": len(YOUTUBE_CACHE["videos"]),
+            "videos": YOUTUBE_CACHE["videos"],
+        }), 200
+
+    api_key = os.getenv("YOUTUBE_API_KEY") or os.getenv("VITE_YOUTUBE_API_KEY", "").strip()
+    channel_id = os.getenv("YOUTUBE_CHANNEL_ID") or os.getenv("VITE_YOUTUBE_CHANNEL_ID", "UCn46HBkf6RSZTV9tj3cqVBg").strip()
+
+    if not api_key:
+        return jsonify({
+            "connected": False,
+            "message": "No YouTube API key configured on server.",
+            "videos": []
+        }), 200
+
+    try:
+        uploads_id = "UU" + channel_id[2:] if channel_id.startswith("UC") else channel_id
+        raw_items = []
+        next_token = None
+        base_playlist_url = f"https://www.googleapis.com/youtube/v3/playlistItems?key={api_key}&playlistId={uploads_id}&part=snippet,contentDetails&maxResults=50"
+
+        # Fetch up to 3 pages (up to 150 items)
+        for _ in range(3):
+            p_url = f"{base_playlist_url}&pageToken={next_token}" if next_token else base_playlist_url
+            req = urllib.request.Request(p_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode())
+                items = data.get("items", [])
+                raw_items.extend(items)
+                next_token = data.get("nextPageToken")
+                if not next_token or len(items) == 0:
+                    break
+
+        video_ids = [
+            it.get("contentDetails", {}).get("videoId") or it.get("snippet", {}).get("resourceId", {}).get("videoId")
+            for it in raw_items
+        ]
+        video_ids = [v for v in video_ids if v]
+
+        if not video_ids:
+            return jsonify({
+                "connected": True,
+                "message": "No videos found in uploads playlist.",
+                "videos": []
+            }), 200
+
+        # Fetch details in batches of 50
+        details_map = {}
+        for i in range(0, len(video_ids), 50):
+            chunk = video_ids[i:i + 50]
+            ids_str = ",".join(chunk)
+            det_url = f"https://www.googleapis.com/youtube/v3/videos?key={api_key}&id={ids_str}&part=contentDetails,statistics,snippet,liveStreamingDetails"
+            req = urllib.request.Request(det_url, headers={"User-Agent": "Mozilla/5.0"})
+            try:
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    det_data = json.loads(resp.read().decode())
+                    for item in det_data.get("items", []):
+                        details_map[item["id"]] = item
+            except Exception as err:
+                print(f"[YouTube API] Error fetching batch details: {err}")
+
+        parsed_videos = []
+        seen_ids = set()
+
+        for idx, vid in enumerate(video_ids):
+            if vid in seen_ids:
+                continue
+            seen_ids.add(vid)
+
+            detail = details_map.get(vid)
+            if not detail:
+                continue
+
+            snippet = detail.get("snippet", {})
+            content_details = detail.get("contentDetails", {})
+            statistics = detail.get("statistics", {})
+            live_details = detail.get("liveStreamingDetails")
+
+            duration_iso = content_details.get("duration", "")
+            total_sec = _duration_seconds(duration_iso)
+
+            # Exclude YouTube Shorts (<= 60 seconds)
+            if 0 < total_sec <= 60:
+                continue
+
+            is_live_now = snippet.get("liveBroadcastContent") == "live"
+            was_stream = bool(live_details) or is_live_now or bool(re.search(r"live|stream|🔴", snippet.get("title", ""), re.IGNORECASE))
+            formatted_duration = "LIVE NOW" if is_live_now else _parse_iso_duration(duration_iso)
+
+            thumbs = snippet.get("thumbnails", {})
+            thumb_url = (
+                thumbs.get("maxres", {}).get("url")
+                or thumbs.get("high", {}).get("url")
+                or thumbs.get("medium", {}).get("url")
+                or f"https://i.ytimg.com/vi/{vid}/hqdefault.jpg"
+            )
+
+            raw_title = snippet.get("title", "HAARSH XO Stream")
+            clean_title = html_parser.unescape(raw_title)
+
+            view_count_str = "LIVE"
+            if is_live_now and live_details and live_details.get("concurrentViewers"):
+                view_count_str = f"{_format_view_count(live_details['concurrentViewers']).replace('Views', 'Watching')}"
+            else:
+                view_count_str = _format_view_count(statistics.get("viewCount", "0"))
+
+            parsed_videos.append({
+                "id": f"yt_{vid}_{idx}",
+                "type": "live" if was_stream else "video",
+                "isLiveNow": is_live_now,
+                "wasStream": was_stream,
+                "badgeText": "🔴 LIVE NOW" if is_live_now else ("🔴 LIVE STREAM" if was_stream else "📹 VIDEO"),
+                "title": clean_title,
+                "duration": formatted_duration,
+                "videoId": vid,
+                "thumbnail": thumb_url,
+                "viewers": view_count_str,
+                "description": snippet.get("description") or "HAARSH XO Free Fire content.",
+            })
+
+        # Sort: actively live streams first, then recent uploads
+        parsed_videos.sort(key=lambda x: (not x["isLiveNow"]))
+
+        YOUTUBE_CACHE["timestamp"] = now
+        YOUTUBE_CACHE["videos"] = parsed_videos
+
+        return jsonify({
+            "connected": True,
+            "cached": False,
+            "count": len(parsed_videos),
+            "videos": parsed_videos
+        }), 200
+
+    except Exception as e:
+        print(f"[YouTube API] Error: {e}")
+        # If cache exists from prior fetch, return it even if expired
+        if YOUTUBE_CACHE["videos"]:
+            return jsonify({
+                "connected": True,
+                "cached": True,
+                "count": len(YOUTUBE_CACHE["videos"]),
+                "videos": YOUTUBE_CACHE["videos"],
+                "warning": str(e)
+            }), 200
+        return jsonify({
+            "connected": False,
+            "error": str(e),
+            "videos": []
+        }), 500
+
+
 # ─── Run ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     if sys.stdout.encoding != 'utf-8':
