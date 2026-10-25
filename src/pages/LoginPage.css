@@ -1,0 +1,179 @@
+/* ============================================
+   LOGIN PAGE — Full-screen authentication wall
+   ============================================ */
+
+.login-page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(102, 252, 241, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 80% 90%, rgba(255, 170, 0, 0.07) 0%, transparent 60%),
+    var(--bg-color, #0b0c10);
+}
+
+/* ── Animated particles ── */
+.lp-bg-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.lp-particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0;
+  animation: lpFloat calc(6s + var(--i, 0) * 0.7s) ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.5s);
+}
+
+.lp-particle:nth-child(odd) {
+  width: 4px;
+  height: 4px;
+  background: rgba(102, 252, 241, 0.6);
+  left: calc(var(--i, 0) * 8.5%);
+  top: 100%;
+  box-shadow: 0 0 8px rgba(102, 252, 241, 0.8);
+}
+
+.lp-particle:nth-child(even) {
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 170, 0, 0.6);
+  left: calc(5% + var(--i, 0) * 8%);
+  top: 100%;
+  box-shadow: 0 0 6px rgba(255, 170, 0, 0.8);
+}
+
+@keyframes lpFloat {
+  0%   { opacity: 0; transform: translateY(0) scale(1); }
+  10%  { opacity: 1; }
+  90%  { opacity: 0.6; }
+  100% { opacity: 0; transform: translateY(-110vh) scale(0.6); }
+}
+
+/* ── Card ── */
+.lp-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 440px;
+  padding: 2.5rem 2rem;
+  border-radius: 20px;
+  box-shadow:
+    0 0 0 1px rgba(102, 252, 241, 0.12),
+    0 0 60px rgba(102, 252, 241, 0.08),
+    0 25px 60px rgba(0, 0, 0, 0.6);
+  animation: lpSlideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes lpSlideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Branding ── */
+.lp-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 1.8rem;
+}
+
+.lp-logo-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(102, 252, 241, 0.15), rgba(255, 170, 0, 0.15));
+  border: 2px solid rgba(102, 252, 241, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 0 24px rgba(102, 252, 241, 0.2);
+  animation: lpPulse 3s ease-in-out infinite;
+}
+
+@keyframes lpPulse {
+  0%, 100% { box-shadow: 0 0 24px rgba(102, 252, 241, 0.2); }
+  50%       { box-shadow: 0 0 40px rgba(102, 252, 241, 0.4); }
+}
+
+.lp-logo-icon {
+  color: #66fcf1;
+}
+
+.lp-brand-name {
+  font-size: 1.8rem;
+  font-weight: 900;
+  letter-spacing: 4px;
+  margin: 0;
+  line-height: 1;
+}
+
+.lp-brand-sub {
+  font-size: 0.68rem;
+  letter-spacing: 3px;
+  color: var(--text-muted, #8892a4);
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ── Heading ── */
+.lp-title {
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 1.2rem 0 1.2rem;
+  letter-spacing: 1px;
+}
+
+/* ── Reuse AuthModal form styles ── */
+
+/* ── Footer links ── */
+.lp-footer-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  font-size: 0.72rem;
+  color: var(--text-muted, #64748b);
+}
+
+.lp-footer-links a {
+  color: var(--text-muted, #64748b);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.lp-footer-links a:hover {
+  color: var(--primary-color, #66fcf1);
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .lp-card {
+    padding: 2rem 1.25rem;
+    border-radius: 16px;
+  }
+
+  .lp-brand-name {
+    font-size: 1.5rem;
+  }
+
+  .lp-logo-ring {
+    width: 56px;
+    height: 56px;
+  }
+}

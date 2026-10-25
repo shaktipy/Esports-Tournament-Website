@@ -69,7 +69,7 @@
 
 .ticket-counts-group {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 0.5rem;
   width: 100%;
 }
@@ -100,10 +100,12 @@
   color: #4ade80;
 }
 
+/* BR ticket: second row, left-aligned at 50% width */
 .count-pill.br {
   background: rgba(226, 232, 240, 0.15);
   border: 1px solid rgba(226, 232, 240, 0.4);
   color: #f1f5f9;
+  grid-column: 1 / 2;  /* stays in col 1 = 50% width */
 }
 
 .coin-pill-img {
@@ -490,7 +492,7 @@
 
   .ticket-counts-group {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 0.4rem;
     width: 100%;
   }
@@ -502,6 +504,10 @@
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .count-pill.br {
+    grid-column: 1 / 2;
   }
 
   .secure-badge {

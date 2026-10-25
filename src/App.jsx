@@ -1,7 +1,9 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import Navbar from './components/Navbar';
 import AuthModal from './components/AuthModal';
+import ProtectedRoute from './components/ProtectedRoute';
+import LoginPage from './pages/LoginPage';
 import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Redeem from './pages/Redeem';
@@ -30,7 +32,6 @@ import BannedModal from './components/BannedModal';
 
 import { GameProvider, useGame } from './context/GameContext';
 import SlidingToast from './components/SlidingToast';
-import { Bell } from 'lucide-react';
 
 function AppContent() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -46,15 +47,30 @@ function AppContent() {
     logout();
   };
 
-  const isAdminRoute = location.pathname.startsWith('/admin');
+  const isAdminRoute  = location.pathname.startsWith('/admin');
   const isEsportsRoute = location.pathname.startsWith('/esports');
+  const isLoginRoute   = location.pathname === '/login';
 
-  // Dedicated Admin layout without public navbars
+  // ── Admin: dedicated layout, no public navbars ──
   if (isAdminRoute) {
     return (
       <Routes>
         <Route path="/admin/*" element={<AdminDashboard />} />
       </Routes>
+    );
+  }
+
+  // ── Login page: full-screen, no navbar ──
+  if (isLoginRoute) {
+    // If already logged in, redirect home
+    if (user) return <Navigate to="/" replace />;
+    return (
+      <>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+        </Routes>
+        <CookieConsent />
+      </>
     );
   }
 
@@ -65,43 +81,51 @@ function AppContent() {
 
       {/* Conditionally render Main Navbar only on main routes */}
       {!isEsportsRoute && (
-        <Navbar 
-          onLoginClick={() => setShowAuthModal(true)} 
+        <Navbar
+          onLoginClick={() => setShowAuthModal(true)}
         />
       )}
-      
+
       {!isEsportsRoute ? (
         <main className="main-content">
           <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/tasks" element={<Tasks />} />
-            <Route path="/redeem" element={<Redeem onLoginClick={() => setShowAuthModal(true)} />} />
-            <Route path="/giveaways" element={<Giveaways />} />
+            {/* Public legal routes — no login required */}
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsConditions />} />
+            <Route path="/terms"          element={<TermsConditions />} />
             <Route path="/cookies-policy" element={<CookiesPolicy />} />
-            <Route path="/refund-policy" element={<RefundPolicy />} />
-            <Route path="/contact" element={<ContactUs />} />
+            <Route path="/refund-policy"  element={<RefundPolicy />} />
+            <Route path="/contact"        element={<ContactUs />} />
+
+            {/* Protected routes — login required */}
+            <Route path="/"        element={<ProtectedRoute><Home /></ProtectedRoute>} />
+            <Route path="/tasks"   element={<ProtectedRoute><Tasks /></ProtectedRoute>} />
+            <Route path="/redeem"  element={<ProtectedRoute><Redeem onLoginClick={() => setShowAuthModal(true)} /></ProtectedRoute>} />
+            <Route path="/giveaways" element={<ProtectedRoute><Giveaways /></ProtectedRoute>} />
+
+            {/* Fallback: redirect unknown paths to home (which itself will gate to /login if needed) */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
       ) : (
         <Routes>
           {/* Esports Mode Routes with dedicated Esports Layout */}
           <Route path="/esports" element={
-            <EsportsLayout 
-              onLoginClick={() => setShowAuthModal(true)}
-              onLogout={handleLogout}
-            />
+            <ProtectedRoute>
+              <EsportsLayout
+                onLoginClick={() => setShowAuthModal(true)}
+                onLogout={handleLogout}
+              />
+            </ProtectedRoute>
           }>
-            <Route index element={<EsportsHome />} />
-            <Route path="passes" element={<EsportsPasses />} />
+            <Route index         element={<EsportsHome />} />
+            <Route path="passes"    element={<EsportsPasses />} />
             <Route path="giveaways" element={<EsportsGiveaways />} />
-            <Route path="redeem" element={<EsportsRedeem />} />
+            <Route path="redeem"    element={<EsportsRedeem />} />
           </Route>
         </Routes>
       )}
 
-      {/* Global Notification Toasts - stacked top-right */}
+      {/* Global Notification Toasts */}
       <div className="toasts-stack-container">
         {notifications.map(n => (
           <SlidingToast
@@ -115,20 +139,20 @@ function AppContent() {
         ))}
       </div>
 
-      {/* Auth Modal */}
+      {/* Auth Modal (still usable from within protected pages) */}
       {showAuthModal && (
-        <AuthModal 
-          onClose={() => setShowAuthModal(false)} 
-          onLogin={handleLogin} 
+        <AuthModal
+          onClose={() => setShowAuthModal(false)}
+          onLogin={handleLogin}
         />
       )}
 
       {/* Account Banned / Suspended Modal */}
-      <BannedModal 
-        isOpen={Boolean(bannedModalInfo?.isOpen)} 
-        status={bannedModalInfo?.status} 
-        reason={bannedModalInfo?.reason} 
-        onClose={closeBannedModal} 
+      <BannedModal
+        isOpen={Boolean(bannedModalInfo?.isOpen)}
+        status={bannedModalInfo?.status}
+        reason={bannedModalInfo?.reason}
+        onClose={closeBannedModal}
       />
 
       {/* Global Essential Cookie Consent Banner */}

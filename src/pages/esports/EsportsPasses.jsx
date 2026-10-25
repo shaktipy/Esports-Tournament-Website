@@ -238,15 +238,15 @@ const EsportsPasses = () => {
             <div className="ticket-counts-group">
               <span className="count-pill coins">
                 <img src="/tokens/xo-coin.png" alt="XO Coin" className="coin-pill-img" />
-                {coins} XO Coins
+                {(coins || 0).toLocaleString()} XO Coins
               </span>
               <span className="count-pill cs">
                 <img src="/tokens/cs-ticket.png" alt="CS" className="ticket-tiny" />
-                {csTickets} CS Tickets
+                {(csTickets || 0).toLocaleString()} CS Tickets
               </span>
               <span className="count-pill br">
                 <img src="/tokens/br-ticket.png" alt="BR" className="ticket-tiny" />
-                {brTickets} BR Tickets
+                {(brTickets || 0).toLocaleString()} BR Tickets
               </span>
             </div>
           </div>
