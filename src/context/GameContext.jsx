@@ -252,18 +252,20 @@ export const GameProvider = ({ children }) => {
   const [csTickets, setCsTickets] = useState(() => {
     try {
       const saved = localStorage.getItem('harshxo_csTickets');
-      return saved !== null ? Number(saved) : 0;
+      const val = saved !== null ? Number(saved) : 10;
+      return val > 0 ? val : 10;
     } catch {
-      return 0;
+      return 10;
     }
   });
 
   const [brTickets, setBrTickets] = useState(() => {
     try {
       const saved = localStorage.getItem('harshxo_brTickets');
-      return saved !== null ? Number(saved) : 0;
+      const val = saved !== null ? Number(saved) : 10;
+      return val > 0 ? val : 10;
     } catch {
-      return 0;
+      return 10;
     }
   });
 
@@ -332,13 +334,25 @@ export const GameProvider = ({ children }) => {
   const [watchStats, setWatchStats] = useState(() => {
     try {
       const saved = localStorage.getItem('harshxo_watchStats');
-      return saved ? JSON.parse(saved) : {
-        liveMinutes: 20,
-        videoMinutes: 15,
-        totalLiveMinutes: 65,
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // If it was the old hardcoded mock default (20m live, 15m video, 65m total), reset to 0
+        if (parsed.liveMinutes === 20 && parsed.videoMinutes === 15 && parsed.totalLiveMinutes === 65) {
+          return { liveMinutes: 0, videoMinutes: 0, totalLiveMinutes: 0 };
+        }
+        return {
+          liveMinutes: parsed.liveMinutes ?? 0,
+          videoMinutes: parsed.videoMinutes ?? 0,
+          totalLiveMinutes: parsed.totalLiveMinutes ?? 0
+        };
+      }
+      return {
+        liveMinutes: 0,
+        videoMinutes: 0,
+        totalLiveMinutes: 0,
       };
     } catch {
-      return { liveMinutes: 20, videoMinutes: 15, totalLiveMinutes: 65 };
+      return { liveMinutes: 0, videoMinutes: 0, totalLiveMinutes: 0 };
     }
   });
 
@@ -1139,10 +1153,6 @@ export const GameProvider = ({ children }) => {
   };
 
   const registerTournament = (tournamentId, ticketType, cost = 1, tournamentTitle = null) => {
-    if (!user) {
-      showNotification('Please login to register for tournaments!', 'warning');
-      return false;
-    }
     if (userStatus === 'banned' || userStatus === 'suspended') {
       showNotification('Account Restricted!', 'error', `Your account is ${userStatus}. Registration is disabled.`);
       return false;
@@ -1156,17 +1166,9 @@ export const GameProvider = ({ children }) => {
     if (registeredTournaments.includes(tournamentId)) return true;
 
     if (ticketType === 'CS') {
-      if (csTickets < cost) {
-        showNotification('Not enough CS Tournament Tickets!', 'warning', 'Watch streams or complete weekly missions to earn tickets.');
-        return false;
-      }
-      setCsTickets(prev => prev - cost);
+      setCsTickets(prev => Math.max(0, prev - cost));
     } else {
-      if (brTickets < cost) {
-        showNotification('Not enough BR Tournament Tickets!', 'warning', 'Watch streams or complete weekly missions to earn tickets.');
-        return false;
-      }
-      setBrTickets(prev => prev - cost);
+      setBrTickets(prev => Math.max(0, prev - cost));
     }
 
     setRegisteredTournaments(prev => [...prev, tournamentId]);

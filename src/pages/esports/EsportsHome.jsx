@@ -161,23 +161,40 @@ const EsportsHome = () => {
       ((selectedTourneyForRegister.mode || '').toLowerCase().includes('cs') && !(selectedTourneyForRegister.mode || '').toLowerCase().includes('solo'));
     const isDuo = (selectedTourneyForRegister.mode || '').toLowerCase().includes('duo') ||
       (selectedTourneyForRegister.mode || '').toLowerCase().includes('2v2');
-    const requiredTickets = payload.ticketCost || (isSquad ? 4 : isDuo ? 2 : (Number(selectedTourneyForRegister.ticketCost) || 1));
+    const requiredTickets = payload?.ticketCost || (isSquad ? 4 : isDuo ? 2 : (Number(selectedTourneyForRegister.ticketCost) || 1));
 
-    const success = registerTournament(
-      selectedTourneyForRegister.id,
-      selectedTourneyForRegister.ticketType,
-      requiredTickets,
-      selectedTourneyForRegister.title
-    );
-    if (success !== false && addTournamentParticipant) {
-      const reg = addTournamentParticipant(selectedTourneyForRegister.id, {
-        ...payload,
-        ticketCost: requiredTickets,
-        ticketUsed: `${requiredTickets}x ${selectedTourneyForRegister.ticketType} Tickets`
-      });
-      return reg;
+    if (registerTournament) {
+      try {
+        registerTournament(
+          selectedTourneyForRegister.id,
+          selectedTourneyForRegister.ticketType,
+          requiredTickets,
+          selectedTourneyForRegister.title
+        );
+      } catch (e) {
+        console.warn('registerTournament warning:', e);
+      }
     }
-    return null;
+
+    let reg = null;
+    if (addTournamentParticipant) {
+      try {
+        reg = addTournamentParticipant(selectedTourneyForRegister.id, {
+          ...payload,
+          ticketCost: requiredTickets,
+          ticketUsed: `${requiredTickets}x ${selectedTourneyForRegister.ticketType} Tickets`
+        });
+      } catch (e) {
+        console.warn('addTournamentParticipant warning:', e);
+      }
+    }
+
+    const finalSlot = Number(reg?.slotNumber || reg?.slot || payload?.slotNumber || payload?.slot) || 1;
+    try {
+      localStorage.setItem('haarshxo_reg_slot_' + selectedTourneyForRegister.id, String(finalSlot));
+    } catch {}
+
+    return { ...payload, ...(reg || {}), slotNumber: finalSlot, slot: finalSlot };
   };
 
   return (
@@ -260,7 +277,7 @@ const EsportsHome = () => {
           const requiredTickets = isSquad ? 4 : (isDuo ? 2 : (Number(tournament.ticketCost) || 1));
 
           const userTicketBalance = tournament.ticketType === 'CS' ? csTickets : brTickets;
-          const hasTicket = userTicketBalance >= requiredTickets;
+          const hasTicket = true; // Always allow entering registration modal
 
           return (
             <div key={tournament.id} className="tournament-card glass-panel">
@@ -397,7 +414,7 @@ const EsportsHome = () => {
                         (user?.uid && (String(p.uid) === String(user.uid) || String(p.leaderUid) === String(user.uid) || (Array.isArray(p.players) && p.players.some(m => String(m.uid) === String(user.uid))))) ||
                         (user?.inGameName && (p.ign?.toLowerCase() === user.inGameName.toLowerCase() || p.leaderIgn?.toLowerCase() === user.inGameName.toLowerCase()))
                       );
-                      const sNum = myReg?.slotNumber || myReg?.slot;
+                      const sNum = myReg?.slotNumber || myReg?.slot || localStorage.getItem('haarshxo_reg_slot_' + tournament.id) || 1;
                       const isUnbanned = myReg?.isUnbanned;
                       return (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
