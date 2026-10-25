@@ -62,7 +62,7 @@
 
 .redeem-header-text {
   flex: 1;
-  min-width: 280px;
+  min-width: 0;
 }
 
 .redeem-title {
@@ -153,7 +153,7 @@
   flex-wrap: wrap;
 }
 
-/* 4 cards per row grid */
+/* 4 cards per row grid on desktop, 2 cards per row on mobile */
 .rewards-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -167,15 +167,153 @@
 }
 
 @media (max-width: 768px) {
-  .rewards-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .redeem-page {
     gap: 1rem;
+  }
+
+  .redeem-header-panel {
+    padding: 1rem 0.85rem;
+    border-radius: 14px;
+    gap: 0.85rem;
+  }
+
+  .redeem-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .redeem-header-text {
+    min-width: unset;
+  }
+
+  .redeem-title {
+    font-size: 1.4rem;
+  }
+
+  .redeem-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .current-balance {
+    align-self: flex-start;
+    padding: 0.35rem 0.85rem;
+  }
+
+  .promo-box-banner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 10px 12px;
+  }
+
+  .promo-box-left {
+    min-width: unset;
+    width: 100%;
+  }
+
+  .promo-box-form {
+    min-width: unset;
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .promo-box-form input {
+    width: 100%;
+  }
+
+  .btn-claim-promo {
+    width: 100%;
+    justify-content: center;
+    padding: 8px;
+  }
+
+  /* Filter layout on mobile - smooth horizontal swipe */
+  .redeem-filters {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.4rem;
+    padding: 0.2rem 0;
+  }
+
+  .redeem-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .redeem-filters .filter-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    padding: 6px 12px;
+  }
+
+  /* 2 cards per row on mobile! */
+  .rewards-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.65rem;
+  }
+
+  .reward-card {
+    border-radius: 12px;
+  }
+
+  .reward-image-container {
+    height: 120px;
+  }
+
+  .reward-info {
+    padding: 0.65rem 0.55rem;
+  }
+
+  .reward-title {
+    font-size: 0.82rem;
+    line-height: 1.25;
+    height: 2.5em;
+    margin-bottom: 0.25rem;
+  }
+
+  .reward-desc {
+    display: none;
+  }
+
+  .reward-bottom-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+  }
+
+  .reward-cost {
+    font-size: 0.82rem;
+  }
+
+  .btn-redeem {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
   .rewards-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem;
+  }
+
+  .reward-image-container {
+    height: 105px;
+  }
+
+  .reward-info {
+    padding: 0.5rem 0.4rem;
+  }
+
+  .reward-title {
+    font-size: 0.76rem;
   }
 }
 
@@ -344,7 +482,7 @@
   align-items: center;
   gap: 12px;
   flex: 1;
-  min-width: 260px;
+  min-width: 0;
 }
 
 .promo-box-left strong {
@@ -363,7 +501,7 @@
   display: flex;
   gap: 8px;
   flex: 1;
-  min-width: 280px;
+  min-width: 0;
 }
 
 .promo-box-form input {

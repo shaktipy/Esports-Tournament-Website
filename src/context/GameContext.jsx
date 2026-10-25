@@ -665,6 +665,7 @@ export const GameProvider = ({ children }) => {
   // Real-time backend ban check heartbeat: ensures any admin ban is enforced within seconds on all devices/tabs
   useEffect(() => {
     if (!user || !user.id) return;
+    const identifier = user.id;
     const interval = setInterval(async () => {
       try {
         const baseUrl = getBackendBaseUrl();
@@ -955,7 +956,7 @@ export const GameProvider = ({ children }) => {
   useEffect(() => {
     const handleAuthSession = (session) => {
       if (session?.user) {
-        const metadata = session.user.user_metadata || {};
+        const metadata = session.user.user_metadata || session.user.raw_user_meta_data || {};
         const userData = {
           id: session.user.id,
           supabaseId: session.user.id,

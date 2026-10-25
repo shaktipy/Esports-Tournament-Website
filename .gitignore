@@ -35,6 +35,9 @@ __pycache__/
 server/__pycache__/
 server/arena.db
 server/data/
-server/uploads/
+# server/uploads/ is allowed so uploaded pictures can be deployed to Azure
 *.db
+deploy*.zip
+kudu_creds.txt
+.azureignore
 

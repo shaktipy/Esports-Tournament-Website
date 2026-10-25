@@ -26,19 +26,42 @@ const NotificationCenter = () => {
   const updatePosition = () => {
     if (!bellRef.current) return;
     const rect = bellRef.current.getBoundingClientRect();
-    const popoverWidth = 400;
     const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
     
+    if (viewportWidth <= 520) {
+      const top = Math.max(12, Math.min(rect.bottom + 8, viewportHeight - 200));
+      const maxHeight = Math.max(260, viewportHeight - top - 16);
+      setPopoverStyle({
+        position: 'fixed',
+        top,
+        left: 8,
+        right: 8,
+        width: 'calc(100vw - 16px)',
+        maxWidth: '100vw',
+        maxHeight,
+        zIndex: 99999,
+        boxSizing: 'border-box'
+      });
+      return;
+    }
+
+    const popoverWidth = 400;
     let left = rect.right - popoverWidth;
-    if (left < 8) left = 8;
-    if (left + popoverWidth > viewportWidth - 8) left = viewportWidth - popoverWidth - 8;
+    if (left < 12) left = 12;
+    if (left + popoverWidth > viewportWidth - 12) left = viewportWidth - popoverWidth - 12;
+
+    const top = rect.bottom + 12;
+    const maxHeight = Math.min(540, viewportHeight - top - 16);
 
     setPopoverStyle({
       position: 'fixed',
-      top: rect.bottom + 12,
+      top,
       left,
-      width: Math.min(popoverWidth, viewportWidth - 16),
+      width: Math.min(popoverWidth, viewportWidth - 24),
+      maxHeight,
       zIndex: 99999,
+      boxSizing: 'border-box'
     });
   };
 

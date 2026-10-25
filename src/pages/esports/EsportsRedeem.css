@@ -158,15 +158,121 @@
 }
 
 @media (max-width: 768px) {
+  .esports-redeem .redeem-header-panel {
+    padding: 1rem 0.85rem;
+    border-radius: 14px;
+    gap: 0.85rem;
+  }
+
+  .esports-redeem .redeem-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .esports-redeem .redeem-header-text {
+    min-width: 0;
+  }
+
+  .esports-redeem .redeem-title {
+    font-size: 1.4rem;
+  }
+
+  .esports-redeem .redeem-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .esports-redeem .current-balance {
+    align-self: flex-start;
+    padding: 0.35rem 0.85rem;
+  }
+
+  /* Filter layout on mobile */
+  .esports-redeem .redeem-filters {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.4rem;
+    padding: 0.2rem 0;
+  }
+
+  .esports-redeem .redeem-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .esports-redeem .filter-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: 0.76rem;
+    padding: 5px 12px;
+  }
+
+  /* 2 cards per row in Arena Mode rewards! */
   .esports-redeem .redeem-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.65rem;
+  }
+
+  .esports-redeem .redeem-card {
+    border-radius: 12px;
+  }
+
+  .esports-redeem .r-image-container {
+    height: 115px;
+  }
+
+  .esports-redeem .r-item-details {
+    padding: 0.65rem 0.55rem;
+  }
+
+  .esports-redeem .r-item-name {
+    font-size: 0.82rem;
+    line-height: 1.25;
+    height: 2.5em;
+    margin-bottom: 0.25rem;
+  }
+
+  .esports-redeem .r-item-desc {
+    display: none;
+  }
+
+  .esports-redeem .r-card-bottom {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+  }
+
+  .esports-redeem .r-item-cost {
+    font-size: 0.82rem;
+  }
+
+  .esports-redeem .btn-r-claim {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
   .esports-redeem .redeem-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem;
+  }
+
+  .esports-redeem .r-image-container {
+    height: 100px;
+  }
+
+  .esports-redeem .r-item-details {
+    padding: 0.5rem 0.4rem;
+  }
+
+  .esports-redeem .r-item-name {
+    font-size: 0.76rem;
   }
 }
 

@@ -209,8 +209,14 @@
 
 @media (max-width: 600px) {
   .footer-top {
-    grid-template-columns: 1fr;
-    gap: 24px;
+    grid-template-columns: 1fr 1fr; /* Platform and Legal & Trust in one row on mobile */
+    gap: 24px 16px;
+  }
+  .footer-brand {
+    grid-column: 1 / -1;
+  }
+  .footer-links-col:last-child {
+    grid-column: 1 / -1;
   }
   .footer-copy-row {
     flex-direction: column;

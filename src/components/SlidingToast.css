@@ -177,3 +177,46 @@
     transform: scaleX(0);
   }
 }
+
+/* ======================================================
+   MOBILE RESPONSIVENESS FOR SLIDING TOASTS
+   ====================================================== */
+
+@media (max-width: 640px) {
+  .toasts-stack-container {
+    top: 12px;
+    left: 10px;
+    right: 10px;
+    gap: 8px;
+    width: auto;
+    align-items: center;
+  }
+
+  .sliding-toast-container {
+    min-width: unset;
+    width: 100%;
+    max-width: calc(100vw - 20px);
+    border-radius: 10px;
+    box-sizing: border-box;
+  }
+
+  .toast-body {
+    padding: 0.65rem 0.8rem;
+    gap: 10px;
+  }
+
+  .toast-title {
+    font-size: 0.84rem;
+    line-height: 1.25;
+  }
+
+  .toast-subtitle {
+    font-size: 0.74rem;
+    line-height: 1.25;
+  }
+
+  .toast-icon-wrapper svg {
+    width: 20px;
+    height: 20px;
+  }
+}

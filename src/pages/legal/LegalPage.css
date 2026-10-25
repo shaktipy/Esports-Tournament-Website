@@ -159,10 +159,50 @@
 }
 
 @media (max-width: 768px) {
-  .legal-content-card {
-    padding: 22px 18px;
+  .legal-page-container {
+    margin: 20px auto 40px;
+    padding: 0 12px;
   }
+
+  .legal-header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+
   .legal-title {
-    font-size: 1.7rem;
+    font-size: 1.5rem;
+    letter-spacing: 0;
+  }
+
+  .legal-content-card {
+    padding: 18px 14px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    border-radius: 12px;
+  }
+
+  .legal-content-card h2 {
+    font-size: 1.15rem;
+    margin: 20px 0 8px;
+  }
+
+  .legal-notice-box {
+    padding: 12px 14px;
+    margin: 16px 0;
+    font-size: 0.82rem;
+  }
+
+  .legal-contact-card {
+    margin-top: 24px;
+    padding: 16px 14px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .legal-contact-action {
+    width: 100%;
+    justify-content: center;
+    box-sizing: border-box;
   }
 }

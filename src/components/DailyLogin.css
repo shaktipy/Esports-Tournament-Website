@@ -594,3 +594,164 @@
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
 }
+
+/* ======================================================
+   DAILY LOGIN REWARDS MODAL MOBILE RESPONSIVENESS
+   ====================================================== */
+
+@media (max-width: 650px) {
+  .daily-login-overlay {
+    padding: 0.5rem;
+  }
+
+  .daily-login-modal {
+    padding: 1.25rem 0.85rem;
+    padding-top: 3.2rem; /* Clear room for the close cross */
+    border-radius: 18px;
+    gap: 0.85rem;
+    max-height: 94vh;
+  }
+
+  .dl-close-x-btn {
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 36px;
+    height: 36px;
+  }
+
+  .dl-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .dl-header-left {
+    gap: 0.75rem;
+  }
+
+  .dl-fire-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .dl-title {
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+
+  .dl-subtitle {
+    font-size: 0.75rem;
+    line-height: 1.35;
+  }
+
+  .dl-streak-pills {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.4rem;
+  }
+
+  .dl-streak-pill {
+    padding: 0.4rem 0.5rem;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .dl-pill-val {
+    font-size: 0.88rem;
+  }
+
+  .dl-pill-lbl {
+    font-size: 0.65rem;
+  }
+
+  .dl-calendar-container {
+    max-height: 52vh;
+  }
+
+  .dl-calendar-month-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.45rem;
+  }
+
+  .dl-month-day-card {
+    padding: 0.6rem 0.4rem;
+    min-height: 105px;
+    gap: 0.35rem;
+    border-radius: 10px;
+  }
+
+  .dl-day-number {
+    font-size: 0.62rem;
+  }
+
+  .dl-today-indicator {
+    font-size: 0.55rem;
+    padding: 1px 4px;
+  }
+
+  .dl-day-icon-wrap {
+    width: 32px;
+    height: 32px;
+  }
+
+  .dl-day-token-img {
+    width: 22px;
+    height: 22px;
+  }
+
+  .dl-day-coins {
+    font-size: 0.72rem;
+  }
+
+  .dl-inline-coin-img {
+    width: 13px;
+    height: 13px;
+  }
+
+  .dl-ticket-pill {
+    font-size: 0.65rem;
+    padding: 2px 5px;
+  }
+
+  .dl-status-badge {
+    font-size: 0.62rem;
+    padding: 2px 6px;
+  }
+
+  /* Modal Footer */
+  .dl-modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  .dl-footer-left {
+    font-size: 0.76rem;
+    line-height: 1.3;
+  }
+
+  .dl-footer-right {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .dl-action-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 0.65rem 1rem;
+    font-size: 0.82rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .dl-calendar-month-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+

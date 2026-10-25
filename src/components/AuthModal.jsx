@@ -43,6 +43,20 @@ const AuthModal = ({ onClose, onLogin }) => {
           password: formData.password,
         });
 
+        if (error) {
+          if (error.message?.toLowerCase().includes('email not confirmed')) {
+            throw new Error('Please verify your email address before logging in. Check your inbox/spam for the confirmation link.');
+          }
+          if (error.message?.toLowerCase().includes('invalid login credentials')) {
+            throw new Error('Invalid email or password. Please verify your credentials or create a new account.');
+          }
+          throw error;
+        }
+
+        if (!data || !data.user) {
+          throw new Error('Unable to retrieve user session. Please check your credentials.');
+        }
+
         const user = data.user;
 
         // Verify with backend if user has been banned or suspended by admin
@@ -72,7 +86,7 @@ const AuthModal = ({ onClose, onLogin }) => {
         // Additional safeguard: check local admin users cache if backend was unreachable
         if (!isBanned) {
           try {
-            const meta = user.user_metadata || {};
+            const meta = user.user_metadata || user.raw_user_meta_data || {};
             const userUid = meta.gameUid || 'XO-' + user.id.slice(0, 8);
             const userEmail = (user.email || '').toLowerCase();
             const localUsers = JSON.parse(localStorage.getItem('haarshxo_admin_users') || '[]');
@@ -100,11 +114,11 @@ const AuthModal = ({ onClose, onLogin }) => {
           return;
         }
 
-        const metadata = user.user_metadata || {};
+        const metadata = user.user_metadata || user.raw_user_meta_data || {};
         const profile = {
           id: user.id,
           email: user.email,
-          inGameName: metadata.inGameName || metadata.full_name || user.email.split('@')[0],
+          inGameName: metadata.inGameName || metadata.full_name || user.email?.split('@')[0] || 'Survivor',
           uid: metadata.gameUid || 'XO-' + user.id.slice(0, 8),
         };
 
@@ -127,11 +141,11 @@ const AuthModal = ({ onClose, onLogin }) => {
         // Check if session was returned immediately (email confirmation disabled)
         if (data.session && data.user) {
           const user = data.user;
-          const metadata = user.user_metadata || {};
+          const metadata = user.user_metadata || user.raw_user_meta_data || {};
           const profile = {
             id: user.id,
             email: user.email,
-            inGameName: metadata.inGameName || formData.inGameName || user.email.split('@')[0],
+            inGameName: metadata.inGameName || formData.inGameName || user.email?.split('@')[0] || 'Survivor',
             uid: metadata.gameUid || formData.gameUid || 'XO-' + user.id.slice(0, 8),
           };
           if (onLogin) onLogin(profile);
