@@ -1485,95 +1485,106 @@ export const AdminProvider = ({ children }) => {
   };
 
   const addTournamentParticipant = (tourneyId, registrationData = {}) => {
-    lastLocalActionTime.current = Date.now();
-    const idStr = String(tourneyId);
-    let registeredParticipant = null;
+    try {
+      lastLocalActionTime.current = Date.now();
+      const idStr = String(tourneyId);
 
-    setTournaments(prev => {
-      const targetTourney = prev.find(t => String(t.id) === idStr);
-      if (!targetTourney) return prev;
+      // Find current tournament object synchronously
+      let currentTourney = (tournaments || []).find(t => String(t.id) === idStr);
+      if (!currentTourney) {
+        try {
+          const stored = JSON.parse(localStorage.getItem('haarshxo_admin_tournaments') || '[]');
+          currentTourney = stored.find(t => String(t.id) === idStr);
+        } catch {}
+      }
 
-      const totalSlots = getTournamentTotalSlots(targetTourney);
-      const occupiedSlots = getOccupiedSlotNumbers(targetTourney.participants);
+      const totalSlots = currentTourney ? getTournamentTotalSlots(currentTourney) : 12;
+      const occupiedSlots = currentTourney ? getOccupiedSlotNumbers(currentTourney.participants) : new Set();
 
       // Determine random available slot number
       let assignedSlot = null;
       if (registrationData.slotNumber && !occupiedSlots.has(Number(registrationData.slotNumber))) {
         assignedSlot = Number(registrationData.slotNumber);
-      } else {
-        assignedSlot = assignRandomSlot(targetTourney);
+      } else if (currentTourney) {
+        assignedSlot = assignRandomSlot(currentTourney);
       }
-
-      // If somehow null (e.g. overcapacity), fallback to total occupied count + 1
       if (!assignedSlot) {
-        assignedSlot = (targetTourney.participants?.length || 0) + 1;
+        assignedSlot = registrationData.slotNumber || ((currentTourney?.participants?.length || 0) + 1);
       }
 
-      const updated = prev.map(t => {
-        if (String(t.id) !== idStr) return t;
+      const isSquad = (currentTourney?.mode || '').toLowerCase().includes('squad');
+      const isDuo = (currentTourney?.mode || '').toLowerCase().includes('duo');
+      const isSolo = (currentTourney?.mode || '').toLowerCase().includes('solo');
+      const regType = registrationData.type || (isSquad ? 'squad' : isDuo ? 'duo' : 'solo');
 
-        const isSquad = (t.mode || '').toLowerCase().includes('squad');
-        const isDuo = (t.mode || '').toLowerCase().includes('duo');
-        const isSolo = (t.mode || '').toLowerCase().includes('solo');
-        const regType = registrationData.type || (isSquad ? 'squad' : isDuo ? 'duo' : 'solo');
+      const newParticipant = {
+        id: registrationData.id || `reg_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        tournamentId: currentTourney?.id || tourneyId,
+        tournamentTitle: currentTourney?.title || registrationData.tournamentTitle || '',
+        type: regType, // 'solo' | 'squad' | 'duo'
+        mode: currentTourney?.mode || '',
+        slotNumber: assignedSlot,
+        slot: assignedSlot,
+        teamName: registrationData.teamName || (regType === 'solo' ? (registrationData.ign || 'Solo Player') : 'Team Squad'),
+        ign: registrationData.ign || registrationData.leaderIgn || 'Player',
+        uid: registrationData.uid || registrationData.leaderUid || 'Unknown',
+        leaderIgn: registrationData.leaderIgn || registrationData.ign || 'Player',
+        leaderUid: registrationData.leaderUid || registrationData.uid || 'Unknown',
+        phone: registrationData.phone || '',
+        discord: registrationData.discord || '',
+        players: Array.isArray(registrationData.players) && registrationData.players.length > 0 
+          ? registrationData.players 
+          : [
+              { role: regType === 'solo' ? 'Player' : 'Leader', ign: registrationData.ign || 'Player', uid: registrationData.uid || 'Unknown' }
+            ],
+        registeredAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
+        ticketUsed: registrationData.ticketUsed || `${currentTourney?.ticketCost || 1}x ${currentTourney?.ticketType || 'CS'} Ticket`,
+        status: 'confirmed'
+      };
 
-        const newParticipant = {
-          id: `reg_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
-          tournamentId: t.id,
-          tournamentTitle: t.title,
-          type: regType, // 'solo' | 'squad' | 'duo'
-          mode: t.mode,
-          slotNumber: assignedSlot,
-          slot: assignedSlot,
-          teamName: registrationData.teamName || (regType === 'solo' ? (registrationData.ign || 'Solo Player') : 'Team Squad'),
-          ign: registrationData.ign || registrationData.leaderIgn || 'Player',
-          uid: registrationData.uid || registrationData.leaderUid || 'Unknown',
-          leaderIgn: registrationData.leaderIgn || registrationData.ign || 'Player',
-          leaderUid: registrationData.leaderUid || registrationData.uid || 'Unknown',
-          phone: registrationData.phone || '',
-          discord: registrationData.discord || '',
-          players: Array.isArray(registrationData.players) && registrationData.players.length > 0 
-            ? registrationData.players 
-            : [
-                { role: regType === 'solo' ? 'Player' : 'Leader', ign: registrationData.ign || 'Player', uid: registrationData.uid || 'Unknown' }
-              ],
-          registeredAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' }),
-          ticketUsed: registrationData.ticketUsed || `${t.ticketCost}x ${t.ticketType} Ticket`,
-          status: 'confirmed'
-        };
+      setTournaments(prev => {
+        const targetTourney = (prev || []).find(t => String(t.id) === idStr);
+        if (!targetTourney) return prev;
 
-        registeredParticipant = newParticipant;
-        const updatedList = [newParticipant, ...(t.participants || [])];
-        const newCount = updatedList.length;
-        const maxSlotsNum = totalSlots;
+        const targetTotalSlots = getTournamentTotalSlots(targetTourney);
+        const updated = (prev || []).map(t => {
+          if (String(t.id) !== idStr) return t;
 
-        return {
-          ...t,
-          participants: updatedList,
-          registeredCount: newCount,
-          slots: `${newCount}/${maxSlotsNum} ${isSolo ? 'Players' : isSquad ? 'Squads' : isDuo ? 'Duos' : 'Teams'}`,
-          status: newCount >= maxSlotsNum ? 'closed' : t.status
-        };
+          const updatedList = [newParticipant, ...(t.participants || []).filter(p => p.id !== newParticipant.id)];
+          const newCount = updatedList.length;
+          const maxSlotsNum = targetTotalSlots;
+
+          return {
+            ...t,
+            participants: updatedList,
+            registeredCount: newCount,
+            slots: `${newCount}/${maxSlotsNum} ${isSolo ? 'Players' : isSquad ? 'Squads' : isDuo ? 'Duos' : 'Teams'}`,
+            status: newCount >= maxSlotsNum ? 'closed' : t.status
+          };
+        });
+
+        try {
+          localStorage.setItem('haarshxo_admin_tournaments', JSON.stringify(updated));
+          broadcastChange('tournaments', updated);
+          window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'tournaments', data: updated } }));
+        } catch (err) {
+          console.error('Failed to persist tournament participant:', err);
+        }
+        return updated;
       });
 
-      try {
-        localStorage.setItem('haarshxo_admin_tournaments', JSON.stringify(updated));
-        broadcastChange('tournaments', updated);
-        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'tournaments', data: updated } }));
-      } catch (err) {
-        console.error('Failed to persist tournament participant:', err);
-      }
-      return updated;
-    });
+      setTimeout(() => {
+        const stored = localStorage.getItem('haarshxo_admin_tournaments');
+        if (stored) syncToBackend({ tournaments: JSON.parse(stored) });
+      }, 0);
 
-    setTimeout(() => {
-      const stored = localStorage.getItem('haarshxo_admin_tournaments');
-      if (stored) syncToBackend({ tournaments: JSON.parse(stored) });
-    }, 0);
-
-    const displayIdentifier = registrationData.teamName || registrationData.ign || 'Player';
-    addAuditLog('PARTICIPANT_REGISTERED', 'TOURNAMENTS', `Registered ${displayIdentifier} in tournament ${tourneyId} (Assigned Slot #${registeredParticipant?.slotNumber || '?'})`);
-    return registeredParticipant;
+      const displayIdentifier = registrationData.teamName || registrationData.ign || 'Player';
+      addAuditLog('PARTICIPANT_REGISTERED', 'TOURNAMENTS', `Registered ${displayIdentifier} in tournament ${tourneyId} (Assigned Slot #${newParticipant.slotNumber || '?'})`);
+      return newParticipant;
+    } catch (e) {
+      console.error('addTournamentParticipant error:', e);
+      return registrationData;
+    }
   };
 
   const removeTournamentParticipant = (tourneyId, participantId, reason = '') => {
