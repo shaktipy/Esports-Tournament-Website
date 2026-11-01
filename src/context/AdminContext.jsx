@@ -1722,6 +1722,104 @@ export const AdminProvider = ({ children }) => {
     addAuditLog('PARTICIPANT_DISQUALIFIED', 'TOURNAMENTS', `Disqualified "${targetName}" from tournament ${targetTourneyTitle} (${tourneyId}). Reason: ${disqualifiedRecord?.reason || reason}`);
   };
 
+  const unregisterTournamentParticipant = (tourneyId, participantId) => {
+    lastLocalActionTime.current = Date.now();
+    const idStr = String(tourneyId);
+    let removedParticipant = null;
+    let targetTourneyTitle = '';
+
+    setTournaments(prev => {
+      const targetTourney = prev.find(t => String(t.id) === idStr);
+      if (!targetTourney) return prev;
+      targetTourneyTitle = targetTourney.title;
+
+      const participant = (targetTourney.participants || []).find(p => p.id === participantId);
+      if (participant) {
+        removedParticipant = JSON.parse(JSON.stringify(participant));
+      }
+
+      const updated = prev.map(t => {
+        if (String(t.id) !== idStr) return t;
+        const updatedList = (t.participants || []).filter(p => p.id !== participantId);
+        const newCount = updatedList.length;
+        const maxSlotsNum = getTournamentTotalSlots(t);
+        const isSolo = (t.mode || '').toLowerCase().includes('solo');
+        const isSquad = (t.mode || '').toLowerCase().includes('squad');
+        const isDuo = (t.mode || '').toLowerCase().includes('duo');
+
+        return {
+          ...t,
+          participants: updatedList,
+          registeredCount: newCount,
+          slots: `${newCount}/${maxSlotsNum} ${isSolo ? 'Players' : isSquad ? 'Squads' : isDuo ? 'Duos' : 'Teams'}`,
+          status: (t.status === 'closed' && newCount < maxSlotsNum) ? 'open' : t.status
+        };
+      });
+
+      try {
+        localStorage.setItem('haarshxo_admin_tournaments', JSON.stringify(updated));
+        broadcastChange('tournaments', updated);
+        window.dispatchEvent(new CustomEvent('haarshxo_admin_updated', { detail: { type: 'tournaments', data: updated } }));
+      } catch (err) {}
+      return updated;
+    });
+
+    if (removedParticipant) {
+      const pPlayers = Array.isArray(removedParticipant.players) ? removedParticipant.players : [];
+      const unregEventData = {
+        tournamentId: idStr,
+        tournamentTitle: targetTourneyTitle,
+        participantId: removedParticipant.id,
+        teamName: removedParticipant.teamName || removedParticipant.ign || 'Player',
+        uids: [removedParticipant.uid, removedParticipant.leaderUid, ...pPlayers.map(p => p.uid)].filter(Boolean),
+        igns: [removedParticipant.ign, removedParticipant.leaderIgn, ...pPlayers.map(p => p.ign)].filter(Boolean),
+        ticketCost: removedParticipant.ticketCost || 1,
+        ticketUsed: removedParticipant.ticketUsed || '',
+      };
+
+      // 1. Dispatch custom event and cross-tab BroadcastChannel
+      window.dispatchEvent(new CustomEvent('haarshxo_tournament_unregistered', { detail: unregEventData }));
+      if (globalBroadcastChannel) {
+        globalBroadcastChannel.postMessage({ type: 'tournament_unregistered', data: unregEventData });
+      }
+
+      // 2. Add notification for the user
+      try {
+        const inbox = JSON.parse(localStorage.getItem('haarshxo_notification_inbox') || '[]');
+        const notifItem = {
+          id: `notif_unreg_${Date.now()}`,
+          message: `Tournament Unregistered: ${targetTourneyTitle}`,
+          subtitle: `Aap ${targetTourneyTitle} tournament se unregister ho chuke ho.`,
+          type: 'info',
+          time: 'Just now',
+          read: false
+        };
+        const updatedInbox = [notifItem, ...inbox.filter(n => n.id !== notifItem.id).slice(0, 49)];
+        localStorage.setItem('haarshxo_notification_inbox', JSON.stringify(updatedInbox));
+        window.dispatchEvent(new CustomEvent('haarshxo_inbox_updated', { detail: updatedInbox }));
+        if (globalBroadcastChannel) {
+          globalBroadcastChannel.postMessage({ type: 'inbox_updated', data: updatedInbox });
+        }
+      } catch (e) {}
+
+      // 3. Remove tournament and slot from user's registered list
+      try {
+        const regTourneys = JSON.parse(localStorage.getItem('harshxo_registeredTournaments') || '[]');
+        const updatedReg = regTourneys.filter(id => String(id) !== idStr);
+        localStorage.setItem('harshxo_registeredTournaments', JSON.stringify(updatedReg));
+        localStorage.removeItem('haarshxo_reg_slot_' + idStr);
+      } catch (e) {}
+    }
+
+    setTimeout(() => {
+      const stored = localStorage.getItem('haarshxo_admin_tournaments');
+      if (stored) syncToBackend({ tournaments: JSON.parse(stored) });
+    }, 0);
+
+    const targetName = removedParticipant?.teamName || removedParticipant?.ign || participantId;
+    addAuditLog('PARTICIPANT_UNREGISTERED', 'TOURNAMENTS', `Unregistered "${targetName}" from tournament ${targetTourneyTitle} (${tourneyId}). Slot released.`);
+  };
+
   const reinstateTournamentParticipant = (tourneyId, disqId) => {
     lastLocalActionTime.current = Date.now();
     const idStr = String(tourneyId);
@@ -3105,6 +3203,7 @@ export const AdminProvider = ({ children }) => {
         toggleTournamentStatus,
         addTournamentParticipant,
         removeTournamentParticipant,
+        unregisterTournamentParticipant,
         reinstateTournamentParticipant,
         declareTournamentResults,
 

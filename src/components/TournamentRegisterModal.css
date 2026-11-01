@@ -310,6 +310,8 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
+  min-width: 0;
+  width: 100%;
 }
 
 .treg-form-group.full-width {
@@ -320,6 +322,7 @@
   font-size: 0.78rem;
   font-weight: 600;
   color: #cbd5e1;
+  word-break: break-word;
 }
 
 .treg-form-group input {
@@ -331,6 +334,9 @@
   font-size: 0.85rem;
   transition: all 0.2s;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .treg-form-group input:focus {
@@ -346,6 +352,9 @@
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .input-with-prefix .prefix {
@@ -355,12 +364,16 @@
   color: #94a3b8;
   font-size: 0.82rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .input-with-prefix input {
   border: none;
   background: transparent;
   flex: 1;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .input-with-prefix:focus-within {

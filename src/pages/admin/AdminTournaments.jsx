@@ -6,7 +6,7 @@ import {
   Trophy, Plus, Edit, Trash2, Users, CheckCircle, 
   XCircle, Clock, Award, Shield, AlertTriangle, X, Search, ChevronRight,
   Copy, Check, Phone, MessageSquare, ExternalLink, Filter, Flame, MapPin,
-  Hash, Dices, LayoutGrid
+  Hash, Dices, LayoutGrid, UserMinus
 } from 'lucide-react';
 
 const AdminTournaments = () => {
@@ -17,6 +17,7 @@ const AdminTournaments = () => {
     deleteTournament, 
     toggleTournamentStatus,
     removeTournamentParticipant,
+    unregisterTournamentParticipant,
     reinstateTournamentParticipant,
     declareTournamentResults,
   } = useAdmin();
@@ -446,71 +447,112 @@ const AdminTournaments = () => {
                   <td className="text-muted text-xs">{p.registeredAt}</td>
                   <td><span className="ticket-pill">{p.ticketUsed || (isSquad ? '4x Tickets' : '1x Ticket')}</span></td>
                   <td>
-                    <button 
-                      className="btn-danger-sm"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(185, 28, 28, 0.9))',
-                        border: 'none',
-                        color: '#fff',
-                        fontWeight: 700,
-                        fontSize: '0.74rem',
-                        padding: '5px 10px',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                      onClick={() => {
-                        const targetTourneyId = tourneyContextId || p.tournamentId;
-                        const targetName = p.teamName || p.ign;
-                        const reason = window.prompt(
-                          `Disqualify "${targetName}" from this tournament?\n\nEnter reason for disqualification (player will receive instant alert and cannot re-register):`,
-                          'Fair-play regulation violation (Disqualified by Admin)'
-                        );
-                        if (reason !== null) {
-                          const disqReason = reason.trim() || 'Fair-play regulation violation (Disqualified by Admin)';
-                          removeTournamentParticipant(targetTourneyId, p.id, disqReason);
-                          if (viewingParticipantsTourney) {
-                            setViewingParticipantsTourney(prev => {
-                              if (!prev) return null;
-                              const pPlayers = Array.isArray(p.players) && p.players.length > 0 ? p.players : [];
-                              return {
-                                ...prev,
-                                participants: (prev.participants || []).filter(item => item.id !== p.id),
-                                disqualifiedParticipants: [
-                                  ...(prev.disqualifiedParticipants || []),
-                                  {
-                                    id: `disq_${Date.now()}`,
-                                    participantId: p.id,
-                                    originalParticipant: JSON.parse(JSON.stringify(p)),
-                                    players: pPlayers,
-                                    teamName: targetName,
-                                    type: p.type,
-                                    ign: p.ign || p.leaderIgn,
-                                    leaderIgn: p.leaderIgn || p.ign,
-                                    uid: p.uid || p.leaderUid,
-                                    leaderUid: p.leaderUid || p.uid,
-                                    phone: p.phone || '',
-                                    discord: p.discord || '',
-                                    slotNumber: p.slotNumber || p.slot,
-                                    uids: [p.uid, p.leaderUid, ...pPlayers.map(m => m.uid)].filter(Boolean),
-                                    igns: [p.ign, p.leaderIgn, ...pPlayers.map(m => m.ign)].filter(Boolean),
-                                    reason: disqReason,
-                                    disqualifiedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
-                                  }
-                                ]
-                              };
-                            });
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                      <button 
+                        className="btn-warning-sm"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95))',
+                          border: 'none',
+                          color: '#fff',
+                          fontWeight: 700,
+                          fontSize: '0.74rem',
+                          padding: '5px 10px',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          boxShadow: '0 2px 8px rgba(245, 158, 11, 0.25)'
+                        }}
+                        onClick={() => {
+                          const targetTourneyId = tourneyContextId || p.tournamentId;
+                          const targetName = p.teamName || p.ign;
+                          if (window.confirm(`Unregister "${targetName}" from this tournament?\n\n(No reason required. Slot will be freed up and the player will receive an unregister notification).`)) {
+                            unregisterTournamentParticipant(targetTourneyId, p.id);
+                            if (viewingParticipantsTourney) {
+                              setViewingParticipantsTourney(prev => {
+                                if (!prev) return null;
+                                return {
+                                  ...prev,
+                                  participants: (prev.participants || []).filter(item => item.id !== p.id)
+                                };
+                              });
+                            }
+                            setCopiedToast(`Unregistered "${targetName}". Room slot freed up.`);
+                            setTimeout(() => setCopiedToast(''), 4000);
                           }
-                          setCopiedToast(`Disqualified "${targetName}". Room slot freed up & re-registration blocked.`);
-                          setTimeout(() => setCopiedToast(''), 4000);
-                        }
-                      }}
-                      title="Disqualify roster (releases room slot & locks re-registration)"
-                    >
-                      <XCircle size={12} /> Disqualify 🚫
-                    </button>
+                        }}
+                        title="Unregister player/roster (releases room slot, sends unregister notification, no penalty)"
+                      >
+                        <UserMinus size={12} /> Unregister
+                      </button>
+
+                      <button 
+                        className="btn-danger-sm"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(185, 28, 28, 0.9))',
+                          border: 'none',
+                          color: '#fff',
+                          fontWeight: 700,
+                          fontSize: '0.74rem',
+                          padding: '5px 10px',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                        onClick={() => {
+                          const targetTourneyId = tourneyContextId || p.tournamentId;
+                          const targetName = p.teamName || p.ign;
+                          const reason = window.prompt(
+                            `Disqualify "${targetName}" from this tournament?\n\nEnter reason for disqualification (player will receive instant alert and cannot re-register):`,
+                            'Fair-play regulation violation (Disqualified by Admin)'
+                          );
+                          if (reason !== null) {
+                            const disqReason = reason.trim() || 'Fair-play regulation violation (Disqualified by Admin)';
+                            removeTournamentParticipant(targetTourneyId, p.id, disqReason);
+                            if (viewingParticipantsTourney) {
+                              setViewingParticipantsTourney(prev => {
+                                if (!prev) return null;
+                                const pPlayers = Array.isArray(p.players) && p.players.length > 0 ? p.players : [];
+                                return {
+                                  ...prev,
+                                  participants: (prev.participants || []).filter(item => item.id !== p.id),
+                                  disqualifiedParticipants: [
+                                    ...(prev.disqualifiedParticipants || []),
+                                    {
+                                      id: `disq_${Date.now()}`,
+                                      participantId: p.id,
+                                      originalParticipant: JSON.parse(JSON.stringify(p)),
+                                      players: pPlayers,
+                                      teamName: targetName,
+                                      type: p.type,
+                                      ign: p.ign || p.leaderIgn,
+                                      leaderIgn: p.leaderIgn || p.ign,
+                                      uid: p.uid || p.leaderUid,
+                                      leaderUid: p.leaderUid || p.uid,
+                                      phone: p.phone || '',
+                                      discord: p.discord || '',
+                                      slotNumber: p.slotNumber || p.slot,
+                                      uids: [p.uid, p.leaderUid, ...pPlayers.map(m => m.uid)].filter(Boolean),
+                                      igns: [p.ign, p.leaderIgn, ...pPlayers.map(m => m.ign)].filter(Boolean),
+                                      reason: disqReason,
+                                      disqualifiedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
+                                    }
+                                  ]
+                                };
+                              });
+                            }
+                            setCopiedToast(`Disqualified "${targetName}". Room slot freed up & re-registration blocked.`);
+                            setTimeout(() => setCopiedToast(''), 4000);
+                          }
+                        }}
+                        title="Disqualify roster (releases room slot & locks re-registration)"
+                      >
+                        <XCircle size={12} /> Disqualify 🚫
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

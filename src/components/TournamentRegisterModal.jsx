@@ -88,7 +88,7 @@ const TournamentRegisterModal = ({
   // Squad = 4 tickets (4 players), Duo = 2 tickets, Solo = 1 ticket
   const requiredTickets = isSquad ? 4 : (isDuo ? 2 : (Number(tournament.ticketCost) || 1));
   const ticketType = tournament.ticketType || 'CS';
-  const hasEnoughTickets = (Number(userTickets) >= requiredTickets) || true;
+  const hasEnoughTickets = Number(userTickets) >= requiredTickets;
 
   // Track tournament ID to ONLY reset form when switching to a different tournament
   const activeTourneyIdRef = useRef(null);
@@ -100,7 +100,12 @@ const TournamentRegisterModal = ({
       setSubmittedData(null);
       setErrorMsg('');
       setAgreedToRules(true);
-      setSoloForm({ ign: '', uid: '', phone: '', discord: '' });
+      setSoloForm({ 
+        ign: '', 
+        uid: '', 
+        phone: '', 
+        discord: '' 
+      });
       setSquadForm({
         teamName: '',
         leaderIgn: '',
@@ -130,12 +135,85 @@ const TournamentRegisterModal = ({
     if (e && e.preventDefault) e.preventDefault();
     setErrorMsg('');
 
+    // 1. Slots availability check
+    if (isSlotsFull || availableSlots.length === 0) {
+      setErrorMsg('Cannot register: All tournament slots are currently full.');
+      return;
+    }
+
+    // 2. Real ticket balance check
+    if (!hasEnoughTickets) {
+      setErrorMsg(`Insufficient tickets! You need ${requiredTickets} ${ticketType} tickets to register, but you currently have ${userTickets || 0}.`);
+      return;
+    }
+
+    // 3. Fair play agreement check
+    if (!agreedToRules) {
+      setErrorMsg('You must agree to the tournament fair-play regulations before registering.');
+      return;
+    }
+
+    // 4. Disqualification check
+    if (isDisqualified) {
+      setErrorMsg(`Cannot register: You were disqualified from this tournament by the admin. Reason: ${disqRecord?.reason || 'Fair-play regulation violation'}`);
+      return;
+    }
+
+    // Helpers
+    const isValidPhone = (p) => /^[6-9]\d{9}$/.test(p);
+    const isValidUid = (u) => /^\d{6,14}$/.test(u);
+
+    const existingParticipants = Array.isArray(tournament.participants) ? tournament.participants : [];
+    const getTournamentRegisteredUids = () => {
+      const uids = new Set();
+      existingParticipants.forEach(p => {
+        if (p.uid) uids.add(String(p.uid));
+        if (p.leaderUid) uids.add(String(p.leaderUid));
+        if (Array.isArray(p.players)) {
+          p.players.forEach(m => {
+            if (m.uid) uids.add(String(m.uid));
+          });
+        }
+      });
+      return uids;
+    };
+    const registeredUidsSet = getTournamentRegisteredUids();
+
     let payload = {};
 
     if (isSolo) {
-      const playerIgn = soloForm.ign.trim() || user?.inGameName || 'Player';
-      const playerUid = soloForm.uid.trim() || user?.uid || '849204812';
-      const playerPhone = soloForm.phone.trim() || '9876543210';
+      const playerIgn = soloForm.ign.trim();
+      const playerUid = soloForm.uid.trim();
+      const playerPhone = soloForm.phone.trim();
+
+      if (!playerIgn) {
+        setErrorMsg('Please enter your Free Fire In-Game Name (IGN).');
+        return;
+      }
+      if (playerIgn.length < 3) {
+        setErrorMsg('Free Fire IGN must be at least 3 characters long.');
+        return;
+      }
+      if (!playerUid) {
+        setErrorMsg('Please enter your Free Fire UID (Account ID).');
+        return;
+      }
+      if (!isValidUid(playerUid)) {
+        setErrorMsg('Free Fire UID must be a valid numeric ID (6 to 14 digits).');
+        return;
+      }
+      if (!playerPhone) {
+        setErrorMsg('Please enter your 10-digit WhatsApp number to receive room ID & password.');
+        return;
+      }
+      if (!isValidPhone(playerPhone)) {
+        setErrorMsg('Please enter a valid 10-digit WhatsApp mobile number (starting with 6, 7, 8, or 9).');
+        return;
+      }
+      if (registeredUidsSet.has(playerUid)) {
+        setErrorMsg(`Free Fire UID ${playerUid} is already registered in this tournament.`);
+        return;
+      }
 
       payload = {
         type: 'solo',
@@ -153,12 +231,49 @@ const TournamentRegisterModal = ({
         ticketUsed: `${requiredTickets}x ${ticketType} Ticket`
       };
     } else if (isDuo) {
-      const capIgn = duoForm.leaderIgn.trim() || user?.inGameName || 'Captain';
-      const capUid = duoForm.leaderUid.trim() || user?.uid || '849204812';
-      const capPhone = duoForm.leaderPhone.trim() || '9876543210';
-      const team = duoForm.teamName.trim() || `${capIgn} Duo`;
-      const p2Ign = duoForm.player2Ign.trim() || `${capIgn}_P2`;
-      const p2Uid = duoForm.player2Uid.trim() || '849204813';
+      const team = duoForm.teamName.trim();
+      const capIgn = duoForm.leaderIgn.trim();
+      const capUid = duoForm.leaderUid.trim();
+      const capPhone = duoForm.leaderPhone.trim();
+      const p2Ign = duoForm.player2Ign.trim();
+      const p2Uid = duoForm.player2Uid.trim();
+
+      if (!team) {
+        setErrorMsg('Please enter your Duo Team Name.');
+        return;
+      }
+      if (!capIgn || capIgn.length < 3) {
+        setErrorMsg('Please enter Player 1 / Leader IGN (at least 3 characters).');
+        return;
+      }
+      if (!capUid || !isValidUid(capUid)) {
+        setErrorMsg('Please enter a valid numeric UID for Player 1 (6 to 14 digits).');
+        return;
+      }
+      if (!capPhone || !isValidPhone(capPhone)) {
+        setErrorMsg('Please enter a valid 10-digit WhatsApp number for Captain.');
+        return;
+      }
+      if (!p2Ign || p2Ign.length < 3) {
+        setErrorMsg('Please enter Player 2 IGN (at least 3 characters).');
+        return;
+      }
+      if (!p2Uid || !isValidUid(p2Uid)) {
+        setErrorMsg('Please enter a valid numeric UID for Player 2 (6 to 14 digits).');
+        return;
+      }
+      if (capUid === p2Uid) {
+        setErrorMsg('Player 1 UID and Player 2 UID cannot be the same! Each player must have a unique UID.');
+        return;
+      }
+      if (registeredUidsSet.has(capUid)) {
+        setErrorMsg(`Player 1 UID ${capUid} is already registered in this tournament.`);
+        return;
+      }
+      if (registeredUidsSet.has(p2Uid)) {
+        setErrorMsg(`Player 2 UID ${p2Uid} is already registered in this tournament.`);
+        return;
+      }
 
       payload = {
         type: 'duo',
@@ -177,16 +292,88 @@ const TournamentRegisterModal = ({
       };
     } else {
       // Squad
-      const capIgn = squadForm.leaderIgn.trim() || user?.inGameName || 'Captain';
-      const capUid = squadForm.leaderUid.trim() || user?.uid || '849204812';
-      const capPhone = squadForm.leaderPhone.trim() || '9876543210';
-      const team = squadForm.teamName.trim() || `${capIgn}'s Squad`;
-      const p2Ign = squadForm.player2Ign.trim() || `${capIgn}_P2`;
-      const p2Uid = squadForm.player2Uid.trim() || '849204813';
-      const p3Ign = squadForm.player3Ign.trim() || `${capIgn}_P3`;
-      const p3Uid = squadForm.player3Uid.trim() || '849204814';
-      const p4Ign = squadForm.player4Ign.trim() || `${capIgn}_P4`;
-      const p4Uid = squadForm.player4Uid.trim() || '849204815';
+      const team = squadForm.teamName.trim();
+      const capIgn = squadForm.leaderIgn.trim();
+      const capUid = squadForm.leaderUid.trim();
+      const capPhone = squadForm.leaderPhone.trim();
+      const p2Ign = squadForm.player2Ign.trim();
+      const p2Uid = squadForm.player2Uid.trim();
+      const p3Ign = squadForm.player3Ign.trim();
+      const p3Uid = squadForm.player3Uid.trim();
+      const p4Ign = squadForm.player4Ign.trim();
+      const p4Uid = squadForm.player4Uid.trim();
+      const subIgn = squadForm.subIgn.trim();
+      const subUid = squadForm.subUid.trim();
+
+      if (!team) {
+        setErrorMsg('Please enter your Squad / Team Name.');
+        return;
+      }
+      if (!capIgn || capIgn.length < 3) {
+        setErrorMsg('Please enter Captain IGN (at least 3 characters).');
+        return;
+      }
+      if (!capUid || !isValidUid(capUid)) {
+        setErrorMsg('Please enter a valid numeric UID for Captain (6 to 14 digits).');
+        return;
+      }
+      if (!capPhone || !isValidPhone(capPhone)) {
+        setErrorMsg('Please enter a valid 10-digit WhatsApp number for Captain.');
+        return;
+      }
+      if (!p2Ign) {
+        setErrorMsg('Please enter Player 2 IGN.');
+        return;
+      }
+      if (!p2Uid || !isValidUid(p2Uid)) {
+        setErrorMsg('Please enter a valid numeric UID for Player 2 (6 to 14 digits).');
+        return;
+      }
+      if (!p3Ign) {
+        setErrorMsg('Please enter Player 3 IGN.');
+        return;
+      }
+      if (!p3Uid || !isValidUid(p3Uid)) {
+        setErrorMsg('Please enter a valid numeric UID for Player 3 (6 to 14 digits).');
+        return;
+      }
+      if (!p4Ign) {
+        setErrorMsg('Please enter Player 4 IGN.');
+        return;
+      }
+      if (!p4Uid || !isValidUid(p4Uid)) {
+        setErrorMsg('Please enter a valid numeric UID for Player 4 (6 to 14 digits).');
+        return;
+      }
+
+      const squadUids = [capUid, p2Uid, p3Uid, p4Uid];
+      if (new Set(squadUids).size !== squadUids.length) {
+        setErrorMsg('All squad player UIDs must be distinct. Duplicate UID detected in squad roster.');
+        return;
+      }
+
+      if (subIgn || subUid) {
+        if (!subIgn) {
+          setErrorMsg('Please enter Substitute Player IGN or clear the substitute fields.');
+          return;
+        }
+        if (!subUid || !isValidUid(subUid)) {
+          setErrorMsg('Please enter a valid numeric UID for Substitute Player (6 to 14 digits).');
+          return;
+        }
+        if (squadUids.includes(subUid)) {
+          setErrorMsg('Substitute player UID cannot match any main squad player UID.');
+          return;
+        }
+      }
+
+      const allSquadUids = [...squadUids, ...(subUid ? [subUid] : [])];
+      for (const u of allSquadUids) {
+        if (registeredUidsSet.has(u)) {
+          setErrorMsg(`Player UID ${u} is already registered in this tournament.`);
+          return;
+        }
+      }
 
       const roster = [
         { role: 'Captain (P1)', ign: capIgn, uid: capUid },
@@ -195,11 +382,11 @@ const TournamentRegisterModal = ({
         { role: 'Player 4', ign: p4Ign, uid: p4Uid },
       ];
 
-      if (squadForm.subIgn.trim() || squadForm.subUid.trim()) {
+      if (subIgn && subUid) {
         roster.push({ 
           role: 'Substitute', 
-          ign: squadForm.subIgn.trim() || `${capIgn}_Sub`, 
-          uid: squadForm.subUid.trim() || '849204816' 
+          ign: subIgn, 
+          uid: subUid 
         });
       }
 
@@ -217,11 +404,7 @@ const TournamentRegisterModal = ({
       };
     }
 
-    if (isDisqualified) {
-      setErrorMsg(`Cannot register: You were disqualified from this tournament by the admin. Reason: ${disqRecord?.reason || 'Fair-play regulation violation'}`);
-      return;
-    }
-
+    // Check blacklist / disqualification on roster members
     const disqList = tournament.disqualifiedParticipants || [];
     const payloadUids = [payload.uid, payload.leaderUid, ...(payload.players || []).map(p => p.uid)].filter(Boolean).map(String);
     const payloadIgns = [payload.ign, payload.leaderIgn, ...(payload.players || []).map(p => p.ign)].filter(Boolean).map(i => i.toLowerCase());
@@ -237,7 +420,11 @@ const TournamentRegisterModal = ({
     }
 
     // Assign a valid random available slot number for the tournament
-    const assignedSlot = Number(assignRandomSlot(tournament)) || Math.floor(Math.random() * 8) + 1;
+    const assignedSlot = assignRandomSlot(tournament);
+    if (!assignedSlot) {
+      setErrorMsg('No match slots available. This tournament is completely full.');
+      return;
+    }
     payload.slotNumber = assignedSlot;
     payload.slot = assignedSlot;
 
@@ -256,10 +443,8 @@ const TournamentRegisterModal = ({
       setSubmittedData(finalData);
       setRegisteredSuccess(true);
     } catch (err) {
-      console.warn('Registration callback warning (using fallback):', err);
-      const fallbackData = { ...payload, slotNumber: assignedSlot, slot: assignedSlot };
-      setSubmittedData(fallbackData);
-      setRegisteredSuccess(true);
+      console.error('Registration failed:', err);
+      setErrorMsg(err.message || 'Registration failed. Please check your tickets and try again.');
     }
   };
 
@@ -518,29 +703,32 @@ const TournamentRegisterModal = ({
                 <h4 className="section-title mt-3">
                   <User size={16} /> Player 1 (Leader / Contact)
                 </h4>
-                <div className="treg-field-grid-3">
+                <div className="treg-field-grid-2">
                   <div className="treg-form-group">
-                    <label>Leader IGN *</label>
+                    <label>Leader Free Fire IGN *</label>
                     <input 
                       type="text" 
                       required
-                      placeholder="Captain / Player 1 IGN"
+                      placeholder="e.g. Soul_Mortal99"
                       value={duoForm.leaderIgn}
                       onChange={e => setDuoForm({ ...duoForm, leaderIgn: e.target.value })}
                     />
                   </div>
                   <div className="treg-form-group">
-                    <label>Leader UID *</label>
+                    <label>Leader Free Fire UID *</label>
                     <input 
                       type="text" 
                       required
-                      placeholder="Captain FF UID (e.g. 849204812)"
+                      placeholder="e.g. 849204812"
                       value={duoForm.leaderUid}
                       onChange={e => setDuoForm({ ...duoForm, leaderUid: e.target.value.replace(/\D/g, '') })}
                     />
                   </div>
-                  <div className="treg-form-group">
-                    <label>WhatsApp Number *</label>
+                </div>
+                <div className="treg-form-group" style={{ marginTop: '8px' }}>
+                  <label>Leader WhatsApp Number (For Room ID &amp; Password) *</label>
+                  <div className="input-with-prefix">
+                    <span className="prefix">+91</span>
                     <input 
                       type="tel" 
                       required
@@ -601,13 +789,13 @@ const TournamentRegisterModal = ({
                     <span className="rpc-badge captain-badge">👑 Team Captain (Player 1)</span>
                     <span className="rpc-note">Room ID &amp; Password will be sent to captain</span>
                   </div>
-                    <div className="treg-field-grid-3">
+                  <div className="treg-field-grid-2">
                     <div className="treg-form-group">
-                      <label>Captain IGN *</label>
+                      <label>Captain Free Fire IGN *</label>
                       <input 
                         type="text" 
                         required
-                        placeholder="Captain IGN (e.g. Soul_Mortal99)"
+                        placeholder="e.g. Soul_Mortal99"
                         value={squadForm.leaderIgn}
                         onChange={e => setSquadForm({ ...squadForm, leaderIgn: e.target.value })}
                       />
@@ -617,24 +805,24 @@ const TournamentRegisterModal = ({
                       <input 
                         type="text" 
                         required
-                        placeholder="Captain Free Fire UID (e.g. 849204812)"
+                        placeholder="e.g. 849204812"
                         value={squadForm.leaderUid}
                         onChange={e => setSquadForm({ ...squadForm, leaderUid: e.target.value.replace(/\D/g, '') })}
                       />
                     </div>
-                    <div className="treg-form-group">
-                      <label>Captain WhatsApp Number *</label>
-                      <div className="input-with-prefix">
-                        <span className="prefix">+91</span>
-                        <input 
-                          type="tel" 
-                          required
-                          maxLength={10}
-                          placeholder="10-digit WhatsApp number"
-                          value={squadForm.leaderPhone}
-                          onChange={e => setSquadForm({ ...squadForm, leaderPhone: e.target.value.replace(/\D/g, '') })}
-                        />
-                      </div>
+                  </div>
+                  <div className="treg-form-group" style={{ marginTop: '8px' }}>
+                    <label>Captain WhatsApp Number (For Room ID &amp; Password) *</label>
+                    <div className="input-with-prefix">
+                      <span className="prefix">+91</span>
+                      <input 
+                        type="tel" 
+                        required
+                        maxLength={10}
+                        placeholder="10-digit WhatsApp number"
+                        value={squadForm.leaderPhone}
+                        onChange={e => setSquadForm({ ...squadForm, leaderPhone: e.target.value.replace(/\D/g, '') })}
+                      />
                     </div>
                   </div>
                 </div>
@@ -784,13 +972,27 @@ const TournamentRegisterModal = ({
                 <button type="button" className="treg-btn-cancel" onClick={onClose}>
                   Cancel
                 </button>
-                <button 
-                  type="button"
-                  onClick={handleSubmit}
-                  className="treg-btn-submit"
-                >
-                  <Flame size={16} /> Confirm &amp; Register ({requiredTickets}x {ticketType} Tickets)
-                </button>
+                {!hasEnoughTickets ? (
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      onClose();
+                      window.location.href = '/esports/passes';
+                    }}
+                    className="treg-btn-submit"
+                    style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)' }}
+                  >
+                    <Ticket size={16} /> Need {Math.max(0, requiredTickets - userTickets)} More Tickets (Get Pass)
+                  </button>
+                ) : (
+                  <button 
+                    type="submit"
+                    className="treg-btn-submit"
+                    disabled={isSlotsFull || isDisqualified}
+                  >
+                    <Flame size={16} /> Confirm &amp; Register ({requiredTickets}x {ticketType} Tickets)
+                  </button>
+                )}
               </div>
             </div>
           </form>
