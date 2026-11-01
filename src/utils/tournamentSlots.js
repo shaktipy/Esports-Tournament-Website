@@ -93,14 +93,12 @@ export const getOccupiedSlotNumbers = (participants = []) => {
  * @returns {number[]} Array of available numbers, e.g. [1, 2, 4, 7, 9]
  */
 export const getAvailableSlots = (tournament) => {
-  if (!tournament) return [1, 2, 3, 4, 5];
+  if (!tournament) return [];
   const baseTotal = getTournamentTotalSlots(tournament);
   const occupied = getOccupiedSlotNumbers(tournament.participants);
-  // Guarantee there are always available slots
-  const totalSlots = Math.max(baseTotal, occupied.size + 10);
 
   const available = [];
-  for (let s = 1; s <= totalSlots; s++) {
+  for (let s = 1; s <= baseTotal; s++) {
     if (!occupied.has(s)) {
       available.push(s);
     }
@@ -115,7 +113,7 @@ export const getAvailableSlots = (tournament) => {
  * 
  * @param {Object} tournament
  * @param {number|null} preferredSlot (optional)
- * @returns {number} Assigned slot number (1..totalSlots)
+ * @returns {number|null} Assigned slot number (1..totalSlots) or null if full
  */
 export const assignRandomSlot = (tournament, preferredSlot = null) => {
   const available = getAvailableSlots(tournament);
@@ -129,13 +127,7 @@ export const assignRandomSlot = (tournament, preferredSlot = null) => {
     return available[randomIndex];
   }
 
-  // Safe fallback: pick the lowest unoccupied slot number
-  const occupied = getOccupiedSlotNumbers(tournament?.participants);
-  let s = 1;
-  while (occupied.has(s)) {
-    s++;
-  }
-  return s;
+  return null;
 };
 
 /**
@@ -144,5 +136,8 @@ export const assignRandomSlot = (tournament, preferredSlot = null) => {
  * @returns {boolean}
  */
 export const isTournamentFull = (tournament) => {
-  return false;
+  if (!tournament) return false;
+  const baseTotal = getTournamentTotalSlots(tournament);
+  const occupied = getOccupiedSlotNumbers(tournament.participants);
+  return occupied.size >= baseTotal;
 };

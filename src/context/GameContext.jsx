@@ -252,20 +252,26 @@ export const GameProvider = ({ children }) => {
   const [csTickets, setCsTickets] = useState(() => {
     try {
       const saved = localStorage.getItem('harshxo_csTickets');
-      const val = saved !== null ? Number(saved) : 10;
-      return val > 0 ? val : 10;
+      if (saved !== null) {
+        const val = Number(saved);
+        return !isNaN(val) ? Math.max(0, val) : 0;
+      }
+      return 0;
     } catch {
-      return 10;
+      return 0;
     }
   });
 
   const [brTickets, setBrTickets] = useState(() => {
     try {
       const saved = localStorage.getItem('harshxo_brTickets');
-      const val = saved !== null ? Number(saved) : 10;
-      return val > 0 ? val : 10;
+      if (saved !== null) {
+        const val = Number(saved);
+        return !isNaN(val) ? Math.max(0, val) : 0;
+      }
+      return 0;
     } catch {
-      return 10;
+      return 0;
     }
   });
 
@@ -560,6 +566,8 @@ export const GameProvider = ({ children }) => {
             syncFromAnnouncements(data);
           } else if (type === 'tournament_disqualified' && data) {
             window.dispatchEvent(new CustomEvent('haarshxo_tournament_disqualified', { detail: data }));
+          } else if (type === 'tournament_unregistered' && data) {
+            window.dispatchEvent(new CustomEvent('haarshxo_tournament_unregistered', { detail: data }));
           } else if (type === 'tournament_reinstated' && data) {
             window.dispatchEvent(new CustomEvent('haarshxo_tournament_reinstated', { detail: data }));
           } else if (type === 'user_banned' && data) {
@@ -941,14 +949,44 @@ export const GameProvider = ({ children }) => {
       }
     };
 
+    const handleUnregistered = (e) => {
+      const detail = e.detail;
+      if (!detail) return;
+      const { tournamentId, tournamentTitle, uids = [], igns = [] } = detail;
+
+      const userUid = user?.uid ? String(user.uid) : '';
+      const userIgn = user?.inGameName ? user.inGameName.toLowerCase() : '';
+
+      const isUserMatch = (
+        (userUid && uids.some(u => String(u) === userUid)) ||
+        (userIgn && igns.some(i => i?.toLowerCase() === userIgn)) ||
+        (!userUid && !userIgn) ||
+        (registeredTournaments.includes(String(tournamentId)))
+      );
+
+      if (isUserMatch) {
+        setRegisteredTournaments(prev => prev.filter(id => String(id) !== String(tournamentId)));
+        try {
+          localStorage.removeItem('haarshxo_reg_slot_' + tournamentId);
+        } catch {}
+        showNotification(
+          `Tournament Unregistered`,
+          'info',
+          `Tum "${tournamentTitle || 'Tournament'}" se unregister ho chuke ho.`
+        );
+      }
+    };
+
     window.addEventListener('haarshxo_tournament_disqualified', handleDisqualification);
+    window.addEventListener('haarshxo_tournament_unregistered', handleUnregistered);
     window.addEventListener('haarshxo_tournament_reinstated', handleReinstated);
 
     return () => {
       window.removeEventListener('haarshxo_tournament_disqualified', handleDisqualification);
+      window.removeEventListener('haarshxo_tournament_unregistered', handleUnregistered);
       window.removeEventListener('haarshxo_tournament_reinstated', handleReinstated);
     };
-  }, [user]);
+  }, [user, registeredTournaments]);
 
   useEffect(() => {
     localStorage.setItem('harshxo_loginStreak', JSON.stringify(loginStreak));
@@ -1160,6 +1198,12 @@ export const GameProvider = ({ children }) => {
 
     if (disqualifiedTournaments.includes(tournamentId)) {
       showNotification('Registration Blocked!', 'error', `Cannot register: You are disqualified from ${tournamentTitle || 'this tournament'} by the admin.`);
+      return false;
+    }
+
+    const currentTickets = ticketType === 'CS' ? csTickets : brTickets;
+    if (currentTickets < cost) {
+      showNotification('Insufficient Tickets!', 'error', `You need ${cost} ${ticketType} tickets to register, but you currently have ${currentTickets}.`);
       return false;
     }
 

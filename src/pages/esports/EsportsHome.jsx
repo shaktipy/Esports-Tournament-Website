@@ -164,15 +164,14 @@ const EsportsHome = () => {
     const requiredTickets = payload?.ticketCost || (isSquad ? 4 : isDuo ? 2 : (Number(selectedTourneyForRegister.ticketCost) || 1));
 
     if (registerTournament) {
-      try {
-        registerTournament(
-          selectedTourneyForRegister.id,
-          selectedTourneyForRegister.ticketType,
-          requiredTickets,
-          selectedTourneyForRegister.title
-        );
-      } catch (e) {
-        console.warn('registerTournament warning:', e);
+      const ok = registerTournament(
+        selectedTourneyForRegister.id,
+        selectedTourneyForRegister.ticketType,
+        requiredTickets,
+        selectedTourneyForRegister.title
+      );
+      if (!ok) {
+        throw new Error(`Insufficient tickets or account restricted. You need ${requiredTickets} ${selectedTourneyForRegister.ticketType} tickets.`);
       }
     }
 
@@ -268,7 +267,11 @@ const EsportsHome = () => {
             return (user?.uid && uids.some(u => String(u) === String(user.uid))) ||
               (user?.inGameName && igns.some(i => i?.toLowerCase() === user.inGameName.toLowerCase()));
           });
-          const isRegistered = registeredTournaments.includes(tournament.id);
+          const isRegistered = registeredTournaments.includes(tournament.id) ||
+            (Array.isArray(tournament.participants) && tournament.participants.some(p =>
+              (user?.uid && (String(p.uid) === String(user.uid) || String(p.leaderUid) === String(user.uid) || (Array.isArray(p.players) && p.players.some(m => String(m.uid) === String(user.uid))))) ||
+              (user?.inGameName && user.inGameName !== 'Player' && (p.ign?.toLowerCase() === user.inGameName.toLowerCase() || p.leaderIgn?.toLowerCase() === user.inGameName.toLowerCase()))
+            ));
           const isSquad = (tournament.mode || '').toLowerCase().includes('squad') ||
             (tournament.mode || '').toLowerCase().includes('4v4') ||
             ((tournament.mode || '').toLowerCase().includes('cs') && !(tournament.mode || '').toLowerCase().includes('solo'));
@@ -277,7 +280,7 @@ const EsportsHome = () => {
           const requiredTickets = isSquad ? 4 : (isDuo ? 2 : (Number(tournament.ticketCost) || 1));
 
           const userTicketBalance = tournament.ticketType === 'CS' ? csTickets : brTickets;
-          const hasTicket = true; // Always allow entering registration modal
+          const hasTicket = userTicketBalance >= requiredTickets;
 
           return (
             <div key={tournament.id} className="tournament-card glass-panel">
