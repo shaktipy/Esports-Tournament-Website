@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Cookie, CheckCircle2, Shield, Settings, Info } from 'lucide-react';
+import { ArrowLeft, Cookie, CheckCircle2, Shield, Settings, Info, Calendar } from 'lucide-react';
 import './LegalPage.css';
 
 const CookiesPolicy = () => {
@@ -17,6 +17,10 @@ const CookiesPolicy = () => {
         </Link>
         <h1 className="legal-title">Cookies Policy</h1>
         <div className="legal-meta">
+          <span className="legal-meta-item">
+            <Calendar size={14} />
+            <span>Last Updated: 2026</span>
+          </span>
           <span className="legal-meta-item">
             <Cookie size={14} />
             <span>Privacy-First Cookie Practices</span>

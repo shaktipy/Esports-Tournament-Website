@@ -19,7 +19,7 @@ const TermsConditions = () => {
         <div className="legal-meta">
           <span className="legal-meta-item">
             <Scale size={14} />
-            <span>Last Updated: October 2024</span>
+            <span>Last Updated: 2026</span>
           </span>
           <span className="legal-meta-item">
             <Award size={14} />

@@ -19,7 +19,7 @@ const PrivacyPolicy = () => {
         <div className="legal-meta">
           <span className="legal-meta-item">
             <Calendar size={14} />
-            <span>Effective Date: October 2024</span>
+            <span>Effective Date: 2026</span>
           </span>
           <span className="legal-meta-item">
             <Shield size={14} />

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, XCircle, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { ArrowLeft, RefreshCw, XCircle, CheckCircle2, AlertCircle, Clock, Calendar } from 'lucide-react';
 import './LegalPage.css';
 
 const RefundPolicy = () => {
@@ -17,6 +17,10 @@ const RefundPolicy = () => {
         </Link>
         <h1 className="legal-title">Refund & Cancellation Policy</h1>
         <div className="legal-meta">
+          <span className="legal-meta-item">
+            <Calendar size={14} />
+            <span>Last Updated: 2026</span>
+          </span>
           <span className="legal-meta-item">
             <RefreshCw size={14} />
             <span>Clear Case-by-Case Rules</span>
